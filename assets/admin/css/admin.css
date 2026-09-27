@@ -1010,7 +1010,8 @@ button.admin-action-icon { border: 0; background: none; padding: 0; color: inher
 
 .admin-dashboard-swatch-completed { background: #157347; }
 .admin-dashboard-swatch-cancelled { background: #98a2b3; }
-.admin-dashboard-swatch-refunded { background: #2563eb; }
+.admin-dashboard-swatch-new { background: #d98a1f; }
+.admin-dashboard-swatch-confirmed { background: #2563eb; }
 
 .admin-dashboard-section-heading {
   margin: 1.75rem 0 .75rem;

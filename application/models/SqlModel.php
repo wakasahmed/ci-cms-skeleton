@@ -515,12 +515,6 @@ class SqlModel extends CI_Model
         return $this->runQuery("SELECT * FROM banners WHERE type=2 and banner_status='Enable' ORDER BY RAND() ASC LIMIT 1", 1);
 
     }
-    public function getToursIN($tours)
-    {
-        $this->db->where_in('tour_id', $tours);
-        $query = $this->db->get('tours');
-        return $query->result_array();
-    }
 
 }
 

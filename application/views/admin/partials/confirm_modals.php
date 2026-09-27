@@ -25,29 +25,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="addTourCatModal" tabindex="-1" aria-labelledby="addTourCatModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title fs-5" id="addTourCatModalLabel">Add New Category</h2>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="admin-field mb-0">
-                    <label class="form-label is-required" for="tour_cat_ajax">Category Name</label>
-                    <input type="text" name="tour_cat_ajax" id="tour_cat_ajax" class="form-control" maxlength="255" autocomplete="off" placeholder="Historical">
-                </div>
-                <div id="tourCatErrorMsg" class="alert alert-danger py-2 mb-0 mt-3 d-none" role="alert" aria-live="assertive"></div>
-            </div>
-            <div class="modal-footer">
-                <span class="spinner-border spinner-border-sm text-primary d-none" id="ajax_loader_tour_cat" role="status"><span class="visually-hidden">Saving...</span></span>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="tourCatSubmit">Add Category</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <?php
 $confirmationModals = array(
     array('id' => 'dupModal', 'label' => 'dupModalLabel', 'title' => 'Duplicate record', 'body' => 'Create a copy of <strong id="recname"></strong>?', 'confirmId' => 'duplicateLink', 'button' => 'Duplicate', 'class' => 'btn-primary'),

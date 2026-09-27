@@ -40,12 +40,6 @@ class Seo extends CI_Controller
             $lines[] = 'Disallow: /';
         } else {
             $lines[] = 'Allow: /';
-            // Booking-step and review-link endpoints return JSON or private, tokenised pages.
-            foreach ($this->locales as $locale) {
-                $lines[] = 'Disallow: /' . $locale . '/booking-';
-                $lines[] = 'Disallow: /' . $locale . '/review/';
-            }
-            $lines[] = 'Disallow: /*/save-step';
             $lines[] = 'Disallow: /recaptcha-enterprise';
             $lines[] = '';
             $lines[] = 'Sitemap: ' . base_url('sitemap.xml');
@@ -65,7 +59,6 @@ class Seo extends CI_Controller
         $entries = array_merge(
             $this->homeEntries(),
             $this->pageEntries(),
-            $this->tourEntries(),
             $this->blogCategoryEntries(),
             $this->blogPostEntries()
         );
@@ -89,28 +82,12 @@ class Seo extends CI_Controller
         $lines = array(
             '# ' . $seo->siteName(),
             '',
-            '> ' . ($intro !== '' ? $intro : 'Guided tours and experiences in Madinah, Saudi Arabia.'),
+            '> ' . ($intro !== '' ? $intro : 'Manicure, nail art and beauty treatments in Gorlice, Poland.'),
             '',
             'This site is published in English (' . $seo->homeUrl('en') . ') and Arabic ('
                 . $seo->homeUrl('ar') . '). Each page below links to its English version.',
             '',
         );
-
-        $tours = array();
-        $experiences = array();
-        foreach ($this->Seo_model->get_tours() as $row) {
-            $isExperience = $row['tour_type'] === 'Experience';
-            $item = $this->llmsItem(
-                $row['tour_name'],
-                $seo->tourUrl($row['tour_slug'], 'en', $isExperience),
-                $row['tour_short_description']
-            );
-            if ($isExperience) {
-                $experiences[] = $item;
-            } else {
-                $tours[] = $item;
-            }
-        }
 
         $posts = array();
         foreach ($this->Seo_model->get_blog_posts() as $row) {
@@ -134,8 +111,6 @@ class Seo extends CI_Controller
         }
 
         $sections = array(
-            'Tours' => $tours,
-            'Experiences' => $experiences,
             'Articles' => $posts,
             'Pages' => $pages,
         );
@@ -210,49 +185,6 @@ class Seo extends CI_Controller
             $entries = array_merge(
                 $entries,
                 $this->localizedEntries($urls, $this->frontend_seo->isoDate($row['page_updated']), $images)
-            );
-        }
-
-        return $entries;
-    }
-
-    private function tourEntries()
-    {
-        $tours = $this->Seo_model->get_tours();
-        $gallery = $this->Seo_model->get_tour_gallery_files(array_column($tours, 'tour_id'));
-        $entries = array();
-
-        foreach ($tours as $row) {
-            $slugEn = trim((string) $row['tour_slug']);
-            $slugAr = trim((string) $row['tour_slug_ar']);
-            if ($slugEn === '') {
-                continue;
-            }
-
-            $isExperience = $row['tour_type'] === 'Experience';
-            $urls = array(
-                'en' => $this->frontend_seo->tourUrl($slugEn, 'en', $isExperience),
-                'ar' => $this->frontend_seo->tourUrl($slugAr !== '' ? $slugAr : $slugEn, 'ar', $isExperience),
-            );
-
-            $candidates = array(
-                array('tours', $row['og_image']),
-                array('tours', $row['tour_image']),
-                array('tours', $row['tour_image_ar']),
-                array('tours', $row['tour_bg_image']),
-            );
-            $galleryFiles = isset($gallery[(int) $row['tour_id']]) ? $gallery[(int) $row['tour_id']] : array();
-            foreach ($galleryFiles as $file) {
-                $candidates[] = array('tour-images', $file);
-            }
-
-            $entries = array_merge(
-                $entries,
-                $this->localizedEntries(
-                    $urls,
-                    $this->frontend_seo->isoDate($row['tour_updated']),
-                    $this->imageUrls($candidates, 11)
-                )
             );
         }
 

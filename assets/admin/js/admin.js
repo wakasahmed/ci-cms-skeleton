@@ -276,17 +276,6 @@
         return compareWithField(value, param, function (current, other) { return current >= other; });
       }, 'Please enter a value that is not lower.');
     }
-    if (!$.validator.methods.slotdurationhours) {
-      $.validator.addMethod('slotdurationhours', function (value, element, param) {
-        var $other = $(param);
-        if (!$other.length) { return true; }
-        var start = comparableValue($other.val());
-        var end = comparableValue(value);
-        if (start === null || end === null) { return true; }
-        var diffHours = (end - start) / 3600;
-        return [2, 4, 6, 8].indexOf(diffHours) !== -1;
-      }, 'Tour slots can only be 2, 4, 6, or 8 hours long. Please adjust the start or end time so the duration matches one of these lengths.');
-    }
     if (!$.validator.methods.onepositiveingroup) {
       $.validator.addMethod('onepositiveingroup', function (value, element, param) {
         return $(param).toArray().some(function (field) {
@@ -563,23 +552,12 @@
 
   var adminPageCopy = {
     admins: { noun: 'administrator', list: 'Manage administrator accounts, access details, and account status.' },
-    attractions: { noun: 'attraction', list: 'Manage the destinations and attractions available for tour planning.' },
-    bookings: { noun: 'booking', list: 'Review and manage customer bookings, payments, assigned guides, and booking status.' },
     contactus: { noun: 'contact message', list: 'Review customer enquiries and the contact information submitted with each message.' },
-    vehicles: { noun: 'vehicle', list: 'Manage vehicles, passenger capacity, pricing, and availability for tours.' },
-    'tour-languages': { noun: 'tour language', list: 'Manage the languages that can be assigned to tour guides.' },
-    'tour-guides': { noun: 'tour guide', list: 'Manage tour guide profiles, contact details, languages, and availability.' },
-    'tour-slots': { noun: 'visiting slot', list: 'Manage the available time slots used for tours and guide scheduling.' },
     icategory: { noun: 'image category', list: 'Organize reusable website images into manageable categories.' },
     pages: { noun: 'web page', list: 'Create and manage the informational pages displayed on the website.' },
-    'discount-codes': { noun: 'discount code', list: 'Manage promotional codes, discount values, validity periods, and availability.' },
-    referrals: { noun: 'referral source', list: 'Manage referral sources and the promotional attribution used for bookings.' },
     slider: { noun: 'slider image', list: 'Manage promotional images, captions, links, display order, and visibility.' },
     sliders: { noun: 'image slider', list: 'Manage promotional image groups and where they appear on the website.' },
     'customer-reviews': { noun: 'customer review', list: 'Manage customer reviews, display order, and publishing status.' },
-    tourimages: { noun: 'tour image', list: 'Manage the image gallery for the selected tour.' },
-    tours: { noun: 'tour', list: 'Manage tour information, schedules, pricing, attractions, and availability.' },
-    'tour-guide-availability': { noun: 'availability date', list: 'Manage tour guide dates, Tour Slots, and bookings.' },
     menu: { noun: 'menu item', list: 'Manage website navigation items, links, hierarchy, and display order.' },
     foot: { noun: 'footer menu item', list: 'Manage footer navigation links, hierarchy, and display order.' }
   };
@@ -593,17 +571,8 @@
       if (lowerTitle.indexOf('account') !== -1) { return 'Update your administrator profile, email address, and password.'; }
       if (lowerTitle.indexOf('contact') !== -1) { return 'Manage the contact details and location information displayed to customers.'; }
       if (lowerTitle.indexOf('website') !== -1) { return 'Manage core website identity, branding, contact, and integration settings.'; }
-      return 'View key system activity, booking information, and important operational updates.';
+      return 'View booking requests, client messages, and important operational updates.';
     }
-    if (controllerName === 'reports') {
-      if (lowerTitle.indexOf('payment') !== -1) { return 'Review booking payment activity across selected dates, tours, guides, and statuses.'; }
-      if (lowerTitle.indexOf('discount') !== -1 || lowerTitle.indexOf('referral') !== -1) { return 'Review referral and discount usage across customer bookings.'; }
-      if (lowerTitle.indexOf('guide') !== -1) { return 'Analyze customer evaluations grouped by tour guide and selected filters.'; }
-      if (lowerTitle.indexOf('evaluation') !== -1) { return 'Analyze customer evaluations grouped by tour and selected filters.'; }
-      if (lowerTitle.indexOf('time slot') !== -1) { return 'Review booking activity by tour and visiting time slot.'; }
-      return 'Review booking activity across selected dates, tours, guides, and statuses.';
-    }
-    if (/booking details/i.test(title)) { return 'Review the complete booking, customer, payment, guide assignment, and status information.'; }
     if (/contact.*details/i.test(title)) { return 'Review the customer contact information and full enquiry message.'; }
     if (/upload/i.test(title)) { return 'Upload new ' + config.noun + ' files and save them to the current gallery.'; }
     if (/^add\b/i.test(title)) { return 'Add a new ' + config.noun + ' and provide the required information.'; }

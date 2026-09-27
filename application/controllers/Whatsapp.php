@@ -47,20 +47,16 @@ class Whatsapp extends CI_Controller
      * CLI:     php index.php whatsapp test 966501234567 [template|text|templates] ["Message text"]
      *          php index.php whatsapp test 966501234567 approved <template ID> [en|ar]
      *          php index.php whatsapp test 966501234567 order
-     *          php index.php whatsapp test - booking <booking ID>
      * Browser: /whatsapp/test?to=966501234567&mode=template (signed-in administrators only)
      *          /whatsapp/test?to=966501234567&mode=approved&template=3&lang=ar
      *          /whatsapp/test?to=966501234567&mode=order
-     *          /whatsapp/test?mode=booking&booking=123
      *
      * "template" sends Meta's pre-approved hello_world template, which works outside
      * the 24-hour window. "approved" sends one of the managed WhatsApp templates
      * (manage/whatsapp-templates) that Meta has approved, filled with each short
      * tag's example value. "order" sends Meta's approved sample
      * jaspers_market_order_confirmation_v1, which only exists on Meta's test WhatsApp
-     * Business Account. "booking" runs the real booking confirmation sender for one
-     * booking (to its own mobile number) and reports why it was not sent, if it was not.
-     * "text" only arrives if the recipient messaged the business
+     * Business Account. "text" only arrives if the recipient messaged the business
      * number within the last 24 hours. "templates" lists the account's templates.
      */
     public function test($to = '', $mode = '', $text = '', $language = '')
@@ -82,8 +78,6 @@ class Whatsapp extends CI_Controller
             $language = (string) $this->input->get('lang', true);
             if ($mode === 'approved') {
                 $text = (string) $this->input->get('template', true);
-            } elseif ($mode === 'booking') {
-                $text = (string) $this->input->get('booking', true);
             }
         }
 
@@ -121,11 +115,6 @@ class Whatsapp extends CI_Controller
                     )
                 );
                 break;
-            case 'booking':
-                // In this mode the third argument is the booking ID; "to" is not used.
-                $this->load->library('Booking_whatsapp_service');
-                $result = $this->booking_whatsapp_service->customerConfirmationResult((int) $text);
-                break;
             case 'approved':
                 // In this mode the third argument is the managed template ID.
                 $this->load->library('Whatsapp_template_service');
@@ -140,7 +129,7 @@ class Whatsapp extends CI_Controller
                     'success' => false,
                     'status_code' => 0,
                     'data' => array(),
-                    'error' => 'Unknown mode. Use template, order, booking, approved, text or templates.',
+                    'error' => 'Unknown mode. Use template, order, approved, text or templates.',
                 );
         }
 

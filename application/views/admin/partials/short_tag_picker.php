@@ -10,7 +10,7 @@
  *
  * Parameters:
  * - tags: array('tag_name' => 'Example value')
- * - entity_label: e.g. "Booking", shown in the heading
+ * - entity_label: e.g. "Contact request", shown in the heading
  * - description: optional help text
  * - id: optional unique ID prefix
  */

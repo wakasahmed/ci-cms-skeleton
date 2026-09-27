@@ -53,36 +53,6 @@ class Admin_record_sorter
 			'order_column' => 'review_order',
 			'fallback_column' => 'review_name',
 		),
-		'tour-slots' => array(
-			'table' => 'tour_slots',
-			'primary_key' => 'slot_id',
-			'order_column' => 'slot_order',
-			'fallback_column' => 'slot_name',
-		),
-		'vehicles' => array(
-			'table' => 'vehicles',
-			'primary_key' => 'vehicle_id',
-			'order_column' => 'vehicle_order',
-			'fallback_column' => 'vehicle_name',
-		),
-		'tour-languages' => array(
-			'table' => 'tour_languages',
-			'primary_key' => 'lang_id',
-			'order_column' => 'lang_order',
-			'fallback_column' => 'lang_id',
-		),
-		'tour-guides' => array(
-			'table' => 'tour_guides',
-			'primary_key' => 'tour_guide_id',
-			'order_column' => 'tour_guide_order',
-			'fallback_column' => 'tour_guide_name',
-		),
-		'tour-categories' => array(
-			'table' => 'tour_categories',
-			'primary_key' => 'cat_id',
-			'order_column' => 'cat_order',
-			'fallback_column' => 'cat_name',
-		),
 		'faqs-categories' => array(
 			'table' => 'faqs_categories',
 			'primary_key' => 'cat_id',
@@ -94,30 +64,6 @@ class Admin_record_sorter
 			'primary_key' => 'faq_id',
 			'order_column' => 'faq_order',
 			'fallback_column' => 'faq_question',
-		),
-		'tours' => array(
-			'table' => 'tours',
-			'primary_key' => 'tour_id',
-			'order_column' => 'tour_order',
-			'fallback_column' => 'tour_name',
-			'scope_column' => 'tour_type',
-			'scope_values' => array('Tour', 'Experience'),
-		),
-		'tour-itineraries' => array(
-			'table' => 'tour_itineraries',
-			'primary_key' => 'id',
-			'order_column' => 'itinerary_order',
-			'fallback_column' => 'title',
-			'scope_column' => 'tour_id',
-			'scope_required' => TRUE,
-		),
-		'tour-images' => array(
-			'table' => 'tour_images',
-			'primary_key' => 'image_id',
-			'order_column' => 'image_order',
-			'fallback_column' => 'image_name',
-			'scope_column' => 'image_tour_id',
-			'scope_required' => TRUE,
 		),
 	);
 

@@ -86,19 +86,6 @@ define('PASSWORD_RESET_TTL', 3600);
 define('PASSWORD_RESET_MAX_REQUESTS', 3);
 define('PASSWORD_RESET_WINDOW', 900);
 define('PASSWORD_MIN_LENGTH', 8);
-define('TOUR_LIMIT', 9);
-define('PRICE_TOUR_ID', '8');
-define('CAR1','490');
-define('CAR2','690');
-define('CAR3','890');
-define('CAR1_COM','140');
-define('CAR2_COM','190');
-define('CAR3_COM','220');
-define('BOOK_HOUR_LIMIT', 6);
-define('CONSUME_HOUR_LIMIT', 6);
-define('CANCEL_HOUR_LIMIT', 3);
-define('DISCOUNT_CODE_LENGTH', 8);
-define('DISCOUNT_CODE_USE_BY_ONE_CUSTOMER', 3);
 
 /*
 |--------------------------------------------------------------------------
@@ -130,71 +117,6 @@ defined('EMAIL_DATETIME_FORMAT') OR define('EMAIL_DATETIME_FORMAT', EMAIL_DATE_F
 
 /*
 |--------------------------------------------------------------------------
-| Tour Booking Cutoff
-|--------------------------------------------------------------------------
-|
-| Number of hours a Pending frontend booking may stay open, counted from
-| tour_bookings.book_added. After this the booking_cron release_holds job
-| cancels it and releases any guide slots it holds.
-|
-*/
-defined('TOUR_BOOKING_CUTOFF_HOURS') OR define('TOUR_BOOKING_CUTOFF_HOURS', 2);
-
-/*
-|--------------------------------------------------------------------------
-| Moyasar Payments
-|--------------------------------------------------------------------------
-|
-| Change only MOYASAR_SANDBOX when promoting between the configured test and
-| live accounts. Publishable keys may be sent to Moyasar's browser form;
-| secret keys and webhook secrets must remain server-side.
-|
-*/
-define('MOYASAR_SANDBOX', true);
-
-// Moyasar is removed in Phase 2 of PROJECT_PLAN.md. The keys stay empty so
-// MOYASAR_ENABLED is false until then.
-defined('MOYASAR_SANDBOX_PUBLISHABLE_KEY') OR define('MOYASAR_SANDBOX_PUBLISHABLE_KEY', '');
-defined('MOYASAR_SANDBOX_SECRET_KEY') OR define('MOYASAR_SANDBOX_SECRET_KEY', '');
-defined('MOYASAR_SANDBOX_WEBHOOK_SECRET') OR define('MOYASAR_SANDBOX_WEBHOOK_SECRET', '');
-
-defined('MOYASAR_PRODUCTION_PUBLISHABLE_KEY') OR define('MOYASAR_PRODUCTION_PUBLISHABLE_KEY', '');
-defined('MOYASAR_PRODUCTION_SECRET_KEY') OR define('MOYASAR_PRODUCTION_SECRET_KEY', '');
-defined('MOYASAR_PRODUCTION_WEBHOOK_SECRET') OR define('MOYASAR_PRODUCTION_WEBHOOK_SECRET', '');
-
-define(
-    'MOYASAR_PUBLISHABLE_KEY',
-    MOYASAR_SANDBOX
-        ? MOYASAR_SANDBOX_PUBLISHABLE_KEY
-        : MOYASAR_PRODUCTION_PUBLISHABLE_KEY
-);
-define(
-    'MOYASAR_SECRET_KEY',
-    MOYASAR_SANDBOX
-        ? MOYASAR_SANDBOX_SECRET_KEY
-        : MOYASAR_PRODUCTION_SECRET_KEY
-);
-define(
-    'MOYASAR_WEBHOOK_SECRET',
-    MOYASAR_SANDBOX
-        ? MOYASAR_SANDBOX_WEBHOOK_SECRET
-        : MOYASAR_PRODUCTION_WEBHOOK_SECRET
-);
-define('MOYASAR_API_URL', 'https://api.moyasar.com/v1');
-define('MOYASAR_FORM_VERSION', '1.15.0');
-define('MOYASAR_TIMEOUT_SECONDS', 20);
-define('MOYASAR_CURRENCY_EXPONENT', 2);
-define('MOYASAR_KEY_ENVIRONMENT', MOYASAR_SANDBOX ? 'test' : 'live');
-define(
-    'MOYASAR_ENABLED',
-    strpos(MOYASAR_PUBLISHABLE_KEY, 'pk_' . MOYASAR_KEY_ENVIRONMENT . '_') === 0
-        && strpos(MOYASAR_SECRET_KEY, 'sk_' . MOYASAR_KEY_ENVIRONMENT . '_') === 0
-);
-define('MOYASAR_PAYMENT_METHODS', array('creditcard'));
-define('MOYASAR_CARD_NETWORKS', array('mada', 'visa', 'mastercard', 'amex', 'unionpay'));
-
-/*
-|--------------------------------------------------------------------------
 | WhatsApp Cloud API
 |--------------------------------------------------------------------------
 |
@@ -217,13 +139,6 @@ defined('WHATSAPP_WEBHOOK_VERIFY_TOKEN') OR define('WHATSAPP_WEBHOOK_VERIFY_TOKE
 define('WHATSAPP_TIMEOUT_SECONDS', 20);
 // Writes a one-line summary of each webhook event to application/logs/whatsapp_webhook.log.
 define('WHATSAPP_WEBHOOK_LOG', true);
-// Booking WhatsApp notifications. When false, the WhatsApp consent checkbox is hidden
-// on the booking Review step and no booking message is sent.
-define('WHATSAPP_BOOKING_ENABLED', false);
-// TEMPORARY, for the Meta app review recording: the Meta sample template sent when a
-// booking is confirmed, filled with the customer's name, booking reference and tour date.
-// It only exists on Meta's test WhatsApp Business Account. Set to '' to stop sending.
-define('WHATSAPP_BOOKING_TEST_TEMPLATE', 'jaspers_market_order_confirmation_v1');
 define(
     'WHATSAPP_ENABLED',
     WHATSAPP_PHONE_NUMBER_ID !== ''
@@ -251,36 +166,8 @@ defined('FRONTEND_DATETIME_FORMAT') OR define('FRONTEND_DATETIME_FORMAT', FRONTE
 | URI prefixes used when building public links in the manage modules.
 |
 */
-define('TOUR_URI', 'tour/');
-define('EXPERIENCE_URI', 'experience/');
 define('BLOG_URI', 'blog/');
 define('BLOG_CATEGORY_URI', BLOG_URI.'category/');
-
-/*
-|--------------------------------------------------------------------------
-| Discount Code Value Limits
-|--------------------------------------------------------------------------
-|
-| Allowed range for discount_codes.discount_value, per discount type.
-|
-*/
-define('DISCOUNT_VALUE_MIN_PERCENTAGE', 1);
-define('DISCOUNT_VALUE_MAX_PERCENTAGE', 70);
-define('DISCOUNT_VALUE_MIN_FIXED', 1);
-define('DISCOUNT_VALUE_MAX_FIXED', 500);
-
-/*
-|--------------------------------------------------------------------------
-| Discount Code Referral Commission Limits
-|--------------------------------------------------------------------------
-|
-| Allowed range for discount_codes.discount_ref_commission, per commission type.
-|
-*/
-define('DISCOUNT_REF_COMMISSION_MIN_PERCENTAGE', 1);
-define('DISCOUNT_REF_COMMISSION_MAX_PERCENTAGE', 25);
-define('DISCOUNT_REF_COMMISSION_MIN_FIXED', 1);
-define('DISCOUNT_REF_COMMISSION_MAX_FIXED', 250);
 
 // Google reCAPTCHA Enterprise configuration (frontend use only). All values,
 // including the service-account credentials file path, belong in the

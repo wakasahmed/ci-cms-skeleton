@@ -196,53 +196,15 @@ $sectionFooter = function () {
                     </div>
                 <?php $sectionFooter(); ?>
 
-                <?php $sectionHeader('currency', 'Currency, Profit & Tax', 'The currency shown with prices, and the profit and tax percentages applied to every tour and experience price.', 'bi-cash-coin'); ?>
+                <?php $sectionHeader('currency', 'Currency', 'The currency shown with prices.', 'bi-cash-coin'); ?>
                     <div class="row">
                         <div class="admin-field mb-0 col-md-6">
                             <label class="form-label is-required" for="currency_unit">Currency Unit</label>
-                            <input type="text" name="currency_unit" id="currency_unit" maxlength="255" value="<?php echo $value('currency_unit'); ?>" class="form-control<?php echo $isInvalid('currency_unit') ? ' is-invalid' : ''; ?>" data-validate="required" required placeholder="SAR">
+                            <input type="text" name="currency_unit" id="currency_unit" maxlength="255" value="<?php echo $value('currency_unit'); ?>" class="form-control<?php echo $isInvalid('currency_unit') ? ' is-invalid' : ''; ?>" data-validate="required" required placeholder="zł">
                         </div>
                         <div class="admin-field mb-0 col-md-6">
                             <label class="form-label is-required" for="currency_unit_ar">Currency Unit (Arabic)</label>
                             <input type="text" name="currency_unit_ar" id="currency_unit_ar" maxlength="255" value="<?php echo $value('currency_unit_ar'); ?>" class="form-control<?php echo $isInvalid('currency_unit_ar') ? ' is-invalid' : ''; ?>" data-validate="required" required dir="rtl" lang="ar" placeholder="ريال سعودي">
-                        </div>
-                        <div class="admin-field mb-0 mt-3 col-md-6">
-                            <label class="form-label is-required" for="profit">Profit (%)</label>
-                            <input
-                                type="number"
-                                name="profit"
-                                id="profit"
-                                min="0"
-                                max="999.99"
-                                step="0.01"
-                                inputmode="decimal"
-                                value="<?php echo $value('profit'); ?>"
-                                class="form-control<?php echo $isInvalid('profit') ? ' is-invalid' : ''; ?>"
-                                data-validate="required,number,min[0],max[999.99]"
-                                required
-                                aria-describedby="profit-help"
-                                placeholder="0.00"
-                            >
-                            <div id="profit-help" class="form-text">Added to the booking subtotal before any discount. Enter 0 for none.</div>
-                        </div>
-                        <div class="admin-field mb-0 mt-3 col-md-6">
-                            <label class="form-label is-required" for="tax">Tax (%)</label>
-                            <input
-                                type="number"
-                                name="tax"
-                                id="tax"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                inputmode="decimal"
-                                value="<?php echo $value('tax'); ?>"
-                                class="form-control<?php echo $isInvalid('tax') ? ' is-invalid' : ''; ?>"
-                                data-validate="required,number,min[0],max[100]"
-                                required
-                                aria-describedby="tax-help"
-                                placeholder="0.00"
-                            >
-                            <div id="tax-help" class="form-text">Applied after profit and discount. Customer prices include it. Enter 0 for none.</div>
                         </div>
                     </div>
                 <?php $sectionFooter(); ?>
@@ -380,16 +342,6 @@ $sectionFooter = function () {
                         </div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="license_number">Tourism License</label>
-                            <input type="text" name="license_number" id="license_number" maxlength="255" value="<?php echo $value('license_number'); ?>" class="form-control<?php echo $isInvalid('license_number') ? ' is-invalid' : ''; ?>">
-                        </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="license_number_ar">Tourism License (Arabic)</label>
-                            <input type="text" name="license_number_ar" id="license_number_ar" maxlength="255" value="<?php echo $value('license_number_ar'); ?>" class="form-control<?php echo $isInvalid('license_number_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar">
-                        </div>
-                    </div>
-                    <div class="row">
                         <div class="admin-field mb-0 col-md-6">
                             <label class="form-label" for="contact_text">Contact Text</label>
                             <textarea name="contact_text" id="contact_text" rows="3" class="form-control<?php echo $isInvalid('contact_text') ? ' is-invalid' : ''; ?>"><?php echo $value('contact_text'); ?></textarea>
@@ -398,32 +350,6 @@ $sectionFooter = function () {
                             <label class="form-label" for="contact_text_ar">Contact Text (Arabic)</label>
                             <textarea name="contact_text_ar" id="contact_text_ar" rows="3" class="form-control<?php echo $isInvalid('contact_text_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar"><?php echo $value('contact_text_ar'); ?></textarea>
                         </div>
-                    </div>
-                    <div class="row mt-4">
-                        <div class="admin-field mb-4 col-md-6">
-                            <label class="form-label" for="payment_title">Payment Title</label>
-                            <input type="text" name="payment_title" id="payment_title" maxlength="255" value="<?php echo $value('payment_title'); ?>" class="form-control<?php echo $isInvalid('payment_title') ? ' is-invalid' : ''; ?>">
-                        </div>
-                        <div class="admin-field mb-4 col-md-6">
-                            <label class="form-label" for="payment_title_ar">Payment Title (Arabic)</label>
-                            <input type="text" name="payment_title_ar" id="payment_title_ar" maxlength="255" value="<?php echo $value('payment_title_ar'); ?>" class="form-control<?php echo $isInvalid('payment_title_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar">
-                        </div>
-                    </div>
-                    <div class="admin-field mb-0">
-                        <?php $this->load->view('admin/partials/file_upload', array(
-                            'name' => 'uploadfile7',
-                            'id' => 'uploadfile7',
-                            'label' => 'Payment Accepted',
-                            'allowed_types' => 'jpg|jpeg|png',
-                            'required' => FALSE,
-                            'current_path' => $currentImage('payment_icons', 'assets/frontend/images/logo/'),
-                            'preview_alt' => 'Current payment accepted icons',
-                            'preview_shape' => 'square',
-                            'preview_size' => 132,
-                            'help' => 'Allowed: JPG, JPEG, PNG. Max 4000 x 4000px, 10 MB.',
-                            'recommended_size' => 'PNG with a transparent background',
-                            'size_note' => 'The accepted payment method icons shown in the website footer.',
-                        )); ?>
                     </div>
                 <?php $sectionFooter(); ?>
 

@@ -6,10 +6,8 @@ $siteSettings = $this->SqlModel->getSingleRecord('site_settings', array('id' => 
 $logoPath = './assets/frontend/images/logo/'.(isset($siteSettings['logo_white']) ? $siteSettings['logo_white'] : '');
 $footerMenuOneLabel = !empty($siteSettings['foot_col_2']) ? $siteSettings['foot_col_2'] : 'Footer Menu';
 $footerMenuTwoLabel = !empty($siteSettings['foot_col_3']) ? $siteSettings['foot_col_3'] : 'Footer Menu Two';
-$reportsOpen = isset($reportsActive);
 $menusOpen = isset($menuActive);
 $blogsOpen = isset($blogsActive) || isset($blogCategoriesActive);
-$discountsOpen = isset($discountCodesActive) || isset($referralsActive);
 $servicesOpen = isset($servicesActive) || isset($serviceCategoriesActive);
 $galleryOpen = isset($galleryActive) || isset($galleryCategoriesActive);
 $lastLoginValue = $this->session->userdata('last_login');
@@ -106,150 +104,6 @@ $adminNav = array(
         ),
     ),
     array(
-        'label' => 'Tour Management',
-        'items' => array(
-           
-            array(
-                'type' => 'link',
-                'title' => 'Tours',
-                'icon' => 'bi-map',
-                'url' => ADMIN_URL.'tours',
-                'active' => isset($toursActive) || isset($tourimagesActive),
-            ),
-            array(
-                'type' => 'link',
-                'title' => 'Categories',
-                'icon' => 'bi-tags',
-                'url' => ADMIN_URL.'tour-categories',
-                'active' => isset($tourCategoriesActive),
-            ),
-             array(
-                'type' => 'link',
-                'title' => 'Attractions',
-                'icon' => 'bi-geo-alt',
-                'url' => ADMIN_URL.'attractions',
-                'active' => isset($attractionsActive),
-            ),
-            array(
-                'type' => 'link',
-                'title' => 'Slots',
-                'icon' => 'bi-clock',
-                'url' => ADMIN_URL.'tour-slots',
-                'active' => isset($tourGuideSlotsActive),
-            ),
-            array(
-                'type' => 'link',
-                'title' => 'Languages',
-                'icon' => 'bi-translate',
-                'url' => ADMIN_URL.'tour-languages',
-                'active' => isset($tourLanguagesActive),
-            ),
-            array(
-                'type' => 'link',
-                'title' => 'Vehicles',
-                'icon' => 'bi-car-front',
-                'url' => ADMIN_URL.'vehicles',
-                'active' => isset($vehiclesActive),
-            ),
-            array(
-                'type' => 'link',
-                'title' => 'Guides',
-                'icon' => 'bi-person-badge',
-                'url' => ADMIN_URL.'tour-guides',
-                'active' => isset($tourGuidesActive),
-            ),
-            array(
-                'type' => 'link',
-                'title' => 'Guide Availability',
-                'icon' => 'bi-calendar-check',
-                'url' => ADMIN_URL.'tour-guide-availability',
-                'active' => isset($tourGuideAvailabilityActive),
-            ),
-        ),
-    ),
-    array(
-        'label' => 'Bookings & Sales',
-        'items' => array(
-            array(
-                'type' => 'link',
-                'title' => 'Bookings',
-                'icon' => 'bi-journal-check',
-                'url' => ADMIN_URL.'bookings',
-                'active' => isset($bookingsActive),
-            ),
-            array(
-                'type' => 'link',
-                'title' => 'Tour Reviews',
-                'icon' => 'bi-star-half',
-                'url' => ADMIN_URL.'tour-reviews',
-                'active' => isset($tourReviewsActive),
-            ),
-            array(
-                'type' => 'toggle',
-                'title' => 'Discounts',
-                'icon' => 'bi-ticket-perforated',
-                'target' => 'adminDiscountSubnav',
-                'active' => $discountsOpen,
-                'children' => array(
-                    array(
-                        'title' => 'Codes',
-                        'url' => ADMIN_URL.'discount-codes',
-                        'active' => isset($discountCodesActive),
-                    ),
-                    array(
-                        'title' => 'Referrals',
-                        'url' => ADMIN_URL.'referrals',
-                        'active' => isset($referralsActive),
-                    ),
-                ),
-            ),
-        ),
-    ),
-    array(
-        'label' => 'Reports',
-        'items' => array(
-            array(
-                'type' => 'toggle',
-                'title' => 'Reports',
-                'icon' => 'bi-bar-chart',
-                'target' => 'adminReportSubnav',
-                'active' => $reportsOpen,
-                'children' => array(
-                    array(
-                        'title' => 'Bookings',
-                        'url' => ADMIN_URL.'reports/bookings',
-                        'active' => isset($reportType) && $reportType === 'bookings',
-                    ),
-                    array(
-                        'title' => 'Payments',
-                        'url' => ADMIN_URL.'reports/payments',
-                        'active' => isset($reportType) && $reportType === 'payments',
-                    ),
-                    array(
-                        'title' => 'Discounts & Referrals',
-                        'url' => ADMIN_URL.'reports/referrals',
-                        'active' => isset($reportType) && $reportType === 'referrals',
-                    ),
-                    array(
-                        'title' => 'Tour Performance',
-                        'url' => ADMIN_URL.'reports/evaluation',
-                        'active' => isset($reportType) && $reportType === 'evaluation',
-                    ),
-                    array(
-                        'title' => 'Guide Performance',
-                        'url' => ADMIN_URL.'reports/gevaluation',
-                        'active' => isset($reportType) && $reportType === 'gevaluation',
-                    ),
-                    array(
-                        'title' => 'Tours & Time Slots',
-                        'url' => ADMIN_URL.'reports/timeslots',
-                        'active' => isset($reportType) && $reportType === 'timeslots',
-                    ),
-                ),
-            ),
-        ),
-    ),
-    array(
         'label' => 'Content',
         'items' => array(
             array(
@@ -340,13 +194,6 @@ $adminNav = array(
                 'icon' => 'bi-envelope-paper',
                 'url' => ADMIN_URL.'contact-requests',
                 'active' => isset($contactRequestsActive),
-            ),
-            array(
-                'type' => 'link',
-                'title' => 'Plan Your Visit',
-                'icon' => 'bi-signpost-split',
-                'url' => ADMIN_URL.'plan-your-visit',
-                'active' => isset($palanYourVisitActive),
             ),
             array(
                 'type' => 'link',

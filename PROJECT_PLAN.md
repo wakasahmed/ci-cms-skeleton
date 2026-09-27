@@ -240,6 +240,36 @@ Grep for `tour`, `booking`, `guide`, `moyasar`, `discount`, `referral`, `vehicle
 **Done when:** `/manage` and every remaining module load with no PHP notices; `php -l`
 passes on every modified file.
 
+**Status: done (2026-09-27), branch `phase-2-remove-tours`.** Everything listed above was
+removed (16 admin controllers, the booking cron and Moyasar payments controllers, 9 models
+including the unused `SiteModel`, 5 libraries, `report_helper`, 46 admin views and report
+partials, tour/booking admin and frontend JS). The dashboard was rewritten around
+appointment requests. Also removed: tour-only code in `custom.js`/`admin.js`, the AJAX "add
+tour category" modal, the booking/discount/plan-your-visit short-tag entities, the tour and
+payment constants, the tour entries in the sitemap/`llms.txt`, and the profit/tax, tourism
+licence and payment-icon fields in Website Settings.
+
+Changes to the plan made during this phase:
+
+- **The old public site was retired now instead of in Phase 5.** Its header, footer, home and
+  404 pages all loaded tour data, so untangling it would have been throwaway work.
+  `Frontend.php` is now a small controller that serves a holding page
+  (`views/frontend/holding.php`) for every public URL and keeps the admin 404 for unmatched
+  `/manage` URLs. All old public views and frontend routes were removed.
+  Website Settings > Under Construction was set to "Yes" in `blossom_cms`, so robots.txt
+  blocks crawlers and the sitemap/`llms.txt` return 404 until launch.
+- **Moved to Phase 3:** removing the Countries module (it is wired into Contact Requests) and
+  the tour/experience/plan-your-visit messages in Form Settings (they are defined only
+  through `config/manage_translations.php`, which Phase 3 removes).
+- **Added to Phase 4 SQL:** delete pages 3 (Tours), 4 (Experiences), 5 (Plan Your Visit) and
+  11 (Tour Guides) with their page sections and menu entries; delete email templates 2–15;
+  drop `site_settings.profit`, `tax`, `license_number`, `license_number_ar`,
+  `payment_title`, `payment_title_ar`, `payment_icons`.
+- **Added to Phase 5:** delete `views/frontend/holding.php`, set Under Construction back to
+  "No" at launch, remove the remaining Alam frontend assets (`assets/frontend/css`, `js`,
+  `vendor`, `images/alam`, `xsl`) and the Alam section definitions in
+  `config/content_sections.php`.
+
 ---
 
 ## Phase 3 — Remove integrations and make everything English-only

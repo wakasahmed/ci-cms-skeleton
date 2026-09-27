@@ -7,7 +7,7 @@ class Countries extends CI_Controller {
 	public $pKey = 'id';
 	public $moduleName = 'Countries';
 	public $moduleNameSingular = 'Country';
-	public $moduleDesc = 'Manage the countries offered on contact and booking forms.';
+	public $moduleDesc = 'Manage the countries offered on the contact form.';
 	public $controller = 'countries';
 	public $per_page = 10;
 	public $listView = 'countries';
@@ -248,7 +248,6 @@ class Countries extends CI_Controller {
 
 		$existing = $this->db->select($this->pKey)->where_in($this->pKey, $ids)->get($this->tblName)->result_array();
 		if (count($existing) !== count($ids)) return 'error';
-		if ($this->db->where_in('book_country_id', $ids)->count_all_results('tour_bookings') > 0) return 'blocked';
 
 		$this->db->trans_begin();
 		foreach ($ids as $id) $this->manage_translation_service->delete_jobs('countries', $id);

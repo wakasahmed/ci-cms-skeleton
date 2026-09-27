@@ -362,16 +362,6 @@ class Frontend_seo
         return base_url($this->normalizeLocale($locale) . '/' . $this->encodePath($slug));
     }
 
-    public function tourUrl($slug, $locale, $isExperience = false)
-    {
-        return base_url(
-            $this->normalizeLocale($locale)
-            . '/'
-            . ($isExperience ? EXPERIENCE_URI : TOUR_URI)
-            . rawurlencode(trim((string) $slug))
-        );
-    }
-
     public function blogPostUrl($slug, $locale)
     {
         return base_url(
@@ -548,38 +538,6 @@ class Frontend_seo
             '@id' => $canonical . '#breadcrumb',
             'itemListElement' => $items,
         );
-    }
-
-    /** A tour or experience as a TouristTrip offered by the agency. */
-    public function tourNode(array $tour)
-    {
-        $node = array(
-            '@type' => 'TouristTrip',
-            '@id' => $tour['url'] . '#trip',
-            'name' => $tour['name'],
-            'description' => $tour['description'],
-            'url' => $tour['url'],
-            'touristType' => $tour['tourist_type'],
-            'inLanguage' => $tour['locale_tag'],
-            'provider' => array('@id' => $this->siteRootId() . '#organization'),
-        );
-
-        if (!empty($tour['image'])) {
-            $node['image'] = array($tour['image']);
-        }
-
-        // A price of zero means "not priced yet", not a free tour.
-        if ((int) $tour['price'] > 0 && $tour['currency'] !== '') {
-            $node['offers'] = array(
-                '@type' => 'Offer',
-                'url' => $tour['url'],
-                'price' => (int) $tour['price'],
-                'priceCurrency' => $tour['currency'],
-                'availability' => 'https://schema.org/InStock',
-            );
-        }
-
-        return $this->withoutEmpty($node);
     }
 
     /** A blog post as an Article published by the agency. */

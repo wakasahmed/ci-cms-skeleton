@@ -23,42 +23,27 @@ class Home extends CI_Controller {
 		
     }
 	
-	public function index()
-	{
-		$data['dashBoard'] = 1;
-		$data['page_title'] = PROJECT_TITLE." | Dashboard";
-		
-		$data['totalAdmins'] = $this->SqlModel->countRecords('admin_users');
-		$data['totalSliders'] = $this->SqlModel->countRecords('sliders');
-		$data['totalPages'] = $this->SqlModel->countRecords('pages');
-		$data['totalTours'] = $this->SqlModel->countRecords('tours');
-		$data['totalAttractions'] = $this->SqlModel->countRecords('attractions');
-		$data['totalReviews'] = $this->SqlModel->countRecords('customer_reviews');
-		$data['totalBookings'] = $this->SqlModel->countRecords('tour_bookings');
-		$data['totalTourGuides'] = $this->SqlModel->countRecords('tour_guides');
-		$data['totalVehicles'] = $this->SqlModel->countRecords('vehicles');
-		$data['totalSlots'] = $this->SqlModel->countRecords('tour_slots');
-		$data['totalLang'] = $this->SqlModel->countRecords('tour_languages');
-
-        $this->load->helper('report');
-        $rangeDays = $this->dashboardRange();
+    public function index()
+    {
         $this->load->model('Dashboard_model');
-        $data['dashboard'] = $this->Dashboard_model->build($rangeDays);
-        $data['dashboardRange'] = $rangeDays;
-        $data['dashboardRanges'] = $this->dashboardRanges;
-        $data['dashboardCurrency'] = $this->dashboardCurrency();
-        $data['useDashboardCharts'] = TRUE;
+        $rangeDays = $this->dashboardRange();
 
-		$data['userdata'] = $this->user_data;
-		$this->load->view('admin/header',$data);
-		$this->load->view('admin/navigation');
-		$this->load->view('admin/dashboard');
-		$this->load->view('admin/footer');
-	}
-	
-	
-	
-	
+        $data = array(
+            'dashBoard' => 1,
+            'page_title' => PROJECT_TITLE.' | Dashboard',
+            'userdata' => $this->user_data,
+            'dashboard' => $this->Dashboard_model->build($rangeDays),
+            'dashboardRange' => $rangeDays,
+            'dashboardRanges' => $this->dashboardRanges,
+            'useDashboardCharts' => TRUE,
+        );
+
+        $this->load->view('admin/header', $data);
+        $this->load->view('admin/navigation');
+        $this->load->view('admin/dashboard');
+        $this->load->view('admin/footer');
+    }
+
     private function dashboardRange()
     {
         $requested = $this->input->get('range');
@@ -69,17 +54,6 @@ class Home extends CI_Controller {
 
         return 30;
     }
-
-    /** Currency code shown next to money on the dashboard, from the website settings. */
-    private function dashboardCurrency()
-    {
-        $settings = $this->SqlModel->getSingleRecord('site_settings', array('id' => 1));
-
-        return !empty($settings['currency_unit']) ? trim($settings['currency_unit']) : '';
-    }
-
-
-
 
 	public function settings($alert="")
 	{

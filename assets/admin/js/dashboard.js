@@ -8,9 +8,9 @@
     'use strict';
 
     /*
-     * Whole-row links for the Upcoming tours and Recent bookings tables. Each row
-     * also holds a real link for keyboard and screen-reader users, so clicks on
-     * links and controls inside the row are left alone.
+     * Whole-row links for the appointment tables. Each row also holds a real
+     * link for keyboard and screen-reader users, so clicks on links and
+     * controls inside the row are left alone.
      */
     document.querySelectorAll('tr[data-href]').forEach(function (row) {
         row.addEventListener('click', function (event) {
@@ -58,40 +58,36 @@
         text: styles.getPropertyValue('--admin-muted').trim() || '#6b7280',
         grid: '#eef0f3'
     };
+
+    // Matches .admin-dashboard-swatch-* in admin.css.
     var STATUS_COLORS = {
+        New: COLORS.warning,
+        Confirmed: COLORS.info,
         Completed: COLORS.success,
-        Cancelled: COLORS.neutral,
-        Refunded: COLORS.info
+        Cancelled: COLORS.neutral
     };
 
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var numberFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-    var compactFormat = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
+    var numberFormat = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 });
 
     Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
     Chart.defaults.font.size = 12;
     Chart.defaults.color = COLORS.text;
     Chart.defaults.animation = reduceMotion ? false : { duration: 400 };
 
-    function money(value) {
-        var prefix = data.currency ? data.currency + ' ' : '';
-
-        return prefix + numberFormat.format(value);
-    }
-
     function parseDay(iso) {
         return new Date(iso + 'T00:00:00');
     }
 
     function shortDate(iso) {
-        return parseDay(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return parseDay(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
     }
 
     function longDate(iso) {
-        return parseDay(iso).toLocaleDateString('en-US', {
+        return parseDay(iso).toLocaleDateString('en-GB', {
             weekday: 'short',
-            month: 'short',
             day: 'numeric',
+            month: 'short',
             year: 'numeric'
         });
     }
@@ -106,197 +102,89 @@
         return text.length > length ? text.slice(0, length - 1) + '…' : text;
     }
 
-    /* ---------- Business performance (Revenue / Bookings tabs) ---------- */
-
-    var performanceCanvas = document.getElementById('performance-chart');
-    var performanceChart = null;
-
-    function performanceOptions(isRevenue, hasData) {
-        return {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: {
-                    display: !isRevenue,
-                    position: 'bottom',
-                    labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8 }
-                },
-                tooltip: {
-                    callbacks: {
-                        title: function (items) {
-                            return items.length ? longDate(data.labels[items[0].dataIndex]) : '';
-                        },
-                        label: function (item) {
-                            var value = isRevenue ? money(item.parsed.y) : numberFormat.format(item.parsed.y);
-
-                            return item.dataset.label + ': ' + value;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: {
-                        maxRotation: 0,
-                        autoSkip: true,
-                        maxTicksLimit: 8,
-                        callback: function (value) {
-                            return shortDate(data.labels[value]);
-                        }
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    suggestedMax: hasData ? undefined : (isRevenue ? 100 : 4),
-                    grid: { color: COLORS.grid, borderDash: [3, 3] },
-                    border: { display: false },
-                    ticks: {
-                        precision: 0,
-                        callback: function (value) {
-                            return isRevenue ? compactFormat.format(value) : numberFormat.format(value);
-                        }
-                    }
-                }
-            }
-        };
+    function plural(count, word) {
+        return count + ' ' + word + (count === 1 ? '' : 's');
     }
 
-    function performanceConfig(tab) {
-        var isRevenue = tab === 'revenue';
-        var datasets;
+    /* ---------- Requests received per day ---------- */
 
-        if (isRevenue) {
-            datasets = [{
-                label: 'Net revenue',
-                data: data.revenue,
-                borderColor: COLORS.primary,
-                backgroundColor: 'rgba(' + COLORS.primaryRgb + ', 0.12)',
-                fill: true,
-                tension: 0.3,
-                borderWidth: 2,
-                pointRadius: 0,
-                pointHoverRadius: 4
-            }];
-        } else {
-            datasets = [
-                {
-                    label: 'Bookings started',
-                    data: data.started,
-                    borderColor: COLORS.primary,
-                    backgroundColor: COLORS.primary,
-                    tension: 0.3,
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                },
-                {
-                    label: 'Payment completed',
-                    data: data.paid,
-                    borderColor: COLORS.success,
-                    backgroundColor: COLORS.success,
-                    tension: 0.3,
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                }
-            ];
-        }
+    function initRequests() {
+        var canvas = document.getElementById('requests-chart');
 
-        var hasData = sum(datasets[0].data) > 0 || (datasets[1] ? sum(datasets[1].data) > 0 : false);
-
-        return {
-            hasData: hasData,
-            config: {
-                type: 'line',
-                data: { labels: data.labels, datasets: datasets },
-                options: performanceOptions(isRevenue, hasData)
-            }
-        };
-    }
-
-    function showPerformance(tab) {
-        var built = performanceConfig(tab);
-        var emptyNote = document.querySelector('[data-chart-empty]');
-        var panel = document.getElementById('performance-chart-panel');
-
-        if (performanceChart) {
-            performanceChart.destroy();
-        }
-
-        performanceChart = new Chart(performanceCanvas, built.config);
-        performanceCanvas.setAttribute(
-            'aria-label',
-            tab === 'revenue'
-                ? 'Line chart of daily net revenue over the last ' + data.days + ' days'
-                : 'Line chart of bookings started and paid per day over the last ' + data.days + ' days'
-        );
-
-        document.querySelectorAll('[data-chart-stat]').forEach(function (stat) {
-            stat.hidden = stat.getAttribute('data-chart-stat') !== tab;
-        });
-
-        if (emptyNote) {
-            emptyNote.hidden = built.hasData;
-        }
-        if (panel) {
-            panel.setAttribute('aria-labelledby', 'performance-tab-' + tab);
-        }
-    }
-
-    function initPerformance() {
-        var tablist = document.querySelector('[data-dashboard-tabs]');
-
-        if (!performanceCanvas || !tablist) {
+        if (!canvas) {
             return;
         }
 
-        var tabs = Array.prototype.slice.call(tablist.querySelectorAll('[data-chart-tab]'));
+        var hasData = sum(data.requests) > 0;
+        var emptyNote = document.querySelector('[data-chart-empty]');
 
-        function select(tab, moveFocus) {
-            tabs.forEach(function (button) {
-                var active = button === tab;
-
-                button.setAttribute('aria-selected', active ? 'true' : 'false');
-                button.tabIndex = active ? 0 : -1;
-            });
-
-            if (moveFocus) {
-                tab.focus();
-            }
-            showPerformance(tab.getAttribute('data-chart-tab'));
+        if (emptyNote) {
+            emptyNote.hidden = hasData;
         }
 
-        tabs.forEach(function (button, index) {
-            button.addEventListener('click', function () {
-                select(button, false);
-            });
-
-            button.addEventListener('keydown', function (event) {
-                var target = null;
-
-                if (event.key === 'ArrowRight') {
-                    target = tabs[(index + 1) % tabs.length];
-                } else if (event.key === 'ArrowLeft') {
-                    target = tabs[(index - 1 + tabs.length) % tabs.length];
-                } else if (event.key === 'Home') {
-                    target = tabs[0];
-                } else if (event.key === 'End') {
-                    target = tabs[tabs.length - 1];
+        new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Requests',
+                    data: data.requests,
+                    borderColor: COLORS.primary,
+                    backgroundColor: 'rgba(' + COLORS.primaryRgb + ', 0.12)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function (items) {
+                                return items.length ? longDate(data.labels[items[0].dataIndex]) : '';
+                            },
+                            label: function (item) {
+                                return plural(item.parsed.y, 'request');
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 8,
+                            callback: function (value) {
+                                return shortDate(data.labels[value]);
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: hasData ? undefined : 4,
+                        grid: { color: COLORS.grid, borderDash: [3, 3] },
+                        border: { display: false },
+                        ticks: {
+                            precision: 0,
+                            callback: function (value) {
+                                return numberFormat.format(value);
+                            }
+                        }
+                    }
                 }
-
-                if (target) {
-                    event.preventDefault();
-                    select(target, true);
-                }
-            });
+            }
         });
-
-        showPerformance('revenue');
     }
 
-    /* ---------- Booking outcomes (doughnut) ---------- */
+    /* ---------- Request outcomes (doughnut) ---------- */
 
     function initStatus() {
         var canvas = document.getElementById('status-chart');
@@ -322,7 +210,7 @@
                 context.fillText(numberFormat.format(total), x, y - 8);
                 context.fillStyle = COLORS.text;
                 context.font = '12px ' + Chart.defaults.font.family;
-                context.fillText('bookings', x, y + 14);
+                context.fillText(total === 1 ? 'request' : 'requests', x, y + 14);
                 context.restore();
             }
         };
@@ -362,27 +250,27 @@
         });
     }
 
-    /* ---------- Top tours (horizontal bars) ---------- */
+    /* ---------- Most requested services (horizontal bars) ---------- */
 
-    function initTopTours() {
-        var canvas = document.getElementById('top-tours-chart');
+    function initTopServices() {
+        var canvas = document.getElementById('top-services-chart');
 
-        if (!canvas || !data.topTours.labels.length) {
+        if (!canvas || !data.topServices.labels.length) {
             return;
         }
 
         var holder = canvas.parentElement;
-        var rows = parseInt(holder.getAttribute('data-chart-bars'), 10) || data.topTours.labels.length;
+        var rows = parseInt(holder.getAttribute('data-chart-bars'), 10) || data.topServices.labels.length;
 
         holder.style.height = (56 + rows * 44) + 'px';
 
         new Chart(canvas, {
             type: 'bar',
             data: {
-                labels: data.topTours.labels,
+                labels: data.topServices.labels,
                 datasets: [{
-                    label: 'Net revenue',
-                    data: data.topTours.revenue,
+                    label: 'Requests',
+                    data: data.topServices.requests,
                     backgroundColor: COLORS.primary,
                     borderRadius: 4,
                     maxBarThickness: 22
@@ -397,15 +285,10 @@
                     tooltip: {
                         callbacks: {
                             title: function (items) {
-                                return items.length ? data.topTours.labels[items[0].dataIndex] : '';
+                                return items.length ? data.topServices.labels[items[0].dataIndex] : '';
                             },
                             label: function (item) {
-                                return 'Net revenue: ' + money(item.parsed.x);
-                            },
-                            afterLabel: function (item) {
-                                var count = data.topTours.bookings[item.dataIndex];
-
-                                return count + (count === 1 ? ' booking' : ' bookings');
+                                return plural(item.parsed.x, 'request');
                             }
                         }
                     }
@@ -415,12 +298,7 @@
                         beginAtZero: true,
                         grid: { color: COLORS.grid, borderDash: [3, 3] },
                         border: { display: false },
-                        ticks: {
-                            maxTicksLimit: 5,
-                            callback: function (value) {
-                                return compactFormat.format(value);
-                            }
-                        }
+                        ticks: { precision: 0 }
                     },
                     y: {
                         grid: { display: false },
@@ -435,7 +313,7 @@
         });
     }
 
-    initPerformance();
+    initRequests();
     initStatus();
-    initTopTours();
+    initTopServices();
 })();

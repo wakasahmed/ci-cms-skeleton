@@ -34,88 +34,10 @@ class EmailService
             'country',
             'website',
         ),
-        'plan_your_visit' => array(
-            'id',
-            'name',
-            'email',
-            'phone',
-            'country',
-            'arrival_date',
-            'departure_date',
-            'guests',
-            'step_completed',
-            'preferred_language',
-            'preferred_time',
-            'interests',
-            'message',
-            'created_at',
-            'updated_at',
-            'ip',
-            'user_agent',
-            'website',
-        ),
-        'booking' => array(
-            'book_id',
-            'book_name',
-            'book_email',
-            'book_phone',
-            'book_address',
-            'book_res_code',
-            'book_tour_name',
-            'book_date',
-            'book_guests',
-            'book_slot_name',
-            'book_slot_hours',
-            'book_slot_start_time',
-            'book_slot_end_time',
-            'book_lang_name',
-            'book_tour_guide_name',
-            'book_old_tour_guide_name',
-            'book_vehicle_name',
-            'book_original_total',
-            'book_discount_amount',
-            'book_tour_total',
-            'book_profit_percent',
-            'book_profit_amount',
-            'book_tax_percent',
-            'book_tax_amount',
-            'book_paid_amount',
-            'book_currency',
-            'book_payment_method',
-            'book_payment_date',
-            'book_transaction_id',
-            'book_ref_name',
-            'book_promo_code',
-            'book_ref_commission',
-            'book_refund_amount',
-            'book_refunded_at',
-            'book_notes',
-            'book_review_url',
-        ),
-        'discount' => array(
-            'discount_id',
-            'discount_name',
-            'discount_ref_id',
-            'discount_code',
-            'discount_type',
-            'discount_value',
-            'discount_ref_commission_type',
-            'discount_ref_commission',
-            'discount_expiry',
-            'discount_no_of_uses',
-            'discount_status',
-            'discount_added',
-            'discount_updated',
-            'discount_ref_name',
-        ),
     );
 
     /** Tags that render HTML, so they only work in emails, never in WhatsApp templates. */
-    private static $htmlShortTags = array(
-        'booking' => array(
-            'book_review_url_btn',
-        ),
-    );
+    private static $htmlShortTags = array();
 
     public function __construct()
     {
@@ -275,7 +197,7 @@ class EmailService
         return $this->CI->load->view($view, $data, TRUE);
     }
 
-    /** Short tag names an entity supports: contact, plan_your_visit, booking or discount. */
+    /** Short tag names an entity supports (currently only contact). */
     public function shortTagFields($entity)
     {
         return isset(self::$shortTagFields[$entity])
@@ -310,86 +232,6 @@ class EmailService
         return strtr((string) $template, $replacements);
     }
 
-    /** Replace the supported Plan Your Trip short tags with scalar values. */
-    public function parsePlanYourTripShortTags($template, array $values = array())
-    {
-        $fields = $this->shortTagFields('plan_your_visit');
-        $replacements = array();
-
-        foreach ($fields as $field) {
-            $value = isset($values[$field]) && is_scalar($values[$field])
-                ? (string) $values[$field]
-                : '';
-            if ($field === 'message') {
-                $value = nl2br($value);
-            }
-            $replacements['{{'.$field.'}}'] = $value;
-        }
-
-        return strtr((string) $template, $replacements);
-    }
-
-    /** Replace the supported tour-booking short tags with scalar values. */
-    public function parseBookingShortTags($template, array $values = array())
-    {
-        $fields = $this->shortTagFields('booking');
-        $replacements = array();
-
-        foreach ($fields as $field) {
-            $replacements['{{'.$field.'}}'] = isset($values[$field]) && is_scalar($values[$field])
-                ? (string) $values[$field]
-                : '';
-        }
-        $replacements['{{book_review_url_btn}}'] = $this->reviewButton($values);
-
-        return strtr((string) $template, $replacements);
-    }
-
-    /**
-     * Build the "Leave a Review" button for {{book_review_url_btn}}.
-     *
-     * The button is assembled here, after sendManagedTemplate() has escaped the values,
-     * so its markup is not escaped. The label comes from the book_review_button_label
-     * value so the caller can localize it.
-     */
-    private function reviewButton(array $values)
-    {
-        $reviewUrl = isset($values['book_review_url']) && is_scalar($values['book_review_url'])
-            ? trim((string) $values['book_review_url'])
-            : '';
-        if ($reviewUrl === '') {
-            return '';
-        }
-
-        $label = isset($values['book_review_button_label']) && is_scalar($values['book_review_button_label'])
-            ? trim((string) $values['book_review_button_label'])
-            : '';
-        if ($label === '') {
-            $label = 'Leave a Review';
-        }
-
-        return '<a href="'.htmlspecialchars($reviewUrl, ENT_QUOTES, 'UTF-8', FALSE).'" '.
-            'style="display:inline-block;padding:12px 20px;border-radius:6px;'.
-            'background:#63569b;color:#fff;text-decoration:none;font-weight:700">'.
-            htmlspecialchars($label, ENT_QUOTES, 'UTF-8', FALSE).
-            '</a>';
-    }
-
-    /** Replace the supported discount-code short tags with scalar values. */
-    public function parseDiscountShortTags($template, array $values = array())
-    {
-        $fields = $this->shortTagFields('discount');
-        $replacements = array();
-
-        foreach ($fields as $field) {
-            $replacements['{{'.$field.'}}'] = isset($values[$field]) && is_scalar($values[$field])
-                ? (string) $values[$field]
-                : '';
-        }
-
-        return strtr((string) $template, $replacements);
-    }
-
     /**
      * Send an email built from a managed email_templates row.
      *
@@ -399,7 +241,8 @@ class EmailService
      * - language: 'English' or 'Arabic'. The Arabic fields are used only when the template
      *   has an Arabic subject and body, otherwise the English fields are sent.
      * - values: short-tag values keyed by field name
-     * - parser: parseBookingShortTags or parseDiscountShortTags, whichever owns the tags
+     * - parser: the parse*ShortTags() method that owns the template's tags
+     *   (currently parseContactShortTags)
      * - multiline_fields: value keys whose line breaks become <br> in the HTML body
      * - label: prefix for log messages
      */
@@ -417,7 +260,7 @@ class EmailService
         $label = (string) $options['label'];
         $templateId = (int) $options['template_id'];
 
-        if (!in_array($options['parser'], array('parseBookingShortTags', 'parseDiscountShortTags'), TRUE)) {
+        if (!in_array($options['parser'], array('parseContactShortTags'), TRUE)) {
             return $this->fail($label.' has no valid short tag parser.');
         }
 
@@ -487,7 +330,7 @@ class EmailService
 
     /**
      * Currency label from Website Settings in the recipient's language. Falls back to
-     * $fallback (for example the currency stored on a booking) when the setting is empty.
+     * $fallback (for example a currency stored on a record) when the setting is empty.
      */
     public function currencyUnit($locale, $fallback = '')
     {

@@ -18,10 +18,14 @@ Review the existing implementation before making changes. Prefer extending exist
 - **English only.** The CMS and the website have one language. Do not add locales, `/en` or
   `/ar` URL prefixes, `_ar` columns, RTL styles, language switchers, or translation UI.
 - **No tours.** Tours, tour categories/images/itineraries/slots/languages, tour guides and
-  their availability, tour reviews, attractions, vehicles, tour bookings, discount codes,
-  referrals, tour reports and Plan Your Visit are being removed. Do not extend them or build
-  new features on them. Read them only as structural references (see
-  "Manage/admin module standards").
+  their availability, tour reviews, attractions, vehicles, tour bookings, payments, discount
+  codes, referrals, tour reports and Plan Your Visit were removed in Phase 2. Do not
+  reintroduce them. Their code is readable only from the baseline git tag, as a structural
+  reference (see "Manage/admin module standards").
+- **Public site.** The Alam public website was retired in Phase 2. Until the Blossom frontend
+  is built (Phase 5), `Frontend.php` serves a holding page (`views/frontend/holding.php`) for
+  every public URL, and Website Settings > Under Construction is "Yes" locally so robots.txt
+  blocks crawlers and the sitemap is hidden.
 - **Removed integrations.** Do not reintroduce Google Cloud Translation, Google Places, the
   WhatsApp Cloud API, or Moyasar payments.
 - **Kept integrations.** reCAPTCHA Enterprise (contact and booking-request forms) and SMTP
@@ -435,8 +439,8 @@ Other Blossom modules built on the same pattern show the conditional capabilitie
 - Appointments (`Appointments.php`, `viewAppointment.php`) — read-only records with a detail
   view, POST status changes and author-owned internal notes.
 
-Artists is a port of the legacy Tour Guides module. The legacy tour modules remain in the tree
-until Phase 2 of `PROJECT_PLAN.md` and afterwards stay readable from the baseline git tag
+Artists is a port of the legacy Tour Guides module. The legacy tour modules were deleted in
+Phase 2 of `PROJECT_PLAN.md` and stay readable from the baseline git tag
 (`git show alam-cms-baseline:<path>`). When reading them, take the structure only. Never carry
 over their translation integration, language switcher, `_ar` fields, tour/language
 relationships, availability, or license uploads. The legacy code is also densely formatted

@@ -17,9 +17,9 @@ class Website_settings extends CI_Controller {
         'notification_emails', 'sender_name', 'sender_name_ar', 'sender_email',
         'website_intro', 'website_intro_ar', 'foot_col_1', 'foot_col_1_ar', 'foot_col_2', 'foot_col_2_ar',
         'foot_col_3', 'foot_col_3_ar', 'foot_col_4', 'foot_col_4_ar', 'copyright_text', 'copyright_text_ar',
-        'license_number', 'license_number_ar', 'contact_text', 'contact_text_ar', 'payment_title', 'payment_title_ar',
+        'contact_text', 'contact_text_ar',
         'script_after_head', 'script_before_head', 'script_after_body', 'script_before_body',
-        'currency_unit', 'currency_unit_ar', 'profit', 'tax',
+        'currency_unit', 'currency_unit_ar',
     );
 
     private $fieldSections = array(
@@ -30,12 +30,10 @@ class Website_settings extends CI_Controller {
         'notification_emails' => 'email', 'sender_name' => 'email', 'sender_name_ar' => 'email', 'sender_email' => 'email',
         'website_intro' => 'footer', 'website_intro_ar' => 'footer', 'foot_col_1' => 'footer', 'foot_col_1_ar' => 'footer', 'foot_col_2' => 'footer', 'foot_col_2_ar' => 'footer',
         'foot_col_3' => 'footer', 'foot_col_3_ar' => 'footer', 'foot_col_4' => 'footer', 'foot_col_4_ar' => 'footer', 'copyright_text' => 'footer', 'copyright_text_ar' => 'footer',
-        'license_number' => 'footer', 'license_number_ar' => 'footer', 'contact_text' => 'footer', 'contact_text_ar' => 'footer',
-        'payment_title' => 'footer', 'payment_title_ar' => 'footer',
+        'contact_text' => 'footer', 'contact_text_ar' => 'footer',
         'script_after_head' => 'scripts', 'script_before_head' => 'scripts',
         'script_after_body' => 'scripts', 'script_before_body' => 'scripts',
         'currency_unit' => 'currency', 'currency_unit_ar' => 'currency',
-        'profit' => 'currency', 'tax' => 'currency',
     );
 
     /**
@@ -52,14 +50,6 @@ class Website_settings extends CI_Controller {
         'uploadfile6' => array('column' => 'favicon', 'directory' => 'assets/frontend/images/logo/', 'max_width' => 4000, 'max_height' => 4000, 'section' => 'branding', 'required' => TRUE),
         'uploadfile3' => array('column' => 'default_bg', 'directory' => 'assets/frontend/images/bg/', 'max_width' => 0, 'max_height' => 0, 'section' => 'backgrounds', 'required' => FALSE),
         'uploadfile4' => array('column' => 'default_bg_ar', 'directory' => 'assets/frontend/images/bg/', 'max_width' => 0, 'max_height' => 0, 'section' => 'backgrounds', 'required' => FALSE),
-        'uploadfile7' => array(
-            'column' => 'payment_icons',
-            'directory' => 'assets/frontend/images/logo/',
-            'max_width' => 4000,
-            'max_height' => 4000,
-            'section' => 'footer',
-            'required' => FALSE,
-        ),
     );
 
     private $uploadAllowedTypes = 'jpg|jpeg|png';
@@ -273,7 +263,7 @@ class Website_settings extends CI_Controller {
             $errorSections['email'] = TRUE;
         }
 
-        foreach (array('foot_col_1', 'foot_col_1_ar', 'foot_col_2', 'foot_col_2_ar', 'foot_col_3', 'foot_col_3_ar', 'foot_col_4', 'foot_col_4_ar', 'copyright_text', 'copyright_text_ar', 'license_number', 'license_number_ar', 'payment_title', 'payment_title_ar') as $footerColumn)
+        foreach (array('foot_col_1', 'foot_col_1_ar', 'foot_col_2', 'foot_col_2_ar', 'foot_col_3', 'foot_col_3_ar', 'foot_col_4', 'foot_col_4_ar', 'copyright_text', 'copyright_text_ar') as $footerColumn)
         {
             if (isset($values[$footerColumn]) && strlen($values[$footerColumn]) > 255)
             {
@@ -291,15 +281,6 @@ class Website_settings extends CI_Controller {
             }
         }
 
-        // Percentages with up to two decimals. Profit can exceed 100%; tax cannot.
-        foreach (array('profit' => 999.99, 'tax' => 100) as $percentColumn => $maxPercent)
-        {
-            if (isset($values[$percentColumn]) && !$this->isValidPercent($values[$percentColumn], $maxPercent))
-            {
-                $invalidFields[] = $percentColumn;
-                $errorSections['currency'] = TRUE;
-            }
-        }
 
         foreach ($this->escapedColumns as $escapedColumn)
         {
@@ -310,13 +291,6 @@ class Website_settings extends CI_Controller {
         }
 
         return array($values, $invalidFields, $errorSections);
-    }
-
-    /** Required, 0 or more, at most two decimal places. */
-    private function isValidPercent($value, $max)
-    {
-        return preg_match('/^\d{1,3}(\.\d{1,2})?$/', $value) === 1
-            && (float) $value <= $max;
     }
 
     /**

@@ -122,7 +122,7 @@ if ( ! function_exists('image_thumb'))
      * when no fallback was given.
      *
      * echo image_thumb(
-     * './assets/frontend/images/tour-guides/'.$image,
+     * './assets/frontend/images/artists/'.$image,
      * 80, 80, 'webp', 'circle', TRUE,
      * array('alt' => $name, 'fallback' => 'A', 'size' => 42)
      * );

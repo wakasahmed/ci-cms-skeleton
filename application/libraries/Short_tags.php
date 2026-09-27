@@ -54,7 +54,7 @@ class Short_tags
         return $tags;
     }
 
-    /** Display name of the entity a template's tags come from, e.g. "Booking". */
+    /** Display name of the entity a template's tags come from, e.g. "Contact request". */
     public function entityLabel($templateId)
     {
         $entity = $this->entity($this->entityKey($templateId));

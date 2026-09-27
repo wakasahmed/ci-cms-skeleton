@@ -29,7 +29,7 @@
     <?php if (!empty($useDropzone)) { ?>
     <link rel="stylesheet" href="<?php echo ADMIN_ASSETS; ?>vendor/dropzone/dropzone.min.css?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/vendor/dropzone/dropzone.min.css'); ?>">
     <?php } ?>
-    <?php if (in_array($this->controller, array('admins', 'tour-guides', 'customer-reviews'), TRUE)) { ?>
+    <?php if (in_array($this->controller, array('admins', 'customer-reviews'), TRUE)) { ?>
     <link rel="stylesheet" href="<?php echo ADMIN_ASSETS; ?>vendor/cropperjs/cropper.min.css?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/vendor/cropperjs/cropper.min.css'); ?>">
     <?php } ?>
     <?php if (!empty($useMenuManager)) { ?>

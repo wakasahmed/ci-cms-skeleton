@@ -26,57 +26,6 @@ class Seo_model extends SqlModel
         return $this->db->get()->result_array();
     }
 
-    /** Enabled tours and experiences, in the order the site lists them. */
-    public function get_tours($indexableOnly = true)
-    {
-        $this->db->select(
-            'tour_id, tour_type, tour_slug, tour_slug_ar, tour_name, tour_short_description, '
-            . 'tour_updated, tour_image, tour_image_ar, tour_bg_image, og_image',
-            false
-        );
-        $this->db->from('tours');
-        $this->db->where('tour_status', 'Enable');
-        if ($indexableOnly) {
-            $this->db->where('robots_index', 1);
-        }
-        $this->db->order_by('tour_type', 'ASC');
-        $this->db->order_by('tour_order', 'ASC');
-        $this->db->order_by('tour_id', 'ASC');
-
-        return $this->db->get()->result_array();
-    }
-
-    /** Enabled gallery images for the given tours, keyed by tour id. */
-    public function get_tour_gallery_files(array $tourIds, $perTour = 10)
-    {
-        $tourIds = array_values(array_filter(array_map('intval', $tourIds)));
-        if (empty($tourIds)) {
-            return array();
-        }
-
-        $this->db->select('image_tour_id, image_image', false);
-        $this->db->from('tour_images');
-        $this->db->where_in('image_tour_id', $tourIds);
-        $this->db->where('image_status', 'Enable');
-        $this->db->where('image_image <>', '');
-        $this->db->order_by('image_tour_id', 'ASC');
-        $this->db->order_by('image_order', 'ASC');
-        $this->db->order_by('image_id', 'ASC');
-
-        $files = array();
-        foreach ($this->db->get()->result_array() as $row) {
-            $tourId = (int) $row['image_tour_id'];
-            if (!isset($files[$tourId])) {
-                $files[$tourId] = array();
-            }
-            if (count($files[$tourId]) < (int) $perTour) {
-                $files[$tourId][] = $row['image_image'];
-            }
-        }
-
-        return $files;
-    }
-
     /** Published blog posts, newest first. */
     public function get_blog_posts($indexableOnly = true)
     {

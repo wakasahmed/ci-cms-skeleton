@@ -9,7 +9,7 @@ $sortableHeading = function ($column, $label, $class = '') use ($sortUrl, $sortI
 <?php $this->load->view('admin/partials/breadcrumb', array('items' => array(array('label' => $this->moduleName, 'active' => TRUE)))); ?>
 <?php $this->load->view('admin/partials/crud_alert', array(
     'module_name' => 'Image slider', 'status' => $alert,
-    'status_messages' => array('deleteblocked' => array('danger', 'Cannot delete!', 'A selected slider is assigned to a page, tour, or site setting. No sliders were deleted.')),
+    'status_messages' => array('deleteblocked' => array('danger', 'Cannot delete!', 'A selected slider is assigned to a page or site setting. No sliders were deleted.')),
 )); ?>
 
 <section class="admin-records-listing" aria-labelledby="sliders-title">

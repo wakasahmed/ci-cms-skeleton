@@ -17,10 +17,7 @@ if ($this->controller === 'pages') {
 } else {
     $perpageURL = base_url('manage/'.$this->controller).'/';
 }
-if (isset($report_url)) {
-    $perpageURL = $report_url;
-}
-$hasMultiUpload = isset($tourimagesScript) || isset($suploadscript);
+$hasMultiUpload = isset($suploadscript);
 ?>
 <script>
 window.AdminConfig = {
@@ -70,10 +67,9 @@ window.contName = window.AdminConfig.controllerName;
 
 <?php if (!empty($useDropzone)) { ?>
 <script src="<?php echo ADMIN_ASSETS; ?>vendor/dropzone/dropzone.min.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/vendor/dropzone/dropzone.min.js'); ?>"></script>
-<script src="<?php echo ADMIN_ASSETS; ?>js/tour-images-upload.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/tour-images-upload.js'); ?>"></script>
 <?php } ?>
 
-<?php if (in_array($this->controller, array('admins', 'tour-guides', 'customer-reviews'), TRUE)) { ?>
+<?php if (in_array($this->controller, array('admins', 'customer-reviews'), TRUE)) { ?>
 <script src="<?php echo ADMIN_ASSETS; ?>vendor/cropperjs/cropper.min.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/vendor/cropperjs/cropper.min.js'); ?>"></script>
 <script src="<?php echo ADMIN_ASSETS; ?>js/avatar-editor.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/avatar-editor.js'); ?>"></script>
 <?php } ?>
@@ -134,12 +130,6 @@ window.contName = window.AdminConfig.controllerName;
 <?php if (!empty($useDashboardCharts)) { ?>
 <script src="<?php echo ADMIN_ASSETS; ?>vendor/chartjs/chart.umd.min.js?v=4.5.1"></script>
 <script src="<?php echo ADMIN_ASSETS; ?>js/dashboard.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/dashboard.js'); ?>"></script>
-<?php } ?>
-<?php if (!empty($useReports)) { ?>
-<script src="<?php echo ADMIN_ASSETS; ?>js/reports.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/reports.js'); ?>"></script>
-<?php } ?>
-<?php if (strtolower($this->controller) === 'bookings') { ?>
-<script src="<?php echo ADMIN_ASSETS; ?>js/bookings.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/bookings.js'); ?>"></script>
 <?php } ?>
 </body>
 </html>

@@ -311,32 +311,6 @@ jQuery(document).ready(function ($) {
 		target.val(generateSlug(this.value, source.data('slug-language'))).trigger('change');
 	});
 
-	function toggleTourGuidePriceGroups(isExperience) {
-		$('.tour-guide-price-group').prop('hidden', isExperience);
-	}
-
-	function toggleTourExperienceOnlyGroups(isExperience) {
-		$('.tour-experience-only-group').prop('hidden', !isExperience);
-	}
-
-	$(document).on('change', '#tour_type', function () {
-		var isExperience = this.value === 'Experience';
-
-		var prefix = $('#tour_slug_prefix');
-		if (prefix.length) prefix.text(prefix.data(isExperience ? 'prefix-experience' : 'prefix-tour'));
-
-		var slug = $('#tour_slug');
-		if (slug.length && slug.data('placeholder-tour')) slug.attr('placeholder', slug.data(isExperience ? 'placeholder-experience' : 'placeholder-tour'));
-
-		toggleTourGuidePriceGroups(isExperience);
-		toggleTourExperienceOnlyGroups(isExperience);
-	});
-
-	if ($('#tour_type').length) {
-		var tourTypeIsExperience = $('#tour_type').val() === 'Experience';
-		toggleTourGuidePriceGroups(tourTypeIsExperience);
-		toggleTourExperienceOnlyGroups(tourTypeIsExperience);
-	}
 	$("#area_name").on('keyup',function(){
 		var input = this.value;
 		input = input.replace(/^\s\s*/, '') // Trim start
@@ -368,16 +342,6 @@ jQuery(document).ready(function ($) {
         .replace(/[\s]+/g, '-'); // Swap whitespace for single hyphen
 		
 		$("#proj_slug").val(input);
-	});
-	$("#tour_name").on('keyup',function(){
-		var input = this.value;
-		input = input.replace(/^\s\s*/, '') // Trim start
-        .replace(/\s\s*$/, '') // Trim end
-        .toLowerCase() // Camel case is bad
-        .replace(/[^a-z0-9_\-~!\+\s]+/g, '') // Exchange invalid chars
-        .replace(/[\s]+/g, '-'); // Swap whitespace for single hyphen
-		
-		$("#tour_slug").val(input);
 	});
 	$("#prop_name").on('keyup',function(){
 		var input = this.value;
@@ -711,67 +675,6 @@ jQuery(document).ready(function ($) {
 		if (event.key === 'Enter') { event.preventDefault(); $('#bCatSubmit').trigger('click'); }
 	});
 
-	var reqTourCat = null;
-	function showTourCategoryError(message) {
-		$('#tourCatErrorMsg').text(message || '').toggleClass('d-none', !message);
-	}
-	function resetTourCategoryModal() {
-		$('#tour_cat_ajax').val('').removeClass('is-invalid').removeAttr('aria-invalid').closest('.admin-field').removeClass('validate-has-error');
-		showTourCategoryError('');
-	}
-	$('#addNewTourCat').on('click', function() {
-		resetTourCategoryModal();
-		adminModal('addTourCatModal', 'show');
-		setTimeout(function() { $('#tour_cat_ajax').trigger('focus'); }, 180);
-	});
-	$('#tourCatSubmit').on('click', function() {
-		var name = $.trim($('#tour_cat_ajax').val());
-		var $button = $(this);
-		$('#tour_cat_ajax').removeClass('is-invalid').removeAttr('aria-invalid').closest('.admin-field').removeClass('validate-has-error');
-		showTourCategoryError('');
-		if (!name) {
-			$('#tour_cat_ajax').addClass('is-invalid').attr('aria-invalid', 'true').closest('.admin-field').addClass('validate-has-error');
-			showTourCategoryError('Enter a category name.');
-			$('#tour_cat_ajax').trigger('focus');
-			return;
-		}
-		var existingValue = null;
-		$('#tour_categories option').each(function() {
-			if ($.trim($(this).text()).toLowerCase() === name.toLowerCase()) { existingValue = String(this.value); return false; }
-		});
-		if (existingValue !== null) {
-			var selected = ($('#tour_categories').val() || []).map(String);
-			if (selected.indexOf(existingValue) === -1) selected.push(existingValue);
-			$('#tour_categories').val(selected).trigger('change');
-			adminModal('addTourCatModal', 'hide');
-			return;
-		}
-		var requestData = { cat_name_ajax: name };
-		if (window.AdminConfig && AdminConfig.csrfName && AdminConfig.csrfHash) requestData[AdminConfig.csrfName] = AdminConfig.csrfHash;
-		$('#ajax_loader_tour_cat').removeClass('d-none');
-		$button.prop('disabled', true).attr('aria-disabled', 'true');
-		if (reqTourCat !== null) reqTourCat.abort();
-		reqTourCat = $.ajax({
-			url: admin_url + 'tour-categories/addRecordAJAX', type: 'POST', data: requestData, dataType: 'json'
-		}).done(function(data) {
-			if (data.status !== 'true') { showTourCategoryError(data.message || 'The category could not be added.'); return; }
-			if (data.csrf_name && data.csrf_hash && window.AdminConfig) { AdminConfig.csrfName = data.csrf_name; AdminConfig.csrfHash = data.csrf_hash; }
-			$('#tour_categories').append(new Option(data.cat_name, data.cat_id, true, true)).trigger('change');
-			adminModal('addTourCatModal', 'hide');
-			resetTourCategoryModal();
-		}).fail(function(xhr) {
-			var response = xhr.responseJSON || {};
-			showTourCategoryError(response.message || 'The category could not be added. Please try again.');
-		}).always(function() {
-			reqTourCat = null;
-			$('#ajax_loader_tour_cat').addClass('d-none');
-			$button.prop('disabled', false).removeAttr('aria-disabled');
-		});
-	});
-	$('#tour_cat_ajax').on('keydown', function(event) {
-		if (event.key === 'Enter') { event.preventDefault(); $('#tourCatSubmit').trigger('click'); }
-	});
-
 	//For removing the section image
 	$(".removeImage").on('click',function(){
 		var recordID = this.id;
@@ -812,51 +715,6 @@ jQuery(document).ready(function ($) {
 
 	});
 	
-	// Discount Codes: the allowed range of an amount field depends on the type
-	// selected in its companion select (Fixed Amount vs Percentage).
-	$("[data-type-field]").each(function(){
-		var $amount = $(this);
-		var $type = $($amount.data('type-field'));
-		var $help = $("#" + this.id + "_help");
-		if(!$type.length)
-		{
-			return;
-		}
-		var applyRange = function(revalidate){
-			var percentage = $type.val() == "Percentage";
-			var min = parseInt($amount.data(percentage ? 'min-percentage' : 'min-fixed'), 10);
-			var max = parseInt($amount.data(percentage ? 'max-percentage' : 'max-fixed'), 10);
-			$amount.attr('data-validate', 'required,digits,min[' + min + '],max[' + max + ']');
-			$amount.attr({min: min, max: max});
-			// Only reachable once admin.js has initialised the form validator.
-			if($amount.rules && $.data($amount[0].form, 'validator'))
-			{
-				$amount.rules('add', {required: true, digits: true, min: min, max: max});
-				if(revalidate && $amount.val() !== "")
-				{
-					$amount.valid();
-				}
-			}
-			$help.text(percentage
-				? 'Enter a percentage between ' + min + ' and ' + max + '.'
-				: 'Enter an amount between SR' + min + ' and SR' + max + '.');
-		};
-		applyRange(false);
-		$type.on('change', function(){
-			applyRange(true);
-		});
-	});
-	
-	$("#discount_regenerate_code").on('click',function(){
-		var length = parseInt($(this).attr('data-code-length'), 10) || 8;
-		var characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-		var code = '';
-		for (var i = 0; i < length; i++)
-		{
-			code += characters.charAt(Math.floor(Math.random() * characters.length));
-		}
-		$("#discount_code").val(code).trigger('input');
-	});
 });//End of document ready
 
 $.fn.hasExtension = function(exts) {
