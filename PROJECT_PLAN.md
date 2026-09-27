@@ -90,7 +90,7 @@ Each item has a recommendation; the plan below assumes the recommendation unless
 | D7 | Map on contact page | Plain Google Maps embed / "Open in Maps" link (no API key, no Places). |
 | D8 | Existing Arabic columns | **Drop** after the code no longer reads them (Phase 4 SQL). |
 | D9 | Countries module | **Remove** unless D1/D2 needs a country list. |
-| D10 | Local host name | Keep `http://ctech-cms/` or create a new vhost (e.g. `http://blossom-cms/`) and update AGENTS.md. |
+| D10 | Local host name | **Decided:** keep `http://ctech-cms.com/` (existing WAMP vhost). |
 
 ---
 
@@ -138,6 +138,18 @@ Each item has a recommendation; the plan below assumes the recommendation unless
    (`ci3/vendor/` in particular). It is deleted in Phase 9.
 
 **Done when:** the CMS runs against `blossom_cms`, no secret is tracked by git, baseline tag exists.
+
+**Status: done (2026-09-27).** Baseline commit tagged `alam-cms-baseline`. Secrets moved to
+`application/config/development/constants.php` (template: `secrets.example.php`). `blossom_cms`
+created from `ci_cms`; site settings set to the Blossom name, address, phone, `zł` and
+copyright. Open items carried forward:
+
+- Blossom sender/contact email address and domain (settings `email`, `sender_email`, and
+  `EMAIL_ADDRESS`) — not yet known.
+- New reCAPTCHA Enterprise project and keys — forms that verify reCAPTCHA will fail locally
+  until they are added.
+- Old Alam logos/favicon are still set in Website Settings; replaced in Phase 5.
+- The previous project owner should rotate the credentials that were in `constants.php`.
 
 ---
 
