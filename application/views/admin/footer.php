@@ -81,6 +81,18 @@ window.contName = window.AdminConfig.controllerName;
 <script src="<?php echo ADMIN_ASSETS; ?>js/file-upload.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/file-upload.js'); ?>"></script>
 <script src="<?php echo ADMIN_ASSETS; ?>js/star-rating.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/star-rating.js'); ?>"></script>
 
+<?php if (!empty($useGalleryUpload)) { ?>
+<script src="<?php echo ADMIN_ASSETS; ?>js/gallery-upload.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/gallery-upload.js'); ?>"></script>
+<?php } ?>
+
+<?php if (!empty($useRepeatableRows)) { ?>
+<script src="<?php echo ADMIN_ASSETS; ?>js/repeatable-rows.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/repeatable-rows.js'); ?>"></script>
+<?php } ?>
+
+<?php if (!empty($useAccordionValidation)) { ?>
+<script src="<?php echo ADMIN_ASSETS; ?>js/accordion-validation.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/accordion-validation.js'); ?>"></script>
+<?php } ?>
+
 <?php if (!empty($useWebsiteSettings)) { ?>
 <script src="<?php echo ADMIN_ASSETS; ?>js/website-settings.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/website-settings.js'); ?>"></script>
 <?php } ?>
@@ -118,6 +130,7 @@ window.contName = window.AdminConfig.controllerName;
 <script src="<?php echo ADMIN_ASSETS; ?>js/user-select.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/user-select.js'); ?>"></script>
 <?php } ?>
 <script src="<?php echo ADMIN_ASSETS; ?>js/custom.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/custom.js'); ?>"></script>
+<script src="<?php echo ADMIN_ASSETS; ?>js/records-listing.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/records-listing.js'); ?>"></script>
 <?php if (!empty($useDashboardCharts)) { ?>
 <script src="<?php echo ADMIN_ASSETS; ?>vendor/chartjs/chart.umd.min.js?v=4.5.1"></script>
 <script src="<?php echo ADMIN_ASSETS; ?>js/dashboard.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/dashboard.js'); ?>"></script>

@@ -415,7 +415,7 @@ Choose the reference implementation according to the module's data shape before 
 ## Basic CRUD modules
 
 The **Artists** module is the canonical structure and UI reference for a basic CRUD module
-that manages a collection of records, once it exists (Phase 1 of `PROJECT_PLAN.md`):
+that manages a collection of records:
 
 ```text
 application/controllers/manage/Artists.php
@@ -423,22 +423,55 @@ application/views/admin/artists.php
 application/views/admin/addArtist.php
 ```
 
-Artists is a port of the legacy Tour Guides module. Until Artists exists, use Tour Guides as
-the structural reference:
+Other Blossom modules built on the same pattern show the conditional capabilities:
 
-```text
-application/controllers/manage/Tour_guides.php
-application/views/admin/tourGuides.php
-application/views/admin/addTourGuide.php
-```
+- Services (`Services.php`, `addService.php`) — accordion form sections with server-side
+  section reopening, CKEditor, repeatable rows (add-ons), several images, SEO fields,
+  duplication, and a second listing filter (category).
+- Service Categories (`Service_categories.php`) — delete guarded while child records exist.
+- Gallery (`Gallery.php`, `galleryUpload.php`) — Dropzone bulk upload that creates one record
+  per file.
+- Offers (`Offers.php`) — date range validation with the shared `.datepicker`.
+- Appointments (`Appointments.php`, `viewAppointment.php`) — read-only records with a detail
+  view, POST status changes and author-owned internal notes.
 
-After the tour modules are deleted, the legacy files remain readable from the baseline git
-tag (`git show alam-cms-baseline:<path>`).
-
-When using Tour Guides (or any tour module) as a reference, take the structure only. Never
-carry over its translation integration, language switcher, `_ar` fields, tour/language
+Artists is a port of the legacy Tour Guides module. The legacy tour modules remain in the tree
+until Phase 2 of `PROJECT_PLAN.md` and afterwards stay readable from the baseline git tag
+(`git show alam-cms-baseline:<path>`). When reading them, take the structure only. Never carry
+over their translation integration, language switcher, `_ar` fields, tour/language
 relationships, availability, or license uploads. The legacy code is also densely formatted
 with tabs; new code follows the formatting rules in this file.
+
+## Shared building blocks for manage/admin modules
+
+Use these instead of per-controller copies:
+
+- `application/libraries/Admin_upload.php` — `save()` validates and stores an upload under a
+  random name, `delete()` removes a file and its cached thumbnails, `copy()` duplicates an
+  image. Controllers keep the "is this file still referenced" check before deleting.
+- `application/libraries/Admin_slug.php` — `normalize()` (matches the admin slug generator in
+  `custom.js`) and `unique()` for slug columns.
+- `application/libraries/Admin_record_sorter.php` — register every drag-sortable module here.
+- `application/helpers/admin_input_helper.php` — `admin_clean_text()`, `admin_clean_lines()`
+  ("one per line" textareas), `admin_price_value()`, `admin_format_price()` (`80 zł`),
+  `admin_date_value()` / `admin_datepicker_value()` (shared `.datepicker` format),
+  `admin_ids()`.
+- `application/helpers/admin_listing_helper.php` — `admin_sort_heading()` and
+  `admin_datetime_cell()` for listing tables.
+- `assets/admin/js/records-listing.js` (always loaded) — listing filters
+  (`[data-records-filter]`, `[data-filter-segment]`, `[data-filter-keyword]`) and the bulk
+  selection bar (`[data-records-listing]`, `[data-bulk-actions]`). Do not add per-page listing
+  scripts.
+- `assets/admin/js/repeatable-rows.js` (`$data['useRepeatableRows'] = TRUE`) — add/remove
+  form rows (`[data-repeatable]`).
+- `assets/admin/js/accordion-validation.js` (`$data['useAccordionValidation'] = TRUE`) —
+  reveals invalid required fields inside collapsed accordion panels for
+  `form[data-accordion-validation]`.
+
+Validation failures follow one pattern: the controller flashes the posted values
+(`<controller>_data`), the invalid field names (`<controller>_invalid`) and `form_error`, then
+redirects to the form; the view marks those fields `is-invalid` and opens any accordion section
+that contains one.
 
 Use this pattern when the module needs a listing and separate create/edit operations. Adapt only the capabilities the actual module requires, including:
 

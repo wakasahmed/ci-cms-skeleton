@@ -178,7 +178,7 @@ Order (each module = controller + listing view + add/edit view + SQL + navigatio
 5. **Offers** — reference `Tours.php` pricing fields. Fields listed in §3; validity dates use
    the shared `.daterange` Flatpickr selector.
 6. **Appointments** (booking requests) — reference `Bookings.php` + `viewBooking.php`.
-   Listing with search/status filter, detail view, status change (AJAX, JSON response),
+   Listing with search/status filter, detail view, status change (POST form),
    internal notes. No create form in admin unless requested.
 
 Also in this phase:
@@ -190,6 +190,24 @@ Also in this phase:
 
 **Done when:** every new module passes list / search / filter / sort / add / edit /
 validation-failure / status / delete tests locally.
+
+**Status: done (2026-09-27), branch `phase-1-salon-modules`.** Tables created from
+`docs/sql/phase-1.sql` (12 tables, foreign keys included). All modules tested over HTTP; the
+tables were emptied afterwards, so content is loaded in Phase 7. Decisions taken while
+building:
+
+- Artists use a normal portrait photo upload (1200 × 1500px) rather than the 512px circular
+  avatar cropper used by Tour Guides, because the design shows large portrait photos.
+- Appointment status changes use a POST form on the detail page (four statuses, any to any so
+  mistakes can be corrected) rather than the Enable/Disable AJAX toggle. No emails are sent
+  on status change yet (Phase 7).
+- Service Categories cannot be deleted while they contain services; deleting a Gallery
+  Category leaves its images as "Uncategorised".
+- Duplicated services and offers are saved as disabled drafts.
+- Shared pieces were added instead of copying helpers into each controller (see "Shared
+  building blocks" in AGENTS.md). Legacy modules were not changed to use them.
+
+Not yet verified: a visual check in a browser (the admin was tested over HTTP only).
 
 ---
 

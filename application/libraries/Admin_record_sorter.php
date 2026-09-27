@@ -11,6 +11,42 @@ class Admin_record_sorter
 	private $CI;
 
 	private $modules = array(
+		'service-categories' => array(
+			'table' => 'service_categories',
+			'primary_key' => 'category_id',
+			'order_column' => 'category_order',
+			'fallback_column' => 'category_name',
+		),
+		'services' => array(
+			'table' => 'services',
+			'primary_key' => 'service_id',
+			'order_column' => 'service_order',
+			'fallback_column' => 'service_name',
+		),
+		'artists' => array(
+			'table' => 'artists',
+			'primary_key' => 'artist_id',
+			'order_column' => 'artist_order',
+			'fallback_column' => 'artist_name',
+		),
+		'gallery-categories' => array(
+			'table' => 'gallery_categories',
+			'primary_key' => 'category_id',
+			'order_column' => 'category_order',
+			'fallback_column' => 'category_name',
+		),
+		'gallery' => array(
+			'table' => 'gallery_images',
+			'primary_key' => 'image_id',
+			'order_column' => 'image_order',
+			'fallback_column' => 'image_id',
+		),
+		'offers' => array(
+			'table' => 'offers',
+			'primary_key' => 'offer_id',
+			'order_column' => 'offer_order',
+			'fallback_column' => 'offer_title',
+		),
 		'customer-reviews' => array(
 			'table' => 'customer_reviews',
 			'primary_key' => 'review_id',

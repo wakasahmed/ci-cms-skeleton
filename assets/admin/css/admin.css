@@ -2483,3 +2483,19 @@ body.admin-standard-listing .breadcrumb,
   align-items: center;
   gap: .5rem;
 }
+
+/* Repeatable form rows (assets/admin/js/repeatable-rows.js) */
+.admin-repeatable-list { display: grid; gap: .6rem; margin-bottom: .75rem; }
+.admin-repeatable-list[hidden] { display: none; }
+.admin-repeatable-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(7rem, 10rem) auto; gap: .6rem; align-items: start; }
+.admin-repeatable-empty { margin-bottom: .75rem; color: var(--admin-muted); font-size: .875rem; }
+@media (max-width: 575.98px) {
+    .admin-repeatable-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .admin-repeatable-row > :nth-child(2) { grid-column: 1; }
+}
+
+/* Gallery bulk upload (assets/admin/js/gallery-upload.js) */
+.dropzone .dz-edit-link { display: block; margin-top: .35rem; text-align: center; font-size: .8rem; }
+
+/* Free-text notes that keep the author's line breaks */
+.admin-note-text { white-space: pre-wrap; overflow-wrap: anywhere; }

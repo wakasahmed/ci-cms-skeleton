@@ -10,6 +10,8 @@ $reportsOpen = isset($reportsActive);
 $menusOpen = isset($menuActive);
 $blogsOpen = isset($blogsActive) || isset($blogCategoriesActive);
 $discountsOpen = isset($discountCodesActive) || isset($referralsActive);
+$servicesOpen = isset($servicesActive) || isset($serviceCategoriesActive);
+$galleryOpen = isset($galleryActive) || isset($galleryCategoriesActive);
 $lastLoginValue = $this->session->userdata('last_login');
 $lastLoginTimestamp = $lastLoginValue ? strtotime($lastLoginValue) : false;
 $canAccessMiscContent = isset($userdata) && (
@@ -36,6 +38,70 @@ $adminNav = array(
                 'icon' => 'bi-speedometer2',
                 'url' => ADMIN_URL,
                 'active' => isset($dashBoard),
+            ),
+        ),
+    ),
+    array(
+        'label' => 'Salon',
+        'items' => array(
+            array(
+                'type' => 'link',
+                'title' => 'Appointments',
+                'icon' => 'bi-calendar-check',
+                'url' => ADMIN_URL.'appointments',
+                'active' => isset($appointmentsActive),
+            ),
+            array(
+                'type' => 'toggle',
+                'title' => 'Services',
+                'icon' => 'bi-stars',
+                'target' => 'adminServicesSubnav',
+                'active' => $servicesOpen,
+                'children' => array(
+                    array(
+                        'title' => 'All Services',
+                        'url' => ADMIN_URL.'services',
+                        'active' => isset($servicesActive),
+                    ),
+                    array(
+                        'title' => 'Categories',
+                        'url' => ADMIN_URL.'service-categories',
+                        'active' => isset($serviceCategoriesActive),
+                    ),
+                ),
+            ),
+            array(
+                'type' => 'link',
+                'title' => 'Artists',
+                'icon' => 'bi-person-heart',
+                'url' => ADMIN_URL.'artists',
+                'active' => isset($artistsActive),
+            ),
+            array(
+                'type' => 'toggle',
+                'title' => 'Gallery',
+                'icon' => 'bi-images',
+                'target' => 'adminGallerySubnav',
+                'active' => $galleryOpen,
+                'children' => array(
+                    array(
+                        'title' => 'Images',
+                        'url' => ADMIN_URL.'gallery',
+                        'active' => isset($galleryActive),
+                    ),
+                    array(
+                        'title' => 'Categories',
+                        'url' => ADMIN_URL.'gallery-categories',
+                        'active' => isset($galleryCategoriesActive),
+                    ),
+                ),
+            ),
+            array(
+                'type' => 'link',
+                'title' => 'Offers',
+                'icon' => 'bi-gift',
+                'url' => ADMIN_URL.'offers',
+                'active' => isset($offersActive),
             ),
         ),
     ),
