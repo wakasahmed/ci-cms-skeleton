@@ -1,0 +1,286 @@
+/* ==========================================================================
+   Admin theme overrides for the moono editor chrome (CKEditor 4.2).
+
+   Source file. It is appended verbatim to the end of every editor_*.css of
+   this skin so that it also reaches the drop-down panel / context menu
+   iframes, which load the skin stylesheet directly. Edit this file, then
+   re-append it -- never edit the copies inside editor*.css by hand.
+
+   Palette mirrors assets/admin/css/admin.css (values are literal because
+   iframe documents do not inherit the admin :root custom properties).
+   ========================================================================== */
+
+.cke_reset_all,
+.cke_reset_all *,
+.cke_dialog,
+.cke_dialog *,
+.cke_panel,
+.cke_menu_panel {
+	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	color: #1f2937;
+}
+
+/* Editor frame ---------------------------------------------------------- */
+.cke_chrome {
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	box-shadow: 0 1px 2px rgba(17, 24, 39, .035);
+	overflow: hidden;
+}
+.cke_inner { background: #ffffff; }
+.cke_focus .cke_chrome,
+.cke_chrome:focus-within {
+	border-color: #ddd8ec;
+	box-shadow: 0 0 0 .18rem rgba(99, 86, 155, .16);
+}
+
+/* Toolbar --------------------------------------------------------------- */
+.cke_top {
+	padding: 6px 8px 3px;
+	border-bottom: 1px solid #e5e7eb;
+	background: #f9fafb;
+	background-image: none;
+	box-shadow: none;
+	filter: none;
+}
+.cke_float .cke_top { border: 1px solid #e5e7eb; border-bottom-color: #e5e7eb; }
+.cke_toolgroup {
+	margin: 0 6px 4px 0;
+	border: 1px solid #eef0f3;
+	border-radius: 5px;
+	background: #ffffff;
+	background-image: none;
+	box-shadow: none;
+	filter: none;
+}
+.cke_toolbar_separator {
+	width: 1px;
+	margin: 3px 4px;
+	background: #e5e7eb;
+	box-shadow: none;
+}
+.cke_toolbox_collapser {
+	border: 1px solid #eef0f3;
+	border-radius: 5px;
+	background: #ffffff;
+	background-image: none;
+	filter: none;
+}
+.cke_toolbox_collapser:hover { background: #f2f0f8; }
+
+/* Toolbar buttons ------------------------------------------------------- */
+a.cke_button {
+	padding: 4px 6px;
+	border-radius: 4px;
+	color: #4b5563;
+}
+a.cke_button_off:hover,
+a.cke_button_off:focus,
+a.cke_button_off:active {
+	border: 0;
+	padding: 4px 6px;
+	background: #f2f0f8;
+	box-shadow: none;
+	filter: none;
+}
+a.cke_button_on {
+	border: 0;
+	padding: 4px 6px;
+	background: #e9e5f5;
+	background-image: none;
+	box-shadow: none;
+	filter: none;
+}
+a.cke_button_on:hover,
+a.cke_button_on:focus,
+a.cke_button_on:active {
+	background: #ddd8ec;
+	background-image: none;
+	box-shadow: none;
+	filter: none;
+}
+a.cke_button_on .cke_button_label { color: #1f2937; }
+a.cke_button_on .cke_button_arrow { border-top-color: #1f2937; }
+a.cke_button_on .cke_button_icon { filter: none; }
+.cke_button_disabled .cke_button_icon { opacity: .3; }
+.cke_button_label { color: #4b5563; font-size: 12px; }
+.cke_button_arrow { border-top-color: #6b7280; }
+
+/* Icon for the custom youtube plugin (plugins/youtube), which ships no sprite. */
+.cke_button__youtube_icon {
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='.7' y='3.1' width='14.6' height='9.8' rx='2.6' fill='none' stroke='%234b5563' stroke-width='1.3'/%3E%3Cpath d='M6.6 5.9l4 2.1-4 2.1z' fill='%234b5563'/%3E%3C/svg%3E") !important;
+	background-position: center !important;
+	background-size: 16px 16px !important;
+	background-repeat: no-repeat !important;
+}
+
+/* Icon for the custom emoji plugin (plugins/emoji), which ships no sprite. */
+.cke_button__emoji_icon {
+	background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%234b5563' stroke-width='1.3'%3E%3Ccircle cx='8' cy='8' r='6.3'/%3E%3Ccircle cx='5.9' cy='6.4' r='.8' fill='%234b5563' stroke='none'/%3E%3Ccircle cx='10.1' cy='6.4' r='.8' fill='%234b5563' stroke='none'/%3E%3Cpath d='M5.2 9.5a3.4 3.4 0 0 0 5.6 0' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+	background-position: center !important;
+	background-size: 16px 16px !important;
+	background-repeat: no-repeat !important;
+}
+
+/* Emoji panel box. Fixed size in the host document, because the plugin does
+   not use autoSize (see plugins/emoji/plugin.js); !important so a stale
+   inline width from a previously rendered panel cannot win. */
+.cke_panel.cke_emoji_panel {
+	width: 318px !important;
+	height: 330px !important;
+}
+
+/* Combos (styles / format / font) --------------------------------------- */
+.cke_combo_button {
+	margin: 0;
+	border: 1px solid #eef0f3;
+	border-radius: 5px;
+	background: #ffffff;
+	background-image: none;
+	box-shadow: none;
+	filter: none;
+}
+.cke_combo_off a.cke_combo_button:hover,
+.cke_combo_off a.cke_combo_button:focus,
+.cke_combo_on a.cke_combo_button {
+	border-color: #ddd8ec;
+	background: #f2f0f8;
+	background-image: none;
+	box-shadow: none;
+	filter: none;
+}
+.cke_combo_text {
+	padding: 0 6px;
+	color: #1f2937;
+	font-size: 12px;
+	line-height: 26px;
+}
+.cke_combo_open { margin: 4px 4px 0 0; }
+.cke_combo_arrow {
+	margin-top: 11px;
+	border-top-color: #6b7280;
+}
+.cke_combo_disabled .cke_combo_text,
+.cke_combo_disabled .cke_combo_arrow { opacity: .35; }
+
+/* Drop-down panels ------------------------------------------------------ */
+.cke_panel {
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background: #ffffff;
+	box-shadow: 0 10px 26px rgba(17, 24, 39, .12);
+	overflow: hidden;
+}
+.cke_panel_grouptitle {
+	margin: 0;
+	padding: 6px 10px;
+	border-bottom: 1px solid #eef0f3;
+	background: #f9fafb;
+	background-image: none;
+	color: #6b7280;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	filter: none;
+}
+.cke_panel_list { padding: 4px; }
+.cke_panel_listItem a {
+	padding: 5px 8px;
+	border: 0;
+	border-radius: 4px;
+	color: #1f2937;
+}
+.cke_panel_listItem a:hover,
+.cke_panel_listItem a:focus,
+.cke_panel_listItem a:active {
+	border: 0;
+	background-color: #f2f0f8;
+	color: #4b4079;
+}
+/* Light purple rather than solid brand: the format/styles panel renders each
+   item with its own markup (h1, p, ...) whose colour is hard to inherit
+   reliably, so a light background keeps the label readable either way. */
+.cke_panel_listItem.cke_selected a,
+.cke_panel_listItem.cke_selected a:hover,
+.cke_panel_listItem.cke_selected a:focus {
+	background-color: #ddd8ec;
+	color: #4b4079;
+	font-weight: 600;
+}
+.cke_panel_listItem.cke_selected a * { color: #4b4079; }
+
+/* Colour picker panel --------------------------------------------------- */
+a.cke_colorbox { border: 1px solid #e5e7eb; border-radius: 2px; }
+a.cke_colorbox:hover { border-color: #63569b; }
+a.cke_colorauto,
+a.cke_colormore {
+	border: 1px solid #eef0f3;
+	border-radius: 4px;
+	color: #4b5563;
+}
+a.cke_colorauto:hover,
+a.cke_colormore:hover {
+	border-color: #ddd8ec;
+	background: #f2f0f8;
+	color: #4b4079;
+}
+
+/* Context menus --------------------------------------------------------- */
+.cke_menu_panel { padding: 0; }
+.cke_menubutton { padding: 0; }
+.cke_menubutton_label { padding: 0 6px; color: #1f2937; }
+.cke_menubutton:hover,
+.cke_menubutton:focus,
+.cke_menubutton:active,
+.cke_menubutton_on { background-color: #f2f0f8; }
+.cke_menubutton:hover .cke_menubutton_label,
+.cke_menubutton:focus .cke_menubutton_label { color: #4b4079; }
+.cke_menubutton_disabled:hover,
+.cke_menubutton_disabled:focus { background-color: transparent; }
+.cke_menubutton_icon { background-color: transparent; }
+.cke_menuseparator { height: 1px; background-color: #eef0f3; }
+.cke_menuarrow { background-position: 0 10px; }
+
+/* Editing area, elements path and resizer ------------------------------- */
+.cke_contents { background: #ffffff; }
+.cke_bottom {
+	padding: 5px 8px;
+	border-top: 1px solid #eef0f3;
+	background: #f9fafb;
+	background-image: none;
+	box-shadow: none;
+	filter: none;
+}
+.cke_path_item,
+.cke_path_empty {
+	padding: 2px 5px;
+	border-radius: 3px;
+	color: #6b7280;
+	font-size: 11px;
+	text-shadow: none;
+}
+a.cke_path_item:hover,
+a.cke_path_item:focus,
+a.cke_path_item:active {
+	background-color: #f2f0f8;
+	border-radius: 3px;
+	color: #4b4079;
+	box-shadow: none;
+	text-shadow: none;
+}
+.cke_resizer { border-color: transparent #b8bfc9 transparent transparent; }
+.cke_resizer_ltr { border-color: transparent transparent #b8bfc9 transparent; }
+
+/* Source-mode textarea and read-only state ------------------------------ */
+.cke_source {
+	padding: 10px;
+	background: #ffffff;
+	color: #1f2937;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 12.5px;
+	line-height: 1.55;
+}
+.cke_editable_inline { background: #ffffff; }
+.cke_read_only .cke_top,
+.cke_read_only .cke_bottom { background: #f9fafb; }

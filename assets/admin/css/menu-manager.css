@@ -1,0 +1,240 @@
+.menu-manager-instructions {
+    margin: 0 0 1rem;
+    color: var(--admin-muted);
+    font-size: .875rem;
+}
+
+.menu-manager-board {
+    margin: 0 -0.75rem;
+}
+
+.menu-manager-column {
+    padding: 0 .75rem;
+    margin-bottom: 1.25rem;
+}
+
+.menu-manager-column .admin-card > .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.menu-manager-column-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--admin-text);
+}
+
+.menu-manager-count {
+    background: var(--admin-primary-soft);
+    color: var(--admin-primary);
+    border: 1px solid var(--admin-primary-border);
+    font-weight: 600;
+}
+
+.menu-manager-column-description {
+    margin: 0 0 .85rem;
+    color: var(--admin-muted);
+    font-size: .8125rem;
+}
+
+.menu-manager-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-height: 2.5rem;
+    border-radius: var(--admin-radius);
+}
+
+.menu-manager-list:empty {
+    display: block;
+    min-height: 2.75rem;
+    border: 1px dashed var(--admin-border);
+    background: var(--admin-surface-muted);
+}
+
+.menu-manager-children {
+    margin: .4rem 0 .4rem 1.6rem;
+    padding-left: .75rem;
+    border-left: 2px solid var(--admin-primary-border);
+}
+
+.menu-manager-item {
+    margin: 0 0 .4rem;
+}
+
+.menu-manager-item-row {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .5rem .65rem;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius);
+    box-shadow: var(--admin-shadow);
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.menu-manager-item-row:hover {
+    border-color: var(--admin-primary-border);
+}
+
+.menu-manager-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex: 0 0 auto;
+    color: var(--admin-muted);
+    cursor: grab;
+    border-radius: var(--admin-radius);
+}
+
+.menu-manager-drag-handle:hover {
+    color: var(--admin-primary);
+    background: var(--admin-primary-soft);
+}
+
+.menu-manager-item-labels {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: .1rem;
+}
+
+.menu-manager-item-en {
+    font-weight: 600;
+    color: var(--admin-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.menu-manager-edit-link,
+.menu-manager-control {
+    --admin-action-color: var(--admin-primary);
+    --admin-action-bg: rgba(99, 86, 155, .11);
+    --admin-action-border: rgba(99, 86, 155, .27);
+    --admin-action-hover-bg: rgba(99, 86, 155, .22);
+    --admin-action-hover-border: rgba(99, 86, 155, .65);
+    flex: 0 0 auto;
+    display: inline-flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    margin: 1px;
+    padding: 0;
+    border: 1px solid var(--admin-action-border);
+    border-radius: .35rem;
+    background: var(--admin-action-bg);
+    color: var(--admin-action-color);
+    opacity: .78;
+    text-decoration: none;
+    transition: border-color .15s ease, background-color .15s ease, color .15s ease, opacity .15s ease;
+}
+
+.menu-manager-edit-link:hover,
+.menu-manager-control:hover {
+    border-color: var(--admin-action-hover-border);
+    background: var(--admin-action-hover-bg);
+    color: var(--admin-action-color);
+    opacity: 1;
+}
+
+.menu-manager-edit-link {
+    --admin-action-color: #2563eb;
+    --admin-action-bg: rgba(37, 99, 235, .10);
+    --admin-action-border: rgba(37, 99, 235, .25);
+    --admin-action-hover-bg: rgba(37, 99, 235, .20);
+    --admin-action-hover-border: rgba(37, 99, 235, .62);
+}
+
+.menu-manager-control[data-menu-action="add"] {
+    --admin-action-color: #087f5b;
+    --admin-action-bg: rgba(8, 127, 91, .10);
+    --admin-action-border: rgba(8, 127, 91, .25);
+    --admin-action-hover-bg: rgba(8, 127, 91, .20);
+    --admin-action-hover-border: rgba(8, 127, 91, .60);
+}
+
+.menu-manager-control[data-menu-action="remove"] {
+    --admin-action-color: #c93434;
+    --admin-action-bg: rgba(201, 52, 52, .10);
+    --admin-action-border: rgba(201, 52, 52, .25);
+    --admin-action-hover-bg: rgba(201, 52, 52, .20);
+    --admin-action-hover-border: rgba(201, 52, 52, .62);
+}
+
+.menu-manager-item-controls {
+    display: flex;
+    flex: 0 0 auto;
+    gap: .25rem;
+    flex-wrap: wrap;
+}
+
+.menu-manager-control:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+.menu-manager-control:disabled:hover {
+    border-color: var(--admin-action-border);
+    background: var(--admin-action-bg);
+    color: var(--admin-action-color);
+    opacity: .35;
+}
+
+.menu-manager-drag-handle:focus-visible,
+.menu-manager-edit-link:focus-visible,
+.menu-manager-control:focus-visible {
+    outline: 2px solid var(--admin-primary);
+    outline-offset: 1px;
+}
+
+.menu-manager-item-row:focus-within {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 .15rem var(--admin-primary-soft);
+}
+
+.menu-manager-ghost .menu-manager-item-row {
+    border: 1px dashed var(--admin-primary);
+    background: var(--admin-primary-soft);
+    box-shadow: none;
+    opacity: .7;
+}
+
+.menu-manager-chosen > .menu-manager-item-row {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 .15rem var(--admin-primary-soft);
+}
+
+.menu-manager-dragging > .menu-manager-item-row {
+    box-shadow: 0 6px 14px rgba(17, 24, 39, .15);
+}
+
+.menu-manager-empty-state {
+    margin: 0;
+    padding: 1rem;
+    text-align: center;
+    color: var(--admin-muted);
+    font-size: .875rem;
+    border: 1px dashed var(--admin-border);
+    border-radius: var(--admin-radius);
+    background: var(--admin-surface-muted);
+}
+
+@media (max-width: 991.98px) {
+    .menu-manager-item-row {
+        flex-wrap: wrap;
+    }
+
+    .menu-manager-item-controls {
+        flex-basis: 100%;
+        justify-content: flex-end;
+    }
+}

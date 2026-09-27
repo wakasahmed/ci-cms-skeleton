@@ -1,0 +1,455 @@
+/* ==========================================================================
+   Admin theme overrides for the CKFinder "kama" skin (application frame).
+
+   Loaded after app.css through skin.js (application.css list), so nothing in
+   app.css needs to be edited. Palette mirrors assets/admin/css/admin.css;
+   values are literal because this document does not inherit the admin
+   :root custom properties.
+   ========================================================================== */
+
+body,
+.view,
+.cke_skin_kama,
+input, select, textarea, button {
+	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+body {
+	background-color: #f7f8fa;
+	color: #1f2937;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+/* Views / panels -------------------------------------------------------- */
+.view {
+	border-color: #e5e7eb;
+	background-color: #ffffff;
+	border-radius: 6px;
+}
+.view h2 {
+	padding: 8px 10px;
+	border-bottom: 1px solid #eef0f3;
+	background: #f9fafb;
+	color: #4b5563;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+}
+#sidebar_container .view,
+#panel_view .show_border { border-color: #e5e7eb; }
+#sidebar_container { border-color: transparent; }
+
+/* Toolbar --------------------------------------------------------------- */
+#toolbar_view {
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background: #ffffff;
+	background-image: none;
+}
+#toolbar_view .cke_toolbox { padding: 3px; }
+.cke_skin_kama .cke_toolgroup,
+.cke_skin_kama .cke_toolbar_start,
+.cke_skin_kama .cke_toolbar_end {
+	background-image: none;
+	background-color: transparent;
+	border: 0;
+}
+.cke_skin_kama .cke_button a,
+.cke_skin_kama a.cke_button {
+	border-radius: 4px;
+	color: #4b5563;
+}
+.cke_skin_kama .cke_button a:hover,
+.cke_skin_kama .cke_button a:focus,
+.cke_skin_kama .cke_button a.cke_btn_over,
+.cke_skin_kama a.cke_button:hover,
+.cke_skin_kama a.cke_button:focus {
+	background-color: #f2f0f8;
+	background-image: none;
+	border-color: #ddd8ec;
+	color: #4b4079;
+}
+.cke_skin_kama .cke_button a.cke_on,
+.cke_skin_kama a.cke_button.cke_on {
+	background-color: #f2f0f8;
+	background-image: none;
+	border-color: #ddd8ec;
+}
+/* kama keeps a blue hover/focus fill for the pressed state at a higher
+   specificity (a:hover.cke_on), so it has to be matched selector for
+   selector or the active tool button stays blue while focused. */
+.cke_skin_kama .cke_button a:hover.cke_on,
+.cke_skin_kama .cke_button a:focus.cke_on,
+.cke_skin_kama .cke_button a:active.cke_on {
+	background-color: #ddd8ec;
+	background-image: none;
+	border-color: #ddd8ec;
+	color: #4b4079;
+}
+.cke_skin_kama .cke_button .cke_disabled { opacity: .35; }
+.cke_skin_kama .cke_separator { border-color: #e5e7eb; }
+.cke_skin_kama .cke_toolbox_collapser { background-image: none; background-color: transparent; }
+
+/* Folder tree ----------------------------------------------------------- */
+#folders_view .folder_tree li a,
+#folders_view .folder_tree li a:visited { color: #1f2937; text-decoration: none; }
+#folders_view .folder_tree li a:hover,
+#folders_view .folder_tree li a:focus,
+#folders_view .folder_tree li a:active {
+	background-color: #f2f0f8;
+	border-radius: 4px;
+	color: #4b4079;
+	text-decoration: none;
+}
+/* .selection is an empty absolutely-positioned highlight bar; the folder
+   label is a sibling <a>, so a solid fill here would leave dark text on dark
+   purple. Light fill + a marked-up label instead. */
+#folders_view .folder_tree_wrapper .selection {
+	background-color: #ddd8ec;
+	border-radius: 4px;
+}
+#folders_view .folder_tree li.selected > a,
+#folders_view .folder_tree li.selected > a:hover,
+#folders_view .folder_tree li.selected > a:focus {
+	background-color: transparent;
+	color: #4b4079;
+	font-weight: 600;
+}
+
+/* File list ------------------------------------------------------------- */
+#files_view { background: #f7f8fa; }
+#files_view .files_thumbnails .file_entry,
+#dragged_container.file_entry {
+	border-color: #e5e7eb;
+	border-radius: 6px;
+	background: #ffffff;
+}
+#files_view .files_thumbnails a.file_entry,
+#files_view .files_thumbnails a.file_entry:visited { color: #1f2937; text-decoration: none; }
+#files_view .files_thumbnails .file_entry:hover {
+	border-color: #ddd8ec;
+	background-color: #f2f0f8;
+}
+#files_view .files_thumbnails .file_entry.selected {
+	border-color: #63569b;
+	background-color: #f2f0f8;
+	box-shadow: 0 0 0 1px #63569b inset;
+}
+body.dragging #files_view .file_entry {
+	background: #ffffff !important;
+	border-color: #e5e7eb !important;
+}
+body.dragging #files_view .dragged_source {
+	background-color: #f2f0f8 !important;
+	border-color: #63569b !important;
+}
+#files_view .files_details td { border-color: #eef0f3; }
+#files_view .files_details thead th {
+	border-bottom: 1px solid #e5e7eb;
+	background: #f9fafb;
+	color: #4b5563;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .04em;
+	text-transform: uppercase;
+}
+#files_view .files_details td.name { background-color: transparent; }
+#files_view .files_details tbody tr:hover,
+#files_view .files_details tbody tr:hover td,
+#files_view .files_details tbody tr.hover td,
+#files_view .files_details tbody tr:hover td.name,
+#files_view .files_details tbody tr.hover td.name { background-color: #f2f0f8; }
+#files_view .files_details tr.selected,
+#files_view .files_details tr.selected td,
+#files_view .files_details tr.selected td.name { background-color: #ddd8ec; }
+#files_view .message_content {
+	border-radius: 6px;
+	background-color: #f2f0f8;
+	color: #4b4079;
+}
+.focus_inside { border-color: #63569b !important; }
+
+/* Status bar and search box --------------------------------------------- */
+#status_view {
+	border-radius: 6px;
+	background-color: #ffffff;
+	border: 1px solid #e5e7eb;
+	color: #6b7280;
+	font-size: 12px;
+}
+.cke_search_box {
+	padding: 5px 8px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background: #ffffff;
+	color: #1f2937;
+}
+.cke_search_box:focus {
+	border-color: #63569b;
+	box-shadow: 0 0 0 .18rem rgba(99, 86, 155, .16);
+	outline: 0;
+}
+.cke_search_placeholder { color: #9aa3b2; }
+.dropdown { color: #4b5563; }
+
+/* Upload / progress ----------------------------------------------------- */
+#panel_view .panel_widget .buttons_wrapper {
+	border-radius: 0 0 6px 6px;
+	background-color: #f9fafb;
+}
+#panel_view .panel_widget .buttons {
+	border-radius: 0 0 6px 6px;
+	background-color: #f2f0f8;
+}
+.ckf_progress_bar_container {
+	border: 1px solid #e5e7eb;
+	border-radius: 999px;
+	background: #eef0f3;
+	overflow: hidden;
+}
+.ckf_progress_bar_container div { background-color: #63569b; }
+.ckf_status,
+.ckf_speed,
+.ckf_upload_info,
+.ckf_progress_info { color: #6b7280; }
+.ckf_FileError { color: #c62828; }
+
+/* Context menus and drop-down panels ------------------------------------ */
+.cke_skin_kama .cke_panel {
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background-color: #ffffff;
+	box-shadow: 0 10px 26px rgba(17, 24, 39, .12);
+}
+.cke_skin_kama .cke_menuitem .cke_label { background-color: #ffffff; color: #1f2937; }
+.cke_skin_kama .cke_menuitem a:hover,
+.cke_skin_kama .cke_menuitem a:focus,
+.cke_skin_kama .cke_menuitem a:active { background-color: #f2f0f8; }
+.cke_skin_kama .cke_menuitem a:hover .cke_label,
+.cke_skin_kama .cke_menuitem a:focus .cke_label,
+.cke_skin_kama .cke_menuitem a:active .cke_label { background-color: #f2f0f8; color: #4b4079; }
+.cke_skin_kama .cke_menuitem .cke_icon_wrapper,
+.cke_skin_kama .cke_menuitem a:hover .cke_icon_wrapper,
+.cke_skin_kama .cke_menuitem a:focus .cke_icon_wrapper,
+.cke_skin_kama .cke_menuitem a:active .cke_icon_wrapper {
+	background-color: #f2f0f8;
+	border-color: #f2f0f8;
+	opacity: 1;
+}
+.cke_skin_kama .cke_menuseparator { height: 1px; background-color: #eef0f3; opacity: 1; }
+.cke_panel_listItem a { border-color: #ffffff; border-radius: 4px; }
+.cke_panel_listItem a:hover,
+.cke_panel_listItem a:focus { background-color: #f2f0f8; border-color: #f2f0f8; color: #4b4079; }
+.cke_panel_listItem.cke_selected a,
+.cke_panel_listItem.cke_selected a:hover,
+.cke_panel_listItem.cke_selected a:focus { background-color: #ddd8ec; border-color: #ddd8ec; color: #4b4079; font-weight: 600; }
+.cke_panel_listItem.cke_selected a * { color: #4b4079; }
+.cke_panel_grouptitle {
+	background: #f9fafb;
+	background-image: none;
+	border-bottom: 1px solid #eef0f3;
+	color: #6b7280;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+}
+
+/* Dialogs rendered inside the application frame ------------------------- */
+.cke_skin_kama .cke_dialog_tl,
+.cke_skin_kama .cke_dialog_tc,
+.cke_skin_kama .cke_dialog_tr,
+.cke_skin_kama .cke_dialog_ml,
+.cke_skin_kama .cke_dialog_mr,
+.cke_skin_kama .cke_dialog_bl,
+.cke_skin_kama .cke_dialog_bc,
+.cke_skin_kama .cke_dialog_br {
+	background-image: none;
+	background-color: transparent;
+	width: 0;
+	height: 0;
+}
+.cke_skin_kama .cke_dialog_body {
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	background: #ffffff;
+	box-shadow: 0 22px 60px rgba(17, 24, 39, .22);
+}
+.cke_skin_kama .cke_dialog_title {
+	padding: 13px 18px;
+	border-bottom: 1px solid #e5e7eb;
+	background: #ffffff;
+	background-image: none;
+	color: #1f2937;
+	font-size: 15px;
+	font-weight: 600;
+	text-shadow: none;
+}
+/* kama positions the tab strip absolutely and compensates with a top margin
+   on the contents; the strip is in normal flow here, so the compensation has
+   to go or the first field slides under the tabs. */
+.cke_skin_kama .cke_dialog_contents,
+.cke_skin_kama .cke_dialog_page_contents {
+	margin-top: 0;
+	border: 0;
+	background: #ffffff;
+	padding: 16px 18px;
+}
+.cke_skin_kama .cke_dialog_ui_vbox_child { padding: 7px 0; }
+.cke_skin_kama .cke_dialog_ui_vbox_child:first-child { padding-top: 0; }
+.cke_skin_kama .cke_dialog_footer {
+	padding: 12px 18px;
+	border-top: 1px solid #e5e7eb;
+	background: #f9fafb;
+	background-image: none;
+}
+.cke_skin_kama .cke_dialog_tabs {
+	position: static;
+	display: block;
+	top: auto;
+	left: auto;
+	right: auto;
+	height: auto;
+	margin: 0;
+	padding: 8px 18px 0;
+	background: #f9fafb;
+	border-bottom: 1px solid #e5e7eb;
+}
+.cke_skin_kama a.cke_dialog_tab {
+	padding: 9px 14px;
+	border: 1px solid transparent;
+	border-radius: 6px 6px 0 0;
+	background: transparent;
+	background-image: none;
+	color: #4b5563;
+	font-size: 12.5px;
+}
+.cke_skin_kama a.cke_dialog_tab:hover { background: #f2f0f8; color: #4b4079; }
+.cke_skin_kama a.cke_dialog_tab_selected {
+	border-color: #e5e7eb #e5e7eb #ffffff;
+	background: #ffffff;
+	background-image: none;
+	color: #63569b;
+	font-weight: 600;
+}
+.cke_skin_kama .cke_dialog_error_msg { color: #c62828; }
+
+/* Dialog form controls and buttons -------------------------------------- */
+.cke_skin_kama .cke_dialog_ui_labeled_label { color: #4b5563; font-size: 12.5px; font-weight: 500; }
+.cke_skin_kama input.cke_dialog_ui_input_text,
+.cke_skin_kama input.cke_dialog_ui_input_password,
+.cke_skin_kama textarea.cke_dialog_ui_input_textarea,
+.cke_skin_kama select.cke_dialog_ui_input_select,
+.cke_skin_kama input.cke_dialog_ui_input_file {
+	padding: 7px 9px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background: #ffffff;
+	color: #1f2937;
+	font-size: 13px;
+}
+/* Same clipping guard as the editor dialogs: kama's fixed height cut the
+   selected option off once padding and font size went up. */
+.cke_skin_kama select.cke_dialog_ui_input_select {
+	box-sizing: border-box;
+	height: 38px;
+	min-height: 38px;
+	line-height: 24px;
+}
+/* The file field must keep the skin's own box: the class sits on both the
+   <iframe> and its wrapper, and the dialog sets an inline height on that row,
+   so extra height/border here overflows onto the upload button below. */
+.cke_skin_kama .cke_dialog_ui_input_file,
+.cke_skin_kama iframe.cke_dialog_ui_input_file {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+}
+.cke_skin_kama input.cke_dialog_ui_input_text:focus,
+.cke_skin_kama input.cke_dialog_ui_input_password:focus,
+.cke_skin_kama textarea.cke_dialog_ui_input_textarea:focus,
+.cke_skin_kama select.cke_dialog_ui_input_select:focus {
+	border-color: #63569b;
+	box-shadow: 0 0 0 .18rem rgba(99, 86, 155, .16);
+	outline: 0;
+}
+.cke_skin_kama a.cke_dialog_ui_button,
+.ckf_uploadButtons .submit,
+input.submit {
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background: #ffffff;
+	background-image: none;
+	color: #1f2937;
+	font-size: 13px;
+	font-weight: 500;
+	text-shadow: none;
+	cursor: pointer;
+}
+/* Larger click targets. kama sizes the footer buttons through
+   ".cke_dialog_footer_buttons span.cke_dialog_ui_button", so the overrides
+   need the skin class to win on specificity. */
+.cke_skin_kama a.cke_dialog_ui_button {
+	padding: 0;
+	margin: 2px 0;
+	/* zero line-height kills the inline-block baseline gap under the label,
+	   which otherwise pushes the text visually off-centre */
+	line-height: 0;
+	text-align: center;
+	vertical-align: middle;
+}
+.cke_skin_kama span.cke_dialog_ui_button,
+.cke_skin_kama .cke_dialog_footer_buttons span.cke_dialog_ui_button {
+	display: block;
+	width: auto;
+	margin: 0;
+	padding: 8px 18px;
+	color: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 18px;
+	text-align: center;
+	text-shadow: none;
+	white-space: nowrap;
+}
+/* Width floor for the OK/Cancel pair only; inline buttons size to their label. */
+.cke_skin_kama .cke_dialog_footer_buttons span.cke_dialog_ui_button { min-width: 68px; }
+.ckf_uploadButtons .submit,
+input.submit {
+	padding: 8px 18px;
+	font-size: 13px;
+	line-height: 18px;
+	text-align: center;
+}
+.cke_skin_kama a.cke_dialog_ui_button:hover,
+.cke_skin_kama a.cke_dialog_ui_button:focus,
+.ckf_uploadButtons .submit:hover,
+input.submit:hover {
+	border-color: #ddd8ec;
+	background: #f2f0f8;
+	background-image: none;
+	color: #4b4079;
+}
+.cke_skin_kama a.cke_dialog_ui_button_ok,
+.ckf_uploadButtons .submit {
+	border-color: #63569b;
+	background: #63569b;
+	background-image: none;
+	color: #ffffff;
+}
+.cke_skin_kama a.cke_dialog_ui_button_ok span { color: #ffffff; }
+.cke_skin_kama a.cke_dialog_ui_button_ok:hover,
+.cke_skin_kama a.cke_dialog_ui_button_ok:focus,
+.ckf_uploadButtons .submit:hover {
+	border-color: #554987;
+	background: #554987;
+	background-image: none;
+	color: #ffffff;
+}
+.cke_skin_kama a.cke_dialog_ui_button_cancel { border-color: #e5e7eb; background: #ffffff; color: #4b5563; }
+.cke_skin_kama a.cke_dialog_ui_button_cancel:hover { border-color: #d5d9e0; background: #f9fafb; color: #1f2937; }
+.cke_skin_kama .cke_dialog_close_button { opacity: .55; }
+.cke_skin_kama .cke_dialog_close_button:hover { opacity: 1; }
+.cke_dark_background { background-color: #111827; }

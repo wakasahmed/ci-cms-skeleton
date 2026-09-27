@@ -16,3 +16,24 @@ application/logs/*
 !application/logs/index.html
 !application/logs/.htaccess
 /vendor/
+
+# Generated email previews when EMAIL_HOST=log
+/email_logs/*.html
+!/email_logs/.htaccess
+!/email_logs/index.html
+
+# Environment-specific constants and credentials (see application/config/secrets.example.php).
+# */config/development is already ignored above.
+*/config/production
+*/config/staging
+
+# Reference design export for the Blossom rebuild (PROJECT_PLAN.md). Never deployed.
+/ci3/
+
+# Admin-uploaded content. Keep the folders (index.html) but not the uploaded files.
+# images/alam/ holds the old theme's static imagery and is removed in Phase 5.
+/assets/frontend/images/*/*
+!/assets/frontend/images/*/index.html
+!/assets/frontend/images/alam/**
+/assets/uploads/*/*
+!/assets/uploads/*/index.html

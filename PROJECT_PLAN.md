@@ -1,0 +1,403 @@
+# Blossom CMS — Customisation Plan
+
+Plan for turning the copied Alam Al-Munawara tour CMS (this repository) into the CMS and
+website for **Blossom Ewa Mazur**, a manicure, nail art and beauty studio in Gorlice, Poland.
+
+The target frontend is the static CodeIgniter 3 export in `/ci3/`. The target CMS is this
+application with everything tour-related, bilingual, and integration-specific removed.
+
+Work through the phases in order. Each phase should end in a working, committable state.
+
+---
+
+## 1. Review summary
+
+### 1.1 The current application (base CMS)
+
+CodeIgniter 3, PHP 8.4 platform, MySQL (`ci_cms` locally, 51 tables). Built for a bilingual
+(English/Arabic) Madinah tour operator.
+
+| Area | What exists |
+|------|-------------|
+| Admin shell | Login, remember-me, password reset, login throttling, admin users, account settings, dashboard, Bootstrap 5 + Bootstrap Icons, shared partials (`breadcrumb`, `crud_alert`, `module_header`, `table_listing_footer`, `avatar_upload`, `file_upload`, `icon_picker_field`, `confirm_modals`, `star_rating`, `short_tag_picker`), Flatpickr, Coloris, CKEditor/CKFinder, drag sorting (`Admin_record_sorter`, `Record_sorting`) |
+| Content modules | Pages, Blogs, Blog Categories, FAQs, FAQ Categories, Slider/Sliders, Web Page Sections, Miscellaneous Contents, Content Section Sync, Menu, Footer columns (`Foot`), Customer Reviews, Contact Requests, Email Templates, Form Settings, Website Settings, Countries, Email Test |
+| Tour/booking modules | Tours, Tour Categories, Tour Images, Tour Itineraries, Tour Slots, Tour Languages, Tour Guides, Tour Guide Availability, Tour Reviews, Attractions, Vehicles, Bookings, Discount Codes, Referrals, Reports (6 reports), Plan Your Visit |
+| Integrations | Google Cloud Translation (+ translation job queue, cron, polling UI), Google Places (booking pickup location), WhatsApp Cloud API (gateway, templates module, webhook, booking notifications), Moyasar payments (SAR), reCAPTCHA Enterprise, Mailgun SMTP |
+| Frontend | `Frontend.php` (5,335 lines) with `/en` and `/ar` locale prefixes, Tailwind v3 build using Alam tokens, booking wizard, plan-your-trip wizard, review form, SEO library (`Frontend_seo`), presenter library, sitemap/robots/llms |
+| Bilingual data | Almost every content table has `_ar` twin columns; section field tables have a `locale` column; `Localized_model` selects per-locale columns |
+
+**Reusable foundations worth keeping:** `SqlModel`, the admin shell and shared partials,
+`Imagethumb`, `Admin_record_sorter`, `Page_menu_hierarchy`, `Content_section_service`
+(page sections), `Short_tags`, `EmailService`, `Frontend_seo`, `Seo` controller,
+`admin_pagination_helper`, `image_helper`, the CRUD module pattern (Tour Guides) and the
+singleton pattern (Website Settings).
+
+### 1.2 The new frontend (`/ci3/`)
+
+A CodeIgniter 3.1.13 export of a Next.js site. It is **presentation only**:
+
+- 49 views in `ci3/application/views/frontend/`, each a complete, **minified single-line HTML
+  document** using `<?= ?>` short tags. No shared layout; header and footer are duplicated in
+  every file.
+- Every service, artist, article and appointment is a separate hard-coded view.
+- Styling is a compiled **Tailwind v4.3.3** stylesheet (`assets/css/site.css`) with theme
+  tokens (`primary`, `plum`, `lilac`, `petal`, `foreground-soft`, …) and Fraunces + Plus
+  Jakarta Sans fonts. The source CSS is not included.
+- JS: jQuery 4.0.0, `site.js` (header/menu/reveal), `interactions.js` (filters, validation,
+  search), `booking.js` (a 5-step client-side wizard with services/artists/offers hard-coded
+  in JS), Swiper 14 (home hero), PhotoSwipe 5 (gallery), Font Awesome Free 7.3.1.
+- Forms, login/registration, the booking wizard and the account area are UI mock-ups; nothing
+  is persisted.
+- `ci3/vendor/` holds CodeIgniter's dev dependencies (PHPUnit etc.) and is not needed.
+
+**Site map of the new frontend**
+
+| Route | Page | Content found |
+|-------|------|---------------|
+| `/` | Home | Hero carousel, nail services intro, nail art, "fresh from the studio" (gallery), about teaser, artists, how booking works (4 steps), offers, testimonials, location, Instagram feed, CTA |
+| `/services` | Services | Grouped menu (Nails / Hair / Beauty) with price "from" and duration |
+| `/services/{slug}` | Service detail (14) | Intro, price, time, what's included, before your visit, aftercare, add-ons with prices, shapes & finishes, related gallery, FAQs |
+| `/artists`, `/artists/{slug}` | Team (3) | Role, bio, specialties, services offered, weekly availability |
+| `/gallery` | Gallery | Photos with caption + category filter (Manicure, Nail Art, Hair, Makeup, Beauty), lightbox |
+| `/offers` | Offers | Featured + other bundles: label, title, summary, inclusions, price, old price, duration, validity, linked services |
+| `/about` | About | Story, what we're known for, products and tools, team, location |
+| `/blog`, `/blog/{slug}` | Journal (6 articles) | Category filter, lead article + grid |
+| `/faq` | FAQ | Grouped by Appointments / Nails / The salon |
+| `/contact` | Contact | Address, phone, opening hours, map (placeholder), contact form (name, email, phone, subject select, message) |
+| `/book` | Booking | Service → Artist → Date & time → Details → Review |
+| `/search` | Search | Site search across services/articles |
+| `/login`, `/register`, `/forgot-password`, `/account/*`, `/appointment/{ref}` | Customer account | Mock-ups only |
+| `/privacy-policy`, `/terms`, `/cancellation-policy` | Legal | Static text |
+
+Site-wide data used by the header/footer: logo (dark and light), phone `+48 512 129 654`,
+address, "above the 5.10.15 children's store" note, opening hours per day group, footer
+link columns, social/Instagram, copyright. Currency is **PLN (zł)**.
+
+---
+
+## 2. Decisions to confirm before or during the phases
+
+Each item has a recommendation; the plan below assumes the recommendation unless changed.
+
+| # | Decision | Recommendation |
+|---|----------|----------------|
+| D1 | Booking: real online booking engine, a **booking request** form, or phone-only? | Phase 6 ships a **booking request** (the wizard saves an appointment request; staff confirm by phone/email). A real availability engine is Phase 8, optional. |
+| D2 | Customer accounts (login/register/account/appointments) | **Defer.** Remove these routes from launch; revisit only if D1 becomes a real booking engine. |
+| D3 | Online payments | **None.** Remove Moyasar. Salons are paid in the studio. |
+| D4 | reCAPTCHA | **Keep reCAPTCHA Enterprise** (already integrated) for the contact and booking-request forms, with a new Google project/keys for Blossom. Remove only `google/cloud-translate` from Composer. |
+| D5 | Tailwind version for the frontend | **Tailwind v4 standalone CLI.** The exported markup is written for v4 (`@theme` tokens, v4 arbitrary-value syntax); porting it to v3 risks visual drift. |
+| D6 | Instagram section on home | Admin-managed images + profile link (no Instagram API). |
+| D7 | Map on contact page | Plain Google Maps embed / "Open in Maps" link (no API key, no Places). |
+| D8 | Existing Arabic columns | **Drop** after the code no longer reads them (Phase 4 SQL). |
+| D9 | Countries module | **Remove** unless D1/D2 needs a country list. |
+| D10 | Local host name | Keep `http://ctech-cms/` or create a new vhost (e.g. `http://blossom-cms/`) and update AGENTS.md. |
+
+---
+
+## 3. Module mapping (old → new)
+
+| New site need | Source in current CMS | Action |
+|---------------|-----------------------|--------|
+| Services + service groups | Tours, Tour Categories, Tour Images | **New** `Services` + `Service_categories` modules, modelled on Tours/Tour Categories |
+| Service add-ons, inclusions, "before/aftercare" lists | Tour itineraries (repeatable rows) | Part of Services (child rows or structured fields) |
+| Artists / team | Tour Guides | **New** `Artists` module, a direct port of Tour Guides (profile, photo, role, bio, specialties, assigned services) |
+| Artist weekly availability (display) | Tour Guide Availability | Simple weekly day toggles on Artist for display; full availability only if D1 becomes a real engine |
+| Gallery + gallery categories | Tour Images, `tour-images-upload.js` | **New** `Gallery` + `Gallery_categories` modules (multi-upload, caption, category, sort) |
+| Offers / bundles | Tours (pricing), Discount Codes | **New** `Offers` module (label, title, summary, inclusions, price, old price, duration, validity dates, linked services, featured flag) |
+| Appointment requests | Bookings, `viewBooking` | **New** `Appointments` module (listing, view, status: New / Confirmed / Completed / Cancelled, internal notes) |
+| Testimonials | Customer Reviews | **Keep**, English-only |
+| Journal | Blogs, Blog Categories | **Keep**, English-only, route `/blog` |
+| FAQ | FAQs, FAQ Categories | **Keep**, English-only; optionally link FAQs to a service |
+| Legal + generic pages | Pages | **Keep** |
+| Home / About / Contact sections | Web Page Sections, Miscellaneous Contents, `content_sections.php` | **Keep**, redefine sections for Blossom |
+| Hero carousel | Slider / Sliders | **Keep** |
+| Header/footer menus | Menu, Foot | **Keep** |
+| Site-wide details, opening hours, socials | Website Settings | **Keep**, add opening hours + map link + Instagram fields |
+| Contact form | Contact Requests, Form Settings, Email Templates | **Keep** |
+| Admin users | Admins, Login | **Keep** |
+| Dashboard | Home (manage) + `Dashboard_model` | **Rewrite** around appointment requests, contact requests, content counts |
+
+---
+
+## Phase 0 — Baseline, safety and environment
+
+1. **Secrets.** `application/config/constants.php` contains live credentials from the
+   previous client (Mailgun SMTP password, Moyasar live/test keys, WhatsApp access token and
+   app secret, reCAPTCHA keys, Google Maps key). `application/` is not committed yet — remove
+   these values **before the first commit** and ask the previous project owner to rotate them.
+   Move any remaining secrets to `application/config/development/` and
+   `application/config/production/` (already gitignored) and load them from there.
+2. Commit the untouched CMS as a baseline and tag it (for example `alam-cms-baseline`), so the
+   tour modules stay available as a reference through `git show alam-cms-baseline:<path>`
+   after they are deleted.
+3. Create a new local database (for example `blossom_cms`) from a copy of `ci_cms`, point
+   `config/database.php` at it, and keep `ci_cms` untouched as a backup.
+4. Environment: timezone `Europe/Warsaw` (currently `Asia/Riyadh` in `index.php`), sender name
+   and address, local vhost (D10), `PROJECT_TITLE` via Website Settings.
+5. Add `/ci3/` to `.gitignore` or commit it as read-only reference — it must never be deployed
+   (`ci3/vendor/` in particular). It is deleted in Phase 9.
+
+**Done when:** the CMS runs against `blossom_cms`, no secret is tracked by git, baseline tag exists.
+
+---
+
+## Phase 1 — Build the new admin modules (reference: tour modules)
+
+Build new modules **while the tour modules still exist**, so they can be read side by side.
+All new modules are **English-only** — no `_ar` columns, no `Manage_translation_service`, no
+language switcher, no translation badges.
+
+Order (each module = controller + listing view + add/edit view + SQL + navigation entry):
+
+1. **Service Categories** — reference `Tour_categories.php`. Fields: name, slug, short
+   description, image, sort, status.
+2. **Services** — reference `Tours.php` + `addTour.php`. Fields: category, name, slug, summary,
+   description (CKEditor), price from, price suffix (e.g. "/ nail"), duration label, duration
+   minutes, card image, hero image, included items, before-your-visit items, aftercare items,
+   add-ons (label + price), featured flag, SEO fields (page title, meta description, OG),
+   sort, status.
+3. **Artists** — reference `Tour_guides.php` + `addTourGuide.php` (canonical CRUD). Fields:
+   name, slug, role, bio, photo (avatar partial), specialties, assigned services, usual
+   working days, placeholder flag, sort, status. **This becomes the new canonical CRUD
+   module** in AGENTS.md.
+4. **Gallery Categories** + **Gallery** — reference `Tour_images.php` +
+   `tour-images-upload.js`. Fields: image, caption, category, optional related service, sort,
+   status. Multi-upload.
+5. **Offers** — reference `Tours.php` pricing fields. Fields listed in §3; validity dates use
+   the shared `.daterange` Flatpickr selector.
+6. **Appointments** (booking requests) — reference `Bookings.php` + `viewBooking.php`.
+   Listing with search/status filter, detail view, status change (AJAX, JSON response),
+   internal notes. No create form in admin unless requested.
+
+Also in this phase:
+
+- Update `views/admin/navigation.php` with a Salon group (Services, Service Categories,
+  Artists, Gallery, Offers) and an Appointments entry.
+- Register sortable modules with `Admin_record_sorter` where drag sorting is used.
+- Provide the `CREATE TABLE` SQL for each module in `docs/sql/phase-1.sql`.
+
+**Done when:** every new module passes list / search / filter / sort / add / edit /
+validation-failure / status / delete tests locally.
+
+---
+
+## Phase 2 — Remove tours, bookings and payments
+
+Delete (controllers, views, models, libraries, JS, routes, navigation, constants):
+
+- Controllers `manage/`: Tours, Tour_categories, Tour_images, Tour_itineraries, Tour_slots,
+  Tour_languages, Tour_guides, Tour_guide_availability, Tour_reviews, Attractions, Vehicles,
+  Bookings, Discount_codes, Referrals, Reports, Plan_your_visit, (Countries per D9).
+- Root controllers: Booking_cron, Payments.
+- Models: Tour_model, Tour_review_model, Guide_model, Booking_model, Booking_payment_model,
+  Manage_booking_model, Plan_your_visit_model, ReportsModel, Review_model (after checking it
+  is only used by tour reviews).
+- Libraries: Tour_pricing, Moyasar_gateway, Booking_email_service, Discount_email_service.
+- Admin views for all of the above, report partials (unless kept for Appointments reports),
+  `bookings.js`, `reports.js`, `tour-images-upload.js`, `dashboard.js` (rewrite).
+- Helpers: `report_helper.php` (unless kept).
+- Constants: `TOUR_*`, `PRICE_TOUR_ID`, `CAR*`, `BOOK_*`/`CONSUME_*`/`CANCEL_HOUR_LIMIT`,
+  `DISCOUNT_*`, `MOYASAR_*`, `EXPERIENCE_URI`, `TOUR_URI`.
+- Short tags and email templates that refer to bookings, guides, payments or discounts.
+- Frontend: booking wizard, plan-your-trip, tour/experience/guide pages, review form and their
+  JS (`booking*.js`, `plan-your-trip.js`, `hero-search.js`, `review.js`, `number-stepper.js`).
+- Rewrite the dashboard (`manage/Home.php`, `Dashboard_model`, `dashboard.php`) around
+  appointment requests, contact requests and content counts.
+
+Grep for `tour`, `booking`, `guide`, `moyasar`, `discount`, `referral`, `vehicle`,
+`attraction`, `plan_your` after deletion; the only remaining matches should be intentional.
+
+**Done when:** `/manage` and every remaining module load with no PHP notices; `php -l`
+passes on every modified file.
+
+---
+
+## Phase 3 — Remove integrations and make everything English-only
+
+### 3.1 Google Translation
+Remove `Google_translation_service`, `Manage_translation_service`, `Translation_cron`,
+`manage/Manage_translations`, `Translation_job_model`, `config/manage_translations.php`,
+`helpers/manage_translation_helper.php`, `translation_status_badge.php`,
+`manage_language_switcher.php`, `manage_language_switch_modal.php`,
+`assets/admin/js/manage-translations.js`, the `translation-cron` and `manage/translations`
+routes, `GOOGLE_TRANSLATION_*` constants, and every `useManageTranslations` / locale branch
+in the kept modules.
+
+### 3.2 Google Places
+Remove `Google_places_service`, `GOOGLE_PLACES_*` and `GOOGLE_MAPS_API_KEY` constants,
+`place-autocomplete.js`, and the `booking_places` / `booking_place` endpoints (if Phase 2 has
+not already removed them).
+
+### 3.3 WhatsApp
+Remove `Whatsapp` controller, `Whatsapp_gateway`, `Whatsapp_template_service`,
+`Booking_whatsapp_service`, `manage/Whatsapp_templates`, its views and
+`whatsapp-templates.js`, `WHATSAPP_*` constants, `whatsapp/*` routes, WhatsApp short tags
+(`config/short_tags.php`, `Short_tags`), WhatsApp references in `EmailService`, admin
+`footer.php`, navigation and the frontend language files.
+
+### 3.4 Composer
+Change `composer.json` to require only `google/cloud-recaptcha-enterprise` (D4), regenerate
+`application/third_party/google_api/` locally, and commit the result. If D4 changes to "no
+reCAPTCHA Enterprise", remove `composer.json`, `composer.lock`, `third_party/google_api/` and
+`Google_recaptcha` entirely.
+
+### 3.5 English-only
+- Kept modules (Pages, Blogs, Blog Categories, FAQs, FAQ Categories, Slider, Customer
+  Reviews, Email Templates, Form Settings, Website Settings, Web Page Sections, Miscellaneous
+  Contents, Menu, Foot): remove Arabic fields, locale tabs, `_ar` reads/writes and RTL styling.
+- `Localized_model`: simplify to plain column reads or remove once nothing extends it (it is
+  autoloaded in `config/autoload.php`).
+- `config/content_sections.php`: single `en` locale; section-field reads ignore `locale`.
+- Delete `application/language/arabic/`; keep `language/english/frontend_lang.php` only if the
+  new views use it (otherwise remove it too).
+- Routes: drop the `(en|ar)` prefixes, the locale cookie and the locale redirect in
+  `Frontend.php`. URLs become exactly those of the new site map (§1.2).
+- `Seo` (sitemap, robots, llms) and `Frontend_seo`: remove hreflang/alternate-locale output.
+
+**Done when:** grepping for `_ar'`, `'ar'`, `arabic`, `translation`, `whatsapp`, `places`
+returns no functional code, and all kept admin modules save and reload correctly.
+
+---
+
+## Phase 4 — Database clean-up (run manually)
+
+Provide `docs/sql/phase-4-cleanup.sql`, reviewed before execution and run only against
+`blossom_cms` after a backup:
+
+- `DROP TABLE` for: `tours`, `tour_*` (all 17), `attractions`, `vehicles`, `discount_codes`,
+  `referrals`, `plan_your_visit`, `translation_jobs`, `whatsapp_templates`,
+  `ci_sessions_ci2_backup`, `zzz_migration_test`, and `countries` (per D9).
+- `ALTER TABLE … DROP COLUMN` for every `_ar` column in the kept tables (`pages`, `blogs`,
+  `blog_categories`, `faqs`, `faqs_categories`, `slider`, `customer_reviews`,
+  `email_templates`, `form_settings`, `site_settings`).
+- Remove tour-specific columns from kept tables (e.g. `form_settings.tour_success`,
+  `experience_success`, `plan_success`, `pyt_*`; `site_settings.license_number`, `profit`,
+  `tax`, `payment_*`, `currency_unit_ar`).
+- `DELETE … WHERE locale = 'ar'` in `web_page_section_fields` and
+  `miscellaneous_content_section_fields`.
+- Add Blossom fields to `site_settings` (opening hours, map URL, Instagram URL, address note,
+  dark/light logos if not covered).
+- Empty sample data (bookings, contact requests, login attempts, sessions) before seeding.
+
+---
+
+## Phase 5 — Frontend foundation
+
+1. **Tailwind v4 pipeline (D5).** Recreate the theme from `ci3/assets/css/site.css` into
+   `assets/frontend/css/src/tailwind.css` (`@import "tailwindcss"`, `@theme` tokens for
+   colours, fonts, easing, radii, shadows; `@source` for `application/views/frontend` and
+   `assets/frontend/js`). Build with the v4 standalone binary into
+   `assets/frontend/css/app.css`. Remove the Alam `tailwind.config.js`. Compare the rebuilt
+   CSS against `site.css` page by page.
+2. **Assets.** Move fonts, logos, jQuery 4, Swiper, PhotoSwipe and Font Awesome from
+   `ci3/assets/` into `assets/frontend/`. Remove Alam frontend JS/vendor files that are no
+   longer used (select2, intl-tel-input, htmx, datepicker, etc., after checking usage). Do
+   not copy `fontawesome-download/`.
+3. **Layout partials.** Split the duplicated markup into formatted, readable partials:
+   `frontend/layout/head.php`, `header.php` (primary nav from Menu module, phone, Book
+   button), `footer.php` (Foot columns, address, hours, legal links), `cta_band.php`,
+   `breadcrumb.php`, and card partials (`service_card`, `artist_card`, `offer_card`,
+   `article_card`, `gallery_item`, `testimonial`). Replace every `<?=` with `<?php echo` and
+   escape output.
+4. **Controller.** Replace `Frontend.php` with a lean English-only controller (or split into
+   `Services`, `Artists`, `Gallery`, `Offers`, `Blog`, `Pages` frontend controllers) that
+   loads site settings once, uses `Frontend_seo` for meta/OG/canonical, and returns proper
+   404s for unknown slugs.
+5. **Routes.** Match §1.2 exactly (`/services/{slug}`, `/artists/{slug}`, `/blog/{slug}`,
+   etc.). Keep `robots.txt`, `sitemap.xml`, `llms.txt`.
+6. **JS.** Port `site.js` and `interactions.js` into `assets/frontend/js/`, formatted, with
+   hard-coded data replaced by server-rendered markup or JSON endpoints.
+
+**Done when:** the header, footer and an empty home page render with the Blossom design at
+desktop and mobile widths.
+
+---
+
+## Phase 6 — Frontend pages on CMS data
+
+Convert one page at a time; compare against the `/ci3/` version at desktop and mobile.
+
+1. Home — Slider (hero), Web Page Sections (intro blocks, how-booking-works, location),
+   featured Services, Gallery (latest), Artists, featured Offers, Customer Reviews,
+   Instagram (D6), CTA.
+2. Services listing and service detail (with related gallery, FAQs, add-ons, "Book this").
+3. Artists listing and artist detail.
+4. Gallery with category filter + PhotoSwipe.
+5. Offers.
+6. About (Web Page Sections).
+7. Journal listing, category filter, article detail (Blogs).
+8. FAQ (grouped by FAQ Categories).
+9. Contact — settings-driven address/hours/map (D7); form saved to `contact_requests`,
+   reCAPTCHA verified, notification + auto-reply through `EmailService` and Email Templates,
+   Post/Redirect/Get, server-side validation mirrored by `form-validate`.
+10. Legal pages (Pages module).
+11. Search — server-side search across services, offers and journal articles.
+12. Book (D1) — the 5-step wizard reads services/artists/offers from the database and submits
+    an appointment request (saved to `appointments`, reCAPTCHA, emails to salon and client,
+    confirmation screen with reference). Pre-selection via `?service=`, `?artist=`, `?offer=`.
+13. 404 page in the Blossom design.
+
+Remove the account/login/register/appointment mock-up pages from the build (D2).
+
+---
+
+## Phase 7 — SEO, email and content
+
+- `Frontend_seo`: titles, meta descriptions, canonical, OG/Twitter tags, JSON-LD
+  (`BeautySalon`/`NailSalon` LocalBusiness with address, phone, opening hours; `Service`;
+  `BlogPosting`; `FAQPage`; `BreadcrumbList`).
+- `sitemap.xml` from Pages, Services, Artists, Offers, Blogs; `robots.txt`; `llms.txt`.
+- Email Templates for: contact notification, contact auto-reply, appointment request
+  (salon), appointment request received (client), appointment confirmed/cancelled (if
+  status emails are wanted). Use `EMAIL_*_FORMAT` constants.
+- Seed content from the `/ci3/` views: 14 services with prices/durations, 3 artists, gallery
+  images, 6 offers, 6 journal articles, FAQs, testimonials, legal pages, settings. A one-off
+  seed SQL in `docs/sql/seed.sql` is acceptable.
+- Replace placeholder artists/offer validity once the salon supplies real data.
+
+---
+
+## Phase 8 — Optional: real booking and accounts (only if D1/D2 change)
+
+- Artist working hours and exceptions (reference: Tour Guide Availability + Tour Slots).
+- Slot calculation from service duration and artist availability.
+- Customer accounts reusing the admin auth patterns (password hashing, reset, throttling,
+  remember tokens) in a separate `customers` table.
+- Account area: upcoming/past appointments, cancel/reschedule within policy.
+- Appointment reports (reuse the shared report partials if kept).
+
+---
+
+## Phase 9 — QA, clean-up and deployment
+
+- `php -l` on every modified PHP file; JS syntax check on modified JS.
+- Admin: every module's list/search/sort/add/edit/validation/status/delete flow.
+- Frontend: every route at desktop and mobile widths, keyboard navigation, focus states,
+  skip link, form validation and success states, 404s.
+- Grep for leftovers: `alam`, `madinah`, `munawara`, `tour`, `riyadh`, `SAR`, `whatsapp`,
+  `translation`, `_ar`.
+- Delete `/ci3/` and any unused Alam assets (`assets/frontend/xsl`, unused vendor files,
+  uploaded Alam images in `assets/uploads/`).
+- Production: `.htaccess_prod`, production database config, HTTPS base URL, SMTP
+  credentials, reCAPTCHA production keys, cron jobs (none expected unless Phase 8).
+
+---
+
+## Appendix — Files to keep, adapt, remove (quick reference)
+
+**Keep as-is (review only):** `SqlModel`, `AdminLoginAttemptModel`, `AdminRememberTokenModel`,
+`PasswordResetModel`, `Imagethumb`, `Ckeditor`, `Ckfinder`, `Encrypt`, `Admin_record_sorter`,
+`Page_menu_hierarchy`, `image_helper`, `admin_pagination_helper`, admin partials, `admin.js`,
+`color-picker.js`, `icon-picker.js`, `file-upload.js`, `uploads.js`, `avatar-editor.js`,
+`sortable-records.js`, `menu-manager.js`, `content-sections.js`, `website-settings.js`.
+
+**Adapt (English-only / new content):** Pages, Blogs, Blog_categories, Faqs, Faqs_categories,
+Slider, Sliders, Web_page_sections, Miscellaneous_contents, Content_section_sync, Menu, Foot,
+Customer_reviews, Contact_requests, Email_templates, Email_test, Form_settings,
+Website_settings, Admins, Login, manage/Home, Seo, `EmailService`, `Short_tags`,
+`Content_section_service`, `Frontend_seo`, `Frontend_presenter`, `Google_recaptcha`,
+`Recaptcha_enterprise`, `SiteModel`, `Blog_model`, `Faq_model`, `MenuModel`, `FootModel`,
+`Webpage_model`, `Web_page_section_model`, `Miscellaneous_content_model`, `Contact_model`,
+`Seo_model`, `Dashboard_model`.
+
+**Remove:** everything listed in Phases 2 and 3.

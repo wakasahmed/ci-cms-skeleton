@@ -1,0 +1,4 @@
+htmx 2.0.11
+Source: https://registry.npmjs.org/htmx.org/-/htmx.org-2.0.11.tgz (dist/htmx.min.js, unmodified)
+Integrity: sha512-Thx/WtpeOQqSrqBCw/A1cwGJGg4UrVa3+sW0GmrM3p4gJgO89ecH4qtbnyzDDWFvBTqjnIMCgELTNt636dtamA==
+License: 0BSD (see LICENSE)

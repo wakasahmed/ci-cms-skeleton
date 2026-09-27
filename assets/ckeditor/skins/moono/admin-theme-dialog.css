@@ -1,0 +1,279 @@
+/* ==========================================================================
+   Admin theme overrides for the moono dialogs (CKEditor 4.2).
+
+   Source file. It is appended verbatim to the end of every dialog_*.css of
+   this skin. Edit this file, then re-append it -- never edit the copies
+   inside dialog*.css by hand.
+   ========================================================================== */
+
+.cke_dialog,
+.cke_dialog * {
+	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.cke_dialog_background_cover { background-color: #111827 !important; }
+
+.cke_dialog_body {
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	background: #ffffff;
+	box-shadow: 0 22px 60px rgba(17, 24, 39, .22);
+	overflow: hidden;
+}
+.cke_dialog_title {
+	padding: 14px 18px;
+	border-bottom: 1px solid #e5e7eb;
+	background: #ffffff;
+	background-image: none;
+	color: #1f2937;
+	font-size: 15px;
+	font-weight: 600;
+	text-shadow: none;
+	box-shadow: none;
+	filter: none;
+}
+/* moono positions the tab strip absolutely and compensates with a top margin
+   on the contents; the strip is in normal flow here, so the compensation has
+   to go or the first field slides under the tabs. */
+.cke_dialog_contents {
+	margin-top: 0;
+	padding-top: 0;
+	border: 0;
+	border-top: 0;
+	background: #ffffff;
+}
+.cke_dialog_contents_body {
+	margin-top: 0;
+	padding: 18px;
+}
+.cke_single_page .cke_dialog_contents_body { padding-top: 18px; }
+.cke_dialog_footer {
+	padding: 12px 18px;
+	border-top: 1px solid #e5e7eb;
+	background: #f9fafb;
+	background-image: none;
+	box-shadow: none;
+	outline: 0;
+	filter: none;
+}
+
+/* Tabs ------------------------------------------------------------------ */
+.cke_dialog_tabs {
+	position: static;
+	display: block;
+	left: auto;
+	right: auto;
+	height: auto;
+	margin: 0;
+	padding: 8px 18px 0;
+	border-bottom: 1px solid #e5e7eb;
+	background: #f9fafb;
+}
+.cke_rtl .cke_dialog_tabs { left: auto; right: auto; }
+a.cke_dialog_tab {
+	height: auto;
+	margin: 0 2px -1px 0;
+	padding: 9px 14px;
+	border: 1px solid transparent;
+	border-radius: 6px 6px 0 0;
+	background: transparent;
+	background-image: none;
+	color: #4b5563;
+	font-size: 12.5px;
+	font-weight: 500;
+	box-shadow: none;
+	filter: none;
+}
+a.cke_dialog_tab:hover,
+a.cke_dialog_tab:focus { background: #f2f0f8; color: #4b4079; }
+a.cke_dialog_tab_selected,
+a.cke_dialog_tab_selected:hover,
+a.cke_dialog_tab_selected:focus {
+	border-color: #e5e7eb #e5e7eb #ffffff;
+	background: #ffffff;
+	background-image: none;
+	color: #63569b;
+	font-weight: 600;
+	box-shadow: none;
+	filter: none;
+}
+
+/* Form controls --------------------------------------------------------- */
+.cke_dialog_ui_labeled_label {
+	display: inline-block;
+	margin-bottom: 4px;
+	/* .cke_reset_all * forces nowrap, so a long label (e.g. "Language
+	   Direction") ran straight into the next column's label. */
+	white-space: normal;
+	padding-right: 6px;
+	color: #4b5563;
+	font-size: 12.5px;
+	font-weight: 500;
+}
+div.cke_dialog_ui_input_text,
+div.cke_dialog_ui_input_password,
+div.cke_dialog_ui_input_textarea,
+div.cke_dialog_ui_input_select,
+div.cke_dialog_ui_input_file {
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+}
+.cke_dialog input.cke_dialog_ui_input_text,
+.cke_dialog input.cke_dialog_ui_input_password,
+.cke_dialog textarea.cke_dialog_ui_input_textarea,
+.cke_dialog select.cke_dialog_ui_input_select {
+	padding: 6px 8px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background: #ffffff;
+	color: #1f2937;
+	font-size: 13px;
+	box-shadow: none;
+}
+/* moono pins the select to height:24px/line-height:24px, which clips the
+   selected option once the padding and font size below are applied. */
+.cke_dialog select.cke_dialog_ui_input_select {
+	box-sizing: border-box;
+	height: 38px;
+	min-height: 38px;
+	line-height: 24px;
+	padding: 6px 8px;
+}
+/* Do NOT give the file field a box of its own: the class sits on both the
+   <iframe> and its wrapper, the dialog sets an inline height on that row, and
+   any extra border/padding here overflows onto the upload button below it. */
+.cke_dialog .cke_dialog_ui_input_file,
+.cke_dialog iframe.cke_dialog_ui_input_file {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+}
+.cke_dialog input.cke_dialog_ui_input_text:focus,
+.cke_dialog input.cke_dialog_ui_input_password:focus,
+.cke_dialog textarea.cke_dialog_ui_input_textarea:focus,
+.cke_dialog select.cke_dialog_ui_input_select:focus {
+	border-color: #63569b;
+	box-shadow: 0 0 0 .18rem rgba(99, 86, 155, .16);
+	outline: 0;
+}
+
+/* Buttons --------------------------------------------------------------- */
+a.cke_dialog_ui_button {
+	padding: 0;
+	/* zero line-height kills the inline-block baseline gap under the label,
+	   which otherwise pushes the text visually off-centre */
+	line-height: 0;
+	text-align: center;
+	vertical-align: middle;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background: #ffffff;
+	background-image: none;
+	color: #1f2937;
+	box-shadow: none;
+	text-shadow: none;
+	filter: none;
+}
+/* Larger click targets. The footer rule in dialog.css is more specific than
+   a bare "a.cke_dialog_ui_button span", hence the doubled selector. */
+a.cke_dialog_ui_button span,
+.cke_dialog_footer_buttons a.cke_dialog_ui_button span {
+	display: block;
+	padding: 8px 18px;
+	color: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 18px;
+	text-align: center;
+	text-shadow: none;
+	white-space: nowrap;
+}
+/* The width floor is for the OK/Cancel pair only -- inline buttons such as
+   "Browse Server" and "Send it to the Server" size to their label. */
+.cke_dialog_footer_buttons a.cke_dialog_ui_button span { min-width: 68px; }
+/* moono shrinks the padding on :focus/:active to make room for a thicker
+   border -- keep the size stable instead. */
+a.cke_dialog_ui_button_ok:focus,
+a.cke_dialog_ui_button_ok:active,
+a.cke_dialog_ui_button_cancel:focus,
+a.cke_dialog_ui_button_cancel:active {
+	border-width: 1px;
+	padding: 0;
+}
+a.cke_dialog_ui_button_ok:focus span,
+a.cke_dialog_ui_button_ok:active span,
+a.cke_dialog_ui_button_cancel:focus span,
+a.cke_dialog_ui_button_cancel:active span { padding: 8px 18px; }
+.cke_dialog_footer_buttons { margin: 6px 0; }
+.cke_ltr .cke_dialog_footer_buttons .cke_dialog_ui_hbox_first,
+.cke_ltr .cke_dialog_footer_buttons .cke_dialog_ui_hbox_child { padding-right: 8px; }
+.cke_rtl .cke_dialog_footer_buttons .cke_dialog_ui_hbox_first,
+.cke_rtl .cke_dialog_footer_buttons .cke_dialog_ui_hbox_child { padding-left: 8px; padding-right: 0; }
+a.cke_dialog_ui_button:hover,
+a.cke_dialog_ui_button:focus,
+a.cke_dialog_ui_button:active {
+	border-color: #ddd8ec;
+	background: #f2f0f8;
+	background-image: none;
+	color: #4b4079;
+	box-shadow: none;
+	filter: none;
+}
+a.cke_dialog_ui_button_ok {
+	border-color: #63569b;
+	background: #63569b;
+	background-image: none;
+	color: #ffffff;
+	filter: none;
+}
+a.cke_dialog_ui_button_ok span { color: #ffffff; text-shadow: none; }
+a.cke_dialog_ui_button_ok:hover,
+a.cke_dialog_ui_button_ok:focus,
+a.cke_dialog_ui_button_ok:active {
+	border-color: #554987;
+	background: #554987;
+	background-image: none;
+	color: #ffffff;
+	filter: none;
+}
+a.cke_dialog_ui_button_cancel { border-color: #e5e7eb; background: #ffffff; color: #4b5563; }
+a.cke_dialog_ui_button_cancel:hover,
+a.cke_dialog_ui_button_cancel:focus { border-color: #d5d9e0; background: #f9fafb; color: #1f2937; }
+.cke_dialog_ui_button:focus,
+.cke_dialog_ui_button:active { outline: 0; box-shadow: 0 0 0 .18rem rgba(99, 86, 155, .18); }
+
+/* Field spacing ---------------------------------------------------------- */
+.cke_dialog_ui_vbox_child { padding: 6px 0; }
+.cke_dialog_ui_vbox_child:first-child { padding-top: 0; }
+.cke_dialog_page_contents > .cke_dialog_ui_vbox > tbody > tr:first-child > .cke_dialog_ui_vbox_child { padding-top: 0; }
+
+/* Preview and sample panes ---------------------------------------------- */
+.cke_dialog .ImagePreviewBox,
+.cke_dialog .FlashPreviewBox,
+.cke_dialog iframe.cke_pasteframe {
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	background-color: #ffffff;
+}
+.cke_dialog .ImagePreviewLoader { background-color: #f9fafb; }
+.cke_dialog .cke_dark_background { background-color: #eef0f3; }
+.cke_dialog .cke_light_background { background-color: #f9fafb; }
+a.cke_specialchar,
+a.cke_smile { border-radius: 4px; }
+a.cke_specialchar:hover,
+a.cke_specialchar:focus,
+a.cke_smile:hover,
+a.cke_smile:focus { border-color: #ddd8ec; background: #f2f0f8; }
+a.cke_specialchar:active,
+a.cke_smile:active { border-color: #63569b; }
+
+/* Close button ---------------------------------------------------------- */
+.cke_dialog_close_button {
+	top: 12px;
+	right: 14px;
+	border-radius: 5px;
+	opacity: .55;
+}
+.cke_dialog_close_button:hover { opacity: 1; }
+.cke_rtl .cke_dialog_close_button { left: 14px; right: auto; }

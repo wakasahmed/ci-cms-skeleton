@@ -1,0 +1,147 @@
+/*
+Copyright (c) 2003-2013, CKSource - Frederico Knabben. All rights reserved.
+For licensing, see LICENSE.md or http://ckeditor.com/license
+*/
+html{
+    height:100%;
+}
+body
+{
+    height:100%;
+}
+body
+{
+	/* Font: matches the admin theme (assets/admin/css/admin.css) */
+	font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	font-size: 15px;
+
+	/* Text color */
+	color: #1f2937;
+
+	/* Remove the background color to make it transparent */
+	background-color: #fff;
+
+	margin: 20px;
+}
+
+.cke_editable
+{
+	font-size: 15px;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* The frontend app.css (loaded after this file) adds a global :focus-visible
+   ring/radius, which shows as a line around the editable body. Suppress it
+   inside the editor. */
+.page-contents:focus-visible,
+.page-contents :focus-visible
+{
+	border-radius: 0;
+	outline: none;
+	outline-offset: 0;
+}
+
+blockquote
+{
+	font-style: italic;
+	font-family: Georgia, Times, "Times New Roman", serif;
+	padding: 2px 0;
+	border-style: solid;
+	border-color: #ddd8ec;
+	border-width: 0;
+	color: #4b5563;
+}
+
+.cke_contents_ltr blockquote
+{
+	padding-left: 20px;
+	padding-right: 8px;
+	border-left-width: 5px;
+}
+
+.cke_contents_rtl blockquote
+{
+	padding-left: 8px;
+	padding-right: 20px;
+	border-right-width: 5px;
+}
+
+a
+{
+	color: #63569b;
+}
+
+a:hover
+{
+	color: #4b4079;
+}
+
+ol,ul,dl
+{
+	/* IE7: reset rtl list margin. (#7334) */
+	*margin-right: 0px;
+	/* preserved spaces for list items with text direction other than the list. (#6249,#8049)*/
+	padding: 0 40px;
+}
+
+h1,h2,h3,h4,h5,h6
+{
+	color: #1f2937;
+	font-weight: 600;
+	line-height: 1.25;
+	letter-spacing: -.01em;
+}
+
+hr
+{
+	border: 0px;
+	border-top: 1px solid #e5e7eb;
+}
+
+img.right {
+    border: 1px solid #e5e7eb;
+    float: right;
+    margin-left: 15px;
+    padding: 5px;
+}
+
+img.left {
+    border: 1px solid #e5e7eb;
+    float: left;
+    margin-right: 15px;
+    padding: 5px;
+}
+
+img:hover {
+	opacity: .9;
+	filter: alpha(opacity = 90);
+}
+
+pre
+{
+	white-space: pre-wrap; /* CSS 2.1 */
+	word-wrap: break-word; /* IE7 */
+}
+
+table.cke_show_border,
+table.cke_show_border > tr > td, table.cke_show_border > tr > th,
+table.cke_show_border > tbody > tr > td, table.cke_show_border > tbody > tr > th,
+table.cke_show_border > thead > tr > td, table.cke_show_border > thead > tr > th,
+table.cke_show_border > tfoot > tr > td, table.cke_show_border > tfoot > tr > th
+{
+    border: 1px dotted #d5d9e0;
+}
+
+/* In-editor stand-in for a YouTube embed (plugins/youtube). The thumbnail and
+   size come from an inline style on the element itself. */
+img.cke_youtube {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    max-width: 100%;
+    cursor: pointer;
+}
+
+.marker {
+    background-color: #fff3b0;
+}

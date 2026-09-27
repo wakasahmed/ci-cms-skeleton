@@ -1,0 +1,21 @@
+intl-tel-input 29.2.3
+https://github.com/jackocnr/intl-tel-input/releases/tag/v29.2.3
+Files: dist/css/intlTelInput.min.css, dist/js/intlTelInput.min.js, dist/js/utils.js,
+       dist/img/flags.webp, dist/img/flags@2x.webp (the only flag assets the CSS references)
+
+Arabic UI text (ar site build):
+  No locale file is vendored, and none is needed. This version takes its
+  interface strings through the `uiTranslations` initialiser option and resolves
+  country NAMES through `countryNameLocale`, which it feeds to
+  Intl.DisplayNames — so setting it to "ar" renders the whole country list in
+  Arabic with no extra bundle. js/phone-input.js passes both from the shared
+  locale payload (the `iti.*` keys in inc/lang/ar.php).
+
+  The wording of the interface strings is taken verbatim from upstream
+  dist/js/locale/ar.js of this same version, which ships as an ES module with a
+  default export and so cannot be loaded as a plain <script>.
+
+  Note for future upgrades: the option was named `i18n` in some versions of the
+  documentation. In 29.2.3 the accepted names are `uiTranslations` and
+  `countryNameLocale`; an unknown option is ignored silently, so verify the
+  aria-label on the country button after any upgrade.

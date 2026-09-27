@@ -1,0 +1,2433 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.contact-alert-danger {
+  border-color: #fecaca;
+  background-color: #fef2f2;
+  color: #991b1b;
+}
+
+/* ==========================================================================
+   Alam Al-Munawara — design tokens
+   Single source of truth for brand colour. The Tailwind theme mirrors these.
+   ========================================================================== */
+@layer base {
+  :root {
+    --frontend-primary: #63569B;
+    --frontend-primary-deep: #4C427A;
+    --frontend-primary-dark: #3E3565;
+    --frontend-primary-soft: #EEEAF7;
+    --frontend-primary-faint: #F7F5FB;
+    --frontend-border: #C3BAD9;
+    --frontend-ink: #252331;
+    --frontend-ink-muted: #6F6B78;
+    --frontend-surface: #FFFFFF;
+    --frontend-surface-soft: #FAFAFC;
+    --frontend-radius-control: 11px;
+    --frontend-radius-card: 16px;
+    --frontend-radius-feature: 24px;
+    --frontend-header-h: 68px;
+  }
+
+  /* Header grows on large screens; every sticky offset derives from this. */
+  @media (min-width: 1024px) {
+    :root { --frontend-header-h: 80px; }
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--frontend-header-h) + 16px);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white text-ink font-sans antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ---- Arabic typography ------------------------------------------------
+     One rule, keyed off the document direction that header.php already sets,
+     so no template carries a font class and English is untouched. The Arabic
+     face is a shade smaller on the body than Plus Jakarta Sans at the same
+     nominal size, so it is nudged up very slightly — the 14px floor in
+     AGENTS.md section 3 still holds, and every semantic type token keeps its
+     own line-height. The stack is declared in tailwind.config.js.
+     -------------------------------------------------------------------- */
+  [dir="rtl"] body,
+  [dir="rtl"] input,
+  [dir="rtl"] select,
+  [dir="rtl"] textarea,
+  [dir="rtl"] button {
+    @apply font-arabic;
+  }
+
+  /* Arabic has no case, so an uppercase transform does nothing to it but does
+     break the letterforms of any Latin word caught in the same run. */
+  [dir="rtl"] .uppercase,
+  [dir="rtl"] .eyebrow,
+  [dir="rtl"] .eyebrow-plain {
+    text-transform: none;
+  }
+
+  /* Tracking is a Latin device: letter-spacing in Arabic pulls the joined
+     script apart. The eyebrow token carries 0.14em, so it is reset here. */
+  [dir="rtl"] .eyebrow,
+  [dir="rtl"] .eyebrow-plain,
+  [dir="rtl"] .text-eyebrow {
+    letter-spacing: 0;
+  }
+
+  /* Negative tracking on the heading tokens tightens Latin display type; in
+     Arabic it collides the joins. */
+  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3,
+  [dir="rtl"] .text-display, [dir="rtl"] .text-h1,
+  [dir="rtl"] .text-h2, [dir="rtl"] .text-h3,
+  [dir="rtl"] .text-card-title {
+    letter-spacing: 0;
+  }
+
+  h1, h2, h3, h4, h5, h6 { @apply font-semibold text-ink; text-wrap: balance; }
+  p { text-wrap: pretty; }
+
+  :focus-visible {
+    outline: 2px solid var(--frontend-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection { background: var(--frontend-primary); color: #fff; }
+
+  input, select, textarea { accent-color: var(--frontend-primary); }
+
+  img { max-width: 100%; height: auto; }
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+@layer components {
+
+  /* ---- Icons -------------------------------------------------------------
+     Font Awesome Free 7 (vendor/fontawesome/) replaces the old inline SVG set.
+     FA renders a glyph 1.25em wide by default; --fa-width pins every Alam icon
+     to a 1em square so it keeps the same box the stroke SVGs occupied. Size is
+     one of the icon-* steps below, colour comes from the caller (text-alam-500,
+     text-ink-muted, text-white …) so icons inherit the palette tokens. */
+  .icon      { --fa-width: 1em; vertical-align: -0.125em; }
+
+  .icon-xs   { font-size: 0.875rem; }  /* 14px — dense metadata, breadcrumbs */
+  .icon-sm   { font-size: 1rem; }      /* 16px — buttons, meta and list rows */
+  .icon-md   { font-size: 1.125rem; }  /* 18px — badges, footer, feature rows */
+  .icon-lg   { font-size: 1.25rem; }   /* 20px — feature cards, icon buttons */
+  .icon-xl   { font-size: 1.5rem; }    /* 24px — confirmation marks */
+  .icon-2xl  { font-size: 1.75rem; }   /* 28px — large decorative marks */
+
+  /* `icon-flip` marks an icon whose MEANING is directional — an arrow that
+     says "onwards", a chevron that says "next", the opening quotation mark.
+     Those mirror with the document. Icons that merely depict something (a
+     phone, a calendar, a mountain) are left alone: a flipped telephone is
+     just a wrong telephone. Call sites opt in one by one, which is why this
+     is a class rather than a blanket [dir="rtl"] .icon rule. */
+  [dir="rtl"] .icon-flip { transform: scaleX(-1); }
+
+  /* ---- Buttons ---------------------------------------------------------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-control px-5 py-3
+           text-button font-semibold min-h-[46px]
+           transition-[background-color,color,border-color,box-shadow,transform] duration-200;
+  }
+  .btn-primary {
+    @apply btn bg-alam-500 text-white shadow-[0_10px_24px_-14px_rgba(62,53,101,.85)]
+           hover:bg-alam-700 active:bg-alam-800;
+  }
+  .btn-secondary {
+    @apply btn bg-alam-100 text-alam-800 hover:bg-alam-200;
+  }
+  .btn-outline {
+    @apply btn border border-line-strong bg-white text-ink hover:border-alam-400 hover:text-alam-700;
+  }
+  .btn-ghost-light {
+    @apply btn border border-white/45 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20;
+  }
+  .btn-link {
+    @apply inline-flex items-center gap-1.5 text-button font-semibold text-alam-600
+           underline-offset-4 hover:text-alam-800 hover:underline;
+  }
+  .btn-lg { @apply px-7 py-4 text-body-lg min-h-[54px]; }
+  .btn-sm { @apply px-4 py-2.5 text-button-sm min-h-[40px]; }
+  .btn:disabled, .btn[aria-disabled="true"] { @apply opacity-45 cursor-not-allowed pointer-events-none; }
+
+  /* ---- Surfaces --------------------------------------------------------- */
+  .card { @apply rounded-card border border-line bg-white; }
+  .card-hover {
+    @apply transition-[transform,box-shadow,border-color] duration-300
+           hover:-translate-y-1 hover:border-line-strong hover:shadow-lift;
+  }
+  .panel { @apply rounded-feature border border-line bg-white; }
+
+  /* ---- Type helpers ----------------------------------------------------- */
+  .eyebrow {
+    @apply inline-flex items-center gap-2.5 text-eyebrow font-bold uppercase text-alam-600;
+  }
+  .eyebrow::before {
+    content: "";
+    @apply h-px w-7 bg-alam-300;
+  }
+  .eyebrow-plain { @apply text-eyebrow font-bold uppercase text-alam-600; }
+  .lede { @apply text-body-lg text-ink-muted; }
+
+  /* ---- Forms ------------------------------------------------------------ */
+  .field-label { @apply mb-1.5 block text-form-label font-semibold text-ink; }
+  .field-hint { @apply mt-1.5 block text-form-help text-ink-soft; }
+  .input {
+    @apply block w-full rounded-control border border-line-strong bg-white px-3.5 py-2.5
+           text-form-input text-ink placeholder:text-ink-soft min-h-[46px]
+           transition-[border-color,box-shadow] duration-150
+           hover:border-alam-300
+           focus:border-alam-500 focus:outline-none focus:ring-4 focus:ring-alam-500/10;
+  }
+  textarea.input { @apply min-h-[120px] py-3 leading-relaxed; }
+  /* The chevron stays an SVG data URI: it is a CSS background on the control
+     itself, which a Font Awesome webfont glyph cannot be without a pseudo
+     element that would fight `appearance-none` padding and Select2. */
+  .select {
+    @apply input appearance-none bg-no-repeat pe-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236F6B78' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.85rem center;
+    background-size: 16px;
+  }
+  /* A CSS background has no logical keyword for its position, so the one
+     physical value the chevron needs is flipped explicitly. */
+  [dir="rtl"] .select { background-position: left 0.85rem center; }
+
+  /* ---- Place autocomplete (js/place-autocomplete.js) -----------------------
+     The suggestion panel under a text input. It sits inside a `relative`
+     wrapper, so start-0/end-0 keep it aligned with the field in both
+     directions. `is-active` is the keyboard/pointer highlight. */
+  .place-suggestions {
+    @apply absolute inset-x-0 top-full z-40 mt-1.5 max-h-72 overflow-y-auto rounded-control
+           border border-line bg-white p-1 shadow-lift;
+  }
+  .place-option {
+    @apply cursor-pointer rounded-lg px-3 py-2.5 text-start text-form-input text-ink;
+  }
+  .place-option.is-active { @apply bg-alam-50 text-alam-800; }
+  .place-option-main { @apply block font-semibold; }
+  .place-option-secondary { @apply mt-0.5 block text-form-help text-ink-soft; }
+
+  /* ---- Field validation ---------------------------------------------------
+     The same red border/ring the datepicker and phone fields already use,
+     generalised to every plain `.input` (text/email/textarea) and native
+     `.select` — keyed off `aria-invalid="true"` (the accessible signal a
+     script sets) or an `.is-invalid` class, so server-rendered and
+     client-side (jQuery Validate) errors look identical. The select2
+     equivalent lives further down, scoped to `select[aria-invalid] +
+     .select2-container`, since select2 hides this native control. */
+  .input.is-invalid,
+  .input[aria-invalid="true"],
+  .select.is-invalid,
+  .select[aria-invalid="true"] {
+    @apply border-red-600;
+  }
+  .input.is-invalid:focus,
+  .input[aria-invalid="true"]:focus,
+  .select.is-invalid:focus,
+  .select[aria-invalid="true"]:focus {
+    @apply border-red-600;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, .10);
+  }
+
+  /* ---- Date field (Flatpickr) -------------------------------------------
+     date_field() prints the wrapper; js/datepicker.js swaps the real input
+     for a readonly display field carrying the same `.input` class, so a Select2
+     and a date field sitting in one row are the same object visually. */
+  .datepicker-field { @apply relative; }
+  .datepicker-field .input { @apply pe-11 cursor-pointer; }
+  /* The calendar icon and the clear × share one slot on the right: the calendar
+     invites you to open the picker, and once a date is chosen the × takes its
+     place to remove it. `is-filled` is set by js/datepicker.js. */
+  .datepicker-field .datepicker-icon,
+  .datepicker-field .datepicker-clear {
+    @apply absolute end-0 top-0 grid h-[46px] w-11 cursor-pointer place-items-center
+           text-ink-soft transition-colors;
+  }
+  .datepicker-field:hover .datepicker-icon { @apply text-alam-600; }
+  .datepicker-field .datepicker-clear { @apply hover:text-alam-700; }
+  .datepicker-field .datepicker-clear,
+  .datepicker-field.is-filled .datepicker-icon { display: none; }
+  .datepicker-field.is-filled .datepicker-clear { @apply grid; }
+
+  /* ---- Phone field (intl-tel-input) --------------------------------------
+     phone_field() prints the wrapper, the visible input and the hidden
+     inputs the backend reads; js/phone-input.js wraps the input in the plugin's
+     own container. The wrapper is the hook the error state and the hover state
+     hang off, so the flag button and the number read as one control. */
+  .phone-field { @apply relative; }
+
+  /* Selectable radio card */
+  .option-card {
+    @apply relative flex cursor-pointer gap-3 rounded-card border border-line-strong bg-white p-4
+           transition-[border-color,background-color,box-shadow] duration-200
+           hover:border-alam-400 hover:bg-alam-50;
+  }
+  .option-card input[type="radio"],
+  .option-card input[type="checkbox"],
+  .chip input { @apply sr-only; }
+  .option-dot {
+    @apply mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 border-line-strong
+           transition-colors duration-200;
+  }
+  .option-dot::after {
+    content: "";
+    @apply h-2 w-2 scale-0 rounded-full bg-white transition-transform duration-200;
+  }
+  .option-card:has(input:checked) { @apply border-alam-500 bg-alam-50 ring-1 ring-alam-500; }
+  .option-card:has(input:checked) .option-dot { @apply border-alam-500 bg-alam-500; }
+  .option-card:has(input:checked) .option-dot::after { @apply scale-100; }
+  .option-card:has(input:focus-visible) { @apply outline outline-2 outline-offset-2 outline-alam-500; }
+  .option-card:has(input:disabled) { @apply cursor-not-allowed opacity-50 hover:border-line-strong hover:bg-white; }
+
+  /* Chip-style choice */
+  .chip {
+    @apply relative flex cursor-pointer items-center justify-center rounded-control border
+           border-line-strong bg-white px-4 py-2.5 text-center text-body-sm font-medium text-ink min-h-[44px]
+           transition-[border-color,background-color,color] duration-200 hover:border-alam-400;
+  }
+  .chip:has(input:checked) { @apply border-alam-500 bg-alam-500 text-white; }
+  .chip:has(input:focus-visible) { @apply outline outline-2 outline-offset-2 outline-alam-500; }
+  .chip:has(input:disabled) { @apply cursor-not-allowed border-line bg-surface-soft text-ink-soft; }
+
+  /* ---- Decorative ------------------------------------------------------- */
+  .arch-mask {
+    -webkit-mask-image: var(--arch);
+    mask-image: var(--arch);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    --arch: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 130' preserveAspectRatio='none'%3E%3Cpath d='M0 130V56C0 25 22 0 50 0s50 25 50 56v74z' fill='%23000'/%3E%3C/svg%3E");
+  }
+  .arch-soft { border-radius: 180px 180px var(--frontend-radius-feature) var(--frontend-radius-feature); }
+  .pattern-grid {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='%2363569B' stroke-opacity='.16' stroke-width='1'%3E%3Cpath d='M30 4 42 16 30 28 18 16z'/%3E%3Cpath d='M30 32 42 44 30 56 18 44z'/%3E%3Cpath d='M0 16 12 4M60 16 48 4M0 44l12 12M60 44 48 56'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hairline { @apply h-px w-full bg-gradient-to-r from-transparent via-line-strong to-transparent; }
+
+  /* ---- Section table of contents ----------------------------------------
+     Sidebar "on this page" rails: FAQ categories and the policy pages. The
+     active marker is a ::before bar rather than a real border, so the label
+     never shifts by a pixel as the active item changes on scroll. Scroll
+     spying is handled by initTocNav() in js/main.js.
+     ---------------------------------------------------------------------- */
+  .toc-link {
+    @apply relative block rounded-control px-3.5 py-2.5 text-meta font-medium text-ink-muted
+           transition-colors hover:bg-alam-50 hover:text-alam-700 lg:ps-5 lg:pe-3;
+  }
+  /* The active marker sits on the reading-start edge of the rail. */
+  .toc-link::before {
+    content: "";
+    @apply pointer-events-none absolute start-0 top-1/2 hidden h-0 w-[3px] -translate-y-1/2
+           rounded-full bg-alam-500 transition-[height] duration-300 lg:block;
+  }
+  .toc-link[aria-current="true"] {
+    @apply bg-alam-50 font-semibold text-alam-700 lg:bg-transparent;
+  }
+  .toc-link[aria-current="true"]::before { @apply h-[70%]; }
+
+  /* FAQ rail only: below lg the items are chips in a horizontal scroller,
+     where a left bar reads as noise and an outline reads as a control. */
+  .toc-link--chip {
+    @apply whitespace-nowrap border border-line-strong hover:border-alam-400 lg:border-transparent;
+  }
+  .toc-link--chip[aria-current="true"] { @apply border-alam-400 lg:border-transparent; }
+
+  /* ---- Tour/Experience in-page navigation --------------------------------
+     Sticky horizontal pill tabs under the header on the tour/experience
+     detail page. The active pill is one shared indicator (a sibling, not a
+     per-link background) that initSectionNav() in js/main.js slides and
+     resizes under whichever link is active, so the transition reads as
+     movement instead of an instant recolor. The link itself only ever
+     toggles text color.
+     ---------------------------------------------------------------------- */
+  .section-nav-link {
+    @apply relative z-[1] block whitespace-nowrap rounded-control px-3.5 py-2
+           text-meta font-semibold text-ink-muted transition-colors;
+  }
+  .section-nav-link:not([aria-current="true"]):hover { @apply bg-alam-50 text-alam-700; }
+  .section-nav-link[aria-current="true"] { @apply text-white; }
+  /* Anchored to the physical left edge (not the logical start edge) because
+     the position is driven by translateX() in main.js, computed in physical
+     pixels from getBoundingClientRect() — that math holds in both writing
+     directions only if the indicator's own resting edge is also physical. */
+  .section-nav-indicator {
+    @apply pointer-events-none absolute inset-y-2.5 left-0 z-0 w-0
+           rounded-control bg-alam-500 opacity-0
+           transition-[transform,width,opacity] duration-300 ease-out;
+  }
+
+  /* ---- Journey timeline -------------------------------------------------
+     Tour itinerary on the detail page: time gutter, a continuous rail with
+     a marker per stop, then the copy and an optional thumbnail. The rail is
+     drawn by the cell's ::before so it runs through the gap between steps;
+     hiding it on the last step stops the line exactly at the final marker.
+     ---------------------------------------------------------------------- */
+  .journey-step {
+    @apply grid grid-cols-[52px_20px_minmax(0,1fr)] gap-x-3
+           sm:grid-cols-[76px_24px_minmax(0,1fr)] sm:gap-x-5;
+  }
+  /* The time gutter is the first column in both directions — the grid already
+     mirrors — so its text hugs the rail, which is the end edge either way. */
+  .journey-time {
+    @apply pt-1 text-end text-caption font-bold text-ink-soft;
+  }
+  .journey-rail { @apply relative flex justify-center; }
+  .journey-rail::before {
+    content: "";
+    @apply absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-alam-200;
+  }
+  .journey-step:last-child .journey-rail::before { @apply hidden; }
+  .journey-dot {
+    @apply relative z-10 mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-alam-500 bg-white;
+  }
+  /* First and last markers are filled, so the start and end of the day read
+     as endpoints rather than as another stop. */
+  .journey-step:first-child .journey-dot,
+  .journey-step:last-child .journey-dot { @apply bg-alam-500; }
+
+  .journey-body {
+    @apply flex flex-col gap-4 pb-10 sm:flex-row sm:items-start sm:justify-between sm:gap-6;
+  }
+  .journey-step:last-child .journey-body { @apply pb-0; }
+  .journey-copy { @apply min-w-0 max-w-prose; }
+  .journey-title { @apply text-card-title font-bold text-ink; }
+  .journey-thumb {
+    @apply aspect-[4/3] w-full rounded-card bg-alam-100 object-cover
+           sm:w-52 sm:shrink-0;
+  }
+
+  /* ---- Attraction cards + attraction dialog -----------------------------
+     Places & highlights on the tour detail page. The card is one trigger:
+     the heading's <button> is stretched over the whole card with ::after,
+     so the click target is the card while focus and Tab order stay on a
+     real button. The card intentionally has no focus border or ring.
+     ---------------------------------------------------------------------- */
+  .attraction-card {
+    @apply relative flex h-full flex-col overflow-hidden rounded-card border border-line bg-white
+           transition-[transform,box-shadow,border-color] duration-300
+           hover:-translate-y-0.5 hover:border-alam-300 hover:shadow-lift;
+  }
+  .attraction-card-media { @apply relative aspect-[3/2] w-full overflow-hidden bg-alam-100; }
+  .attraction-card-img {
+    @apply h-full w-full object-cover transition-transform duration-500;
+  }
+  .group:hover .attraction-card-img,
+  .attraction-card:focus-within .attraction-card-img { @apply scale-[1.02]; }
+
+  .attraction-card-body { @apply flex flex-1 flex-col p-5; }
+  .attraction-card-trigger {
+    @apply text-start after:absolute after:inset-0 after:content-[''] focus:outline-none;
+    cursor: pointer;
+  }
+  .attraction-card-cue {
+    @apply mt-4 inline-flex items-center gap-1.5 pt-1 text-meta font-semibold text-alam-600
+           transition-[gap] duration-300;
+  }
+  .attraction-card:hover .attraction-card-cue,
+  .attraction-card:focus-within .attraction-card-cue { @apply gap-2.5 text-alam-700; }
+
+  /* ---- GLightbox: attraction inline slide content -----------------------
+     The attraction popup and the photo gallery are both GLightbox now (see
+     js/lightbox-init.js) — this styles only the custom HTML content of the
+     attraction slide; GLightbox supplies its own chrome (backdrop, close
+     button, open/close animation). A handful of brand-color overrides for
+     that chrome live in the GLightbox overrides block further down.
+     ---------------------------------------------------------------------- */
+  /* For an inline slide, GLightbox stacks THREE layout roles onto really
+     two elements: the element it hands our content is simultaneously a flex
+     container (.gslide-media), a scrolling box with its own max-height
+     (.gslide-inline — same element, both classes), and its immediate child
+     (.ginlined-content) is independently overflow:auto too. `position:
+     sticky` on a header nested inside that combination does not clip
+     correctly against the rounded corners in testing — scrolled content
+     visibly escapes above the rounded edge.
+     Rather than fight that, the GLightbox overrides block (further down)
+     neutralises those roles on .gslide-media.gslide-inline and
+     .ginlined-content — no flex, no scroll, no radius, fully unconstrained
+     — so .attraction-lightbox is the only element that lays out or scrolls
+     this popup. A plain (non-sticky) flex column: the header is a `shrink-0`
+     sibling, never inside the scrolling box, so there is nothing for it to
+     clip against. */
+  .attraction-lightbox {
+    @apply mx-auto flex max-h-[85vh] w-[calc(100vw-2rem)] max-w-[720px] flex-col
+           overflow-hidden rounded-feature bg-white text-start shadow-panel;
+  }
+  .attraction-lightbox-header {
+    @apply shrink-0 border-b border-line bg-white px-6 py-5 sm:px-8;
+  }
+  .attraction-lightbox-title { @apply min-w-0 text-h3 text-ink; }
+
+  /* The only scrolling region, with the scrollbar in the brand purple —
+     matches the scrollbar treatment used elsewhere on the site.
+     `scroll-behavior` inherits from html, which sets it to smooth — without
+     the override below, a fresh popup's initial scroll position would
+     visibly animate rather than simply start at the top.
+     `min-height: 0` overrides the flex item's default `min-height: auto`,
+     which otherwise refuses to let it shrink below its content's natural
+     height — without it the card would grow past its max-height instead of
+     scrolling internally. */
+  .attraction-lightbox-content {
+    @apply flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-6 sm:px-8;
+    scroll-behavior: auto;
+    /* The scrollbar's own 10px sits inside this box's content width, so
+       without a matching phantom gutter on the left the image/text read as
+       shifted left of center. Chromium/Firefox only — Safari has no
+       scrollbar-gutter support yet and simply keeps the current slight
+       asymmetry, not a regression from before this rule existed. */
+    scrollbar-gutter: stable both-edges;
+    scrollbar-width: thin;
+    scrollbar-color: var(--frontend-primary) var(--frontend-primary-soft);
+  }
+  .attraction-lightbox-content::-webkit-scrollbar { width: 10px; }
+  /* Chromium draws its own up/down step-arrow buttons on a custom-colored
+     scrollbar unless explicitly suppressed. */
+  .attraction-lightbox-content::-webkit-scrollbar-button { display: none; }
+  .attraction-lightbox-content::-webkit-scrollbar-track {
+    background: var(--frontend-primary-soft);
+    border-radius: 999px;
+  }
+  .attraction-lightbox-content::-webkit-scrollbar-thumb {
+    background: var(--frontend-primary);
+    border: 2px solid var(--frontend-primary-soft);
+    border-radius: 999px;
+  }
+  .attraction-lightbox-content::-webkit-scrollbar-thumb:hover { background: var(--frontend-primary-deep); }
+  @media (hover: hover) and (pointer: fine) {
+    .attraction-lightbox-content { scrollbar-color: transparent transparent; }
+    .attraction-lightbox-content::-webkit-scrollbar-track,
+    .attraction-lightbox-content::-webkit-scrollbar-thumb {
+      background: transparent;
+    }
+    .attraction-lightbox-content:hover,
+    .attraction-lightbox-content:focus-within {
+      scrollbar-color: var(--frontend-primary) var(--frontend-primary-soft);
+    }
+    .attraction-lightbox-content:hover::-webkit-scrollbar-track,
+    .attraction-lightbox-content:focus-within::-webkit-scrollbar-track {
+      background: var(--frontend-primary-soft);
+    }
+    .attraction-lightbox-content:hover::-webkit-scrollbar-thumb,
+    .attraction-lightbox-content:focus-within::-webkit-scrollbar-thumb {
+      background: var(--frontend-primary);
+    }
+    .attraction-lightbox-content:hover::-webkit-scrollbar-thumb:hover,
+    .attraction-lightbox-content:focus-within::-webkit-scrollbar-thumb:hover {
+      background: var(--frontend-primary-deep);
+    }
+  }
+
+  .attraction-lightbox-img {
+    @apply aspect-[3/2] w-full rounded-card bg-alam-100 object-cover;
+  }
+  .attraction-lightbox-body { @apply mt-6; }
+
+
+  /* ---- Hero background slider ------------------------------------------
+     Swiper needs real dimensions on its host elements; everything else about
+     the hero stays Tailwind-driven. Slides are decorative background art, so
+     they never capture pointer events from the content above.
+     -------------------------------------------------------------------- */
+  .hero-slider,
+  .hero-slider .swiper,
+  .hero-slider .swiper-wrapper,
+  .hero-slider .swiper-slide {
+    height: 100%;
+    width: 100%;
+    pointer-events: none;
+  }
+  .hero-slider .swiper-slide { overflow: hidden; }
+  .hero-slider img { display: block; }
+
+  /* Slide indicators — small, quiet, brand-coloured */
+  .hero-pagination {
+    @apply flex items-center gap-2;
+  }
+  .hero-bullet {
+    @apply h-1.5 w-6 cursor-pointer rounded-full bg-white/30 transition-[background-color,width] duration-300;
+    pointer-events: auto;
+  }
+  .hero-bullet:hover { @apply bg-white/55; }
+  .hero-bullet:focus-visible { @apply outline outline-2 outline-offset-4 outline-white; }
+  .hero-bullet--active { @apply w-9 bg-white; }
+
+  /* ---- Tooltip -----------------------------------------------------------
+     A <button> trigger with the tip as its aria-describedby target. Shown on
+     hover and on focus (keyboard, or a tap on touch screens); Escape adds
+     .is-dismissed until the pointer or focus leaves (see main.js). Centred
+     with physical left/translate so it sits correctly in RTL as well.
+     -------------------------------------------------------------------- */
+  .tooltip { @apply relative inline-block; }
+  .tooltip-trigger {
+    @apply cursor-help rounded-sm font-semibold text-alam-600 underline decoration-dotted underline-offset-2
+           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-alam-500;
+  }
+  .tooltip-content {
+    @apply pointer-events-none invisible absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-[14rem]
+           -translate-x-1/2 rounded-control bg-ink px-3 py-2 text-center text-caption font-medium text-white
+           opacity-0 shadow-panel transition-opacity duration-150;
+  }
+  .tooltip-content::after {
+    content: '';
+    @apply absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-ink;
+  }
+  .tooltip:hover .tooltip-content,
+  .tooltip:focus-within .tooltip-content { @apply visible opacity-100; }
+  .tooltip.is-dismissed .tooltip-content { @apply invisible opacity-0; }
+
+  /* ---- Filter chips (Experiences listing) -------------------------------
+     Real <button> elements, so they are reachable and operable by keyboard.
+     State lives in aria-pressed, which is also what the styling keys off.
+     -------------------------------------------------------------------- */
+  .filter-chip {
+    @apply inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-line-strong
+           bg-white px-4 py-2.5 text-button-sm font-semibold text-ink-muted min-h-[44px]
+           transition-[background-color,border-color,color] duration-200
+           hover:border-alam-400 hover:text-alam-700;
+  }
+  .filter-chip[aria-pressed="true"] {
+    @apply border-alam-500 bg-alam-500 text-white hover:border-alam-500 hover:text-white;
+  }
+  .filter-chip[aria-pressed="true"] .filter-chip__count { @apply bg-white/20 text-white; }
+  .filter-chip__count {
+    @apply rounded-full bg-alam-50 px-1.5 py-0.5 text-caption font-bold text-alam-700;
+  }
+
+  /* ---- Accordion -------------------------------------------------------- */
+  .accordion-item { @apply border-b border-line last:border-b-0; }
+  .accordion-trigger {
+    @apply flex w-full items-center justify-between gap-4 py-4 text-start text-body-sm font-semibold text-ink
+           transition-colors hover:text-alam-600;
+  }
+  .accordion-icon {
+    @apply grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line-strong text-alam-600
+           transition-[transform,background-color,border-color,color] duration-300;
+  }
+  .accordion-trigger[aria-expanded="true"] .accordion-icon {
+    @apply rotate-45 border-alam-500 bg-alam-500 text-white;
+  }
+  .accordion-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows .32s cubic-bezier(.4, 0, .2, 1);
+  }
+  .accordion-panel > div { overflow: hidden; }
+  .accordion-panel[data-open="true"] { grid-template-rows: 1fr; }
+
+  /* ---- Header / nav ----------------------------------------------------- */
+  .nav-link {
+    @apply relative py-2 text-nav font-medium text-ink-muted transition-colors hover:text-ink;
+  }
+  .nav-link::after {
+    content: "";
+    @apply absolute inset-x-0 -bottom-0.5 mx-auto h-0.5 w-0 rounded-full bg-alam-500
+           transition-[width] duration-300;
+  }
+  .nav-link:hover::after { @apply w-5; }
+  .nav-link.is-active { @apply font-semibold text-alam-700; }
+  .nav-link.is-active::after { @apply w-full; }
+
+  /* Submenu opens on hover of the parent item and stays open while the
+     pointer or keyboard focus is anywhere inside it, so the dropdown does not
+     disappear while moving the pointer down into it. The parent label is a
+     real link, not just a toggle. Anchored to the trigger's start edge (not
+     end) since a submenu item is not always the last item in the bar. */
+  .nav-submenu {
+    inset-inline-start: 0;
+    margin-top: -1px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+  }
+  .nav-has-submenu:hover > .nav-submenu,
+  .nav-has-submenu:focus-within > .nav-submenu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  /* ---- Blog category bar ------------------------------------------------ */
+  .blog-cat-link {
+    @apply whitespace-nowrap rounded-control px-3.5 py-2 text-body-sm font-bold text-white
+           transition-colors hover:bg-alam-700 xl:px-4;
+  }
+  .blog-cat-link.is-active { @apply bg-white text-alam-700 hover:bg-white; }
+
+  /* ---- Pagination ------------------------------------------------------- */
+  .page-link {
+    @apply grid h-11 w-11 place-items-center rounded-control border border-line-strong bg-white
+           text-meta font-semibold text-ink-muted transition-colors
+           hover:border-alam-400 hover:text-alam-700;
+  }
+  .page-link.is-active {
+    @apply border-alam-500 bg-alam-500 text-white hover:border-alam-500 hover:text-white;
+  }
+  .page-step {
+    @apply inline-flex h-11 items-center gap-2 rounded-control border border-line-strong bg-white
+           px-3 text-meta font-semibold text-ink-muted transition-colors
+           hover:border-alam-400 hover:text-alam-700 sm:px-4;
+  }
+  .page-step.is-disabled {
+    @apply cursor-not-allowed border-line text-ink-soft opacity-45 hover:border-line hover:text-ink-soft;
+  }
+
+  /* ---- Booking wizard --------------------------------------------------- */
+  .step-pill {
+    @apply flex items-center gap-2.5 whitespace-nowrap rounded-full px-2.5 py-1.5 text-meta
+           font-semibold text-ink-soft transition-colors;
+  }
+  .step-index {
+    @apply grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line-strong
+           bg-white text-caption font-bold text-ink-soft transition-colors duration-200;
+  }
+  .step-pill[data-state="active"] { @apply text-alam-800; }
+  .step-pill[data-state="active"] .step-index { @apply border-alam-500 bg-alam-500 text-white; }
+  .step-pill[data-state="done"] { @apply text-alam-700; }
+  .step-pill[data-state="done"] .step-index { @apply border-alam-200 bg-alam-100 text-alam-700; }
+
+  .summary-row { @apply flex items-start justify-between gap-4 py-2.5 text-meta; }
+  .summary-label { @apply shrink-0 text-ink-muted; }
+  .summary-value { @apply text-end font-semibold text-ink; }
+
+  /* Loading overlay over the booking step being saved (booking.js). The card is
+     sticky so it stays in view when a tall step is scrolled to its buttons. */
+  .booking-busy-host { @apply relative; }
+  .booking-busy {
+    @apply absolute inset-0 z-20 rounded-feature bg-white/75 px-4 py-10 backdrop-blur-sm;
+  }
+  .booking-busy-card {
+    @apply sticky top-[calc(var(--frontend-header-h)+30vh)] mx-auto flex max-w-sm items-center
+           gap-3 rounded-card border border-line bg-white px-5 py-4 shadow-panel outline-none;
+  }
+  .booking-busy-spinner {
+    @apply inline-block h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-alam-200
+           border-t-alam-700;
+  }
+  .btn-spinner {
+    @apply inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current
+           border-t-transparent;
+  }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+@layer utilities {
+  .text-shadow-hero { text-shadow: 0 2px 24px rgba(20, 16, 40, .35); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+  }
+}
+
+/* ==========================================================================
+   Select2 — Alam Al-Munawara theme
+   --------------------------------------------------------------------------
+   Loaded after vendor/select2/select2.min.css, so these rules simply replace
+   the plugin's stock greys and blues. Every value comes from the tokens at the
+   top of this file, or from the Tailwind `alam` palette that mirrors them —
+   the control is meant to be indistinguishable from `.input` / `.select`.
+
+   `.alam-select2` (container) and `.alam-select2-dropdown` (panel) are attached
+   by js/select2-init.js, so nothing here can leak into other markup.
+   ========================================================================== */
+
+/* ---- The closed control ------------------------------------------------- */
+.alam-select2 .select2-selection--single {
+  height: 46px;
+  padding: 0;
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-control);
+  background-color: var(--frontend-surface);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.alam-select2 .select2-selection--single .select2-selection__rendered {
+  padding: 0 2.5rem 0 0.875rem;   /* room for the chevron; matches .input px-3.5 */
+  line-height: 44px;
+  font-size: 1rem;                /* 16px — same as text-form-input */
+  color: var(--frontend-ink);
+}
+
+.alam-select2 .select2-selection--single .select2-selection__placeholder {
+  color: #767281;                 /* ink-soft — the placeholder colour on .input */
+}
+
+/* Chevron: the same SVG the native `.select` uses, so the two never drift. */
+.alam-select2 .select2-selection--single .select2-selection__arrow {
+  top: 0;
+  right: 0;
+  width: 2.5rem;
+  height: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236F6B78' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 16px;
+  transition: transform .2s ease;
+}
+.alam-select2 .select2-selection--single .select2-selection__arrow b { display: none; }
+
+/* The clear control, only on the few fields that opt into it. */
+.alam-select2 .select2-selection--single .select2-selection__clear {
+  margin-right: 1.75rem;
+  color: #767281;
+  font-size: 1.125rem;
+  line-height: 44px;
+}
+.alam-select2 .select2-selection--single .select2-selection__clear:hover {
+  color: var(--frontend-primary);
+}
+
+/* ---- Hover -------------------------------------------------------------- */
+.alam-select2:not(.select2-container--disabled):hover .select2-selection--single {
+  border-color: #9385C4;          /* alam-400 — a clear step up, no heavy shadow */
+}
+
+/* ---- Focus / open ------------------------------------------------------- */
+.alam-select2.select2-container--focus .select2-selection--single,
+.alam-select2.select2-container--open .select2-selection--single {
+  border-color: var(--frontend-primary);
+  box-shadow: 0 0 0 4px rgba(99, 86, 155, .10);   /* the same ring as .input */
+}
+.alam-select2.select2-container--open .select2-selection__arrow {
+  transform: rotate(180deg);
+}
+/* Select2 squares off the corners nearest an open dropdown. The panel here is
+   detached by a few pixels instead, so the control keeps its full radius. */
+.alam-select2.select2-container--open.select2-container--below .select2-selection--single,
+.alam-select2.select2-container--open.select2-container--above .select2-selection--single {
+  border-radius: var(--frontend-radius-control);
+}
+/* Keyboard focus stays obvious on top of the ring. */
+.alam-select2 .select2-selection:focus-visible {
+  outline: 2px solid var(--frontend-primary);
+  outline-offset: 2px;
+  border-radius: var(--frontend-radius-control);
+}
+
+/* ---- Disabled ----------------------------------------------------------- */
+.alam-select2.select2-container--disabled .select2-selection--single {
+  background-color: var(--frontend-surface-soft);
+  border-color: #D6CFE6;          /* line */
+  cursor: not-allowed;
+}
+.alam-select2.select2-container--disabled .select2-selection__rendered,
+.alam-select2.select2-container--disabled .select2-selection__placeholder {
+  color: #767281;
+}
+.alam-select2.select2-container--disabled .select2-selection__arrow { opacity: .45; }
+
+/* ---- Validation --------------------------------------------------------- */
+/* Keys off the native select, which is what the page scripts already mark up.
+   No second validation system. */
+select[aria-invalid="true"] + .select2-container .select2-selection--single,
+select.is-invalid + .select2-container .select2-selection--single {
+  border-color: #DC2626;          /* red-600 — the colour of the error text */
+}
+select[aria-invalid="true"] + .select2-container.select2-container--focus .select2-selection--single,
+select[aria-invalid="true"] + .select2-container.select2-container--open .select2-selection--single,
+select.is-invalid + .select2-container.select2-container--focus .select2-selection--single,
+select.is-invalid + .select2-container.select2-container--open .select2-selection--single {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, .10);
+}
+
+/* ---- The dropdown panel ------------------------------------------------- */
+.alam-select2-dropdown {
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-control);
+  background-color: var(--frontend-surface);
+  box-shadow: 0 2px 4px rgba(37, 35, 49, .05), 0 18px 40px -22px rgba(62, 53, 101, .45);
+  overflow: hidden;
+  /* A narrow control — the dialling-code field is 124px — would otherwise get a
+     panel too cramped to read a country name in. The max-width keeps the wider
+     panel inside the viewport on the smallest phones. */
+  min-width: 220px;
+  max-width: calc(100vw - 1.5rem);
+}
+/* Same reason: keep all four corners rounded and all four borders drawn. */
+.alam-select2-dropdown.select2-dropdown--below {
+  margin-top: 6px;
+  border-top: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-control);
+}
+.alam-select2-dropdown.select2-dropdown--above {
+  margin-top: -6px;
+  border-bottom: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-control);
+}
+
+/* ---- Search inside the dropdown ----------------------------------------- */
+.alam-select2-dropdown .select2-search--dropdown {
+  padding: 0.625rem;
+  border-bottom: 1px solid #EEEAF7;
+}
+.alam-select2-dropdown .select2-search--dropdown .select2-search__field {
+  min-height: 42px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--frontend-border);
+  border-radius: 9px;
+  background-color: var(--frontend-surface);
+  font-family: inherit;
+  font-size: 1rem;                /* 16px — no zoom-on-focus on iOS */
+  line-height: 1.5;
+  color: var(--frontend-ink);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.alam-select2-dropdown .select2-search--dropdown .select2-search__field:focus {
+  outline: none;
+  border-color: var(--frontend-primary);
+  box-shadow: 0 0 0 3px rgba(99, 86, 155, .12);
+}
+
+/* ---- Results ------------------------------------------------------------ */
+.alam-select2-dropdown .select2-results > .select2-results__options {
+  max-height: 264px;
+  padding: 0.25rem;
+}
+.alam-select2-dropdown .select2-results__option {
+  padding: 0.625rem 2.25rem 0.625rem 0.875rem;
+  border-radius: 8px;
+  font-size: 1rem;                /* never smaller than the form text */
+  line-height: 1.5;
+  color: var(--frontend-ink);
+}
+
+/* Pointer hover and keyboard highlight share one soft-purple state. */
+.alam-select2-dropdown .select2-results__option--highlighted[aria-selected] {
+  background-color: var(--frontend-primary-soft);
+  color: var(--frontend-primary-dark);
+}
+
+/* The current value: solid brand purple with a tick — unmistakably different
+   from the highlight above. */
+.alam-select2-dropdown .select2-results__option[aria-selected="true"] {
+  background-color: var(--frontend-primary);
+  color: #fff;
+  font-weight: 600;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px;
+}
+/* Selected and under the cursor — darker again, still white text. */
+.alam-select2-dropdown .select2-results__option--highlighted[aria-selected="true"] {
+  background-color: var(--frontend-primary-deep);
+  color: #fff;
+}
+
+.alam-select2-dropdown .select2-results__option[aria-disabled="true"] {
+  color: #767281;
+  opacity: .6;
+}
+.alam-select2-dropdown .select2-results__message {
+  padding: 0.75rem 0.875rem;
+  font-size: 1rem;
+  color: var(--frontend-ink-muted);
+}
+
+/* ---- Layout ------------------------------------------------------------- */
+/* Never let the plugin emit a fixed pixel width inside a responsive grid. */
+.alam-select2 { display: block; width: 100% !important; max-width: 100%; }
+
+/* ==========================================================================
+   Flatpickr — Alam Al-Munawara Theme
+   --------------------------------------------------------------------------
+   Loaded after vendor/flatpickr/flatpickr.min.css, so these rules replace the
+   plugin's stock greys and blues. Every value comes from the tokens at the top
+   of this file, or from the Tailwind `alam` palette that mirrors them — the
+   calendar is meant to read as part of the site, not as a plugin.
+
+   `.alam-flatpickr` is attached by js/datepicker.js, so nothing here can leak
+   into other markup.
+
+   The sizes are deliberate: 16px day numbers, 16px month/year, 15px weekdays.
+   The site's 14px floor applies to the calendar too — older visitors read this
+   on small phones.
+   ========================================================================== */
+
+/* ---- The popup ---------------------------------------------------------- */
+.flatpickr-calendar.alam-flatpickr {
+  width: 20.5rem;                       /* 328px — seven 40px days plus padding */
+  max-width: calc(100vw - 1.5rem);      /* never overflows a phone or a card */
+  padding: 0.5rem;
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-card);
+  background: var(--frontend-surface);
+  box-shadow: 0 2px 4px rgba(37, 35, 49, .05), 0 18px 40px -22px rgba(62, 53, 101, .45);
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--frontend-ink);
+}
+.flatpickr-calendar.alam-flatpickr.arrowTop::before,
+.flatpickr-calendar.alam-flatpickr.arrowTop::after,
+.flatpickr-calendar.alam-flatpickr.arrowBottom::before,
+.flatpickr-calendar.alam-flatpickr.arrowBottom::after { display: none; }
+.flatpickr-calendar.alam-flatpickr.arrowTop { margin-top: 6px; }
+.flatpickr-calendar.alam-flatpickr.arrowBottom { margin-top: -6px; }
+
+/* Inline calendar (the booking wizard) sits inside its own bordered card. */
+.flatpickr-calendar.alam-flatpickr.inline {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* The plugin lays the grid out in fixed pixels; everything below is fluid, so a
+   328px popup and a full-width inline calendar share one set of rules. */
+.alam-flatpickr .flatpickr-innerContainer,
+.alam-flatpickr .flatpickr-rContainer,
+.alam-flatpickr .flatpickr-days,
+.alam-flatpickr .dayContainer {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+.alam-flatpickr .flatpickr-innerContainer { border-bottom: 0; overflow: visible; }
+.alam-flatpickr .flatpickr-days { border: 0; }
+.alam-flatpickr .dayContainer {
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  justify-content: initial;
+}
+
+/* ---- Month header ------------------------------------------------------- */
+.alam-flatpickr .flatpickr-months { padding: 0.25rem 0 0.5rem; align-items: center; }
+.alam-flatpickr .flatpickr-months .flatpickr-month {
+  height: 2.25rem;
+  color: var(--frontend-ink);
+  background: transparent;
+  overflow: visible;
+}
+.alam-flatpickr .flatpickr-current-month {
+  height: 2.25rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 1rem;                      /* 16px */
+  font-weight: 700;
+  line-height: 2.25rem;
+  color: var(--frontend-ink);
+}
+.alam-flatpickr .flatpickr-current-month .cur-month { margin: 0; font-weight: 700; }
+.alam-flatpickr .flatpickr-current-month input.cur-year {
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--frontend-ink);
+  background: transparent;
+}
+.alam-flatpickr .flatpickr-current-month .numInputWrapper { width: 4.25rem; }
+.alam-flatpickr .flatpickr-current-month .numInputWrapper:hover {
+  background: var(--frontend-primary-faint);
+  border-radius: 6px;
+}
+.alam-flatpickr .numInputWrapper span { border-color: var(--frontend-border); }
+.alam-flatpickr .numInputWrapper span:hover { background: var(--frontend-primary-soft); }
+.alam-flatpickr .numInputWrapper span.arrowUp::after { border-bottom-color: var(--frontend-primary); }
+.alam-flatpickr .numInputWrapper span.arrowDown::after { border-top-color: var(--frontend-primary); }
+
+/* Navigation: a 36px target with a Font Awesome chevron — the same self-hosted
+   webfont the rest of the site uses, drawn from CSS because Flatpickr owns this
+   markup and icon() cannot reach into it. */
+.alam-flatpickr .flatpickr-months .flatpickr-prev-month,
+.alam-flatpickr .flatpickr-months .flatpickr-next-month {
+  position: static;
+  display: grid;
+  place-items: center;
+  height: 2.25rem;
+  width: 2.25rem;
+  padding: 0;
+  border-radius: var(--frontend-radius-control);
+  color: var(--frontend-primary-deep);
+  fill: currentColor;
+  transition: background-color .15s ease, color .15s ease;
+}
+.alam-flatpickr .flatpickr-months .flatpickr-prev-month svg,
+.alam-flatpickr .flatpickr-months .flatpickr-next-month svg { display: none; }
+.alam-flatpickr .flatpickr-months .flatpickr-prev-month::before,
+.alam-flatpickr .flatpickr-months .flatpickr-next-month::before {
+  font-family: "Font Awesome 7 Free";
+  font-weight: 900;
+  font-size: 0.9375rem;
+  line-height: 1;
+}
+.alam-flatpickr .flatpickr-months .flatpickr-prev-month::before { content: "\f053"; }
+.alam-flatpickr .flatpickr-months .flatpickr-next-month::before { content: "\f054"; }
+.alam-flatpickr .flatpickr-months .flatpickr-prev-month:hover,
+.alam-flatpickr .flatpickr-months .flatpickr-next-month:hover {
+  background: var(--frontend-primary-soft);
+  color: var(--frontend-primary-dark);
+}
+.alam-flatpickr .flatpickr-months .flatpickr-prev-month:focus-visible,
+.alam-flatpickr .flatpickr-months .flatpickr-next-month:focus-visible {
+  outline: 2px solid var(--frontend-primary);
+  outline-offset: 2px;
+}
+.alam-flatpickr .flatpickr-months .flatpickr-prev-month.flatpickr-disabled,
+.alam-flatpickr .flatpickr-months .flatpickr-next-month.flatpickr-disabled {
+  display: grid;                        /* keep the header row from reflowing */
+  opacity: .35;
+  pointer-events: none;
+}
+
+/* ---- Weekday labels ----------------------------------------------------- */
+.alam-flatpickr .flatpickr-weekdays { height: 2rem; background: transparent; }
+.alam-flatpickr .flatpickr-weekdaycontainer {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.alam-flatpickr span.flatpickr-weekday {
+  font-size: 0.9375rem;                 /* 15px */
+  font-weight: 700;
+  color: var(--frontend-ink-muted);
+  background: transparent;
+}
+
+/* ---- Days --------------------------------------------------------------- */
+.alam-flatpickr .flatpickr-day {
+  width: auto;
+  max-width: none;
+  height: 2.5rem;                       /* 40px — a comfortable touch target */
+  line-height: 2.5rem;
+  margin: 0;
+  border: 0;
+  border-radius: var(--frontend-radius-control);
+  font-size: 1rem;                      /* 16px */
+  font-weight: 500;
+  color: var(--frontend-ink);
+  background: transparent;
+  transition: background-color .15s ease, color .15s ease;
+}
+.alam-flatpickr .flatpickr-day:hover {
+  background: var(--frontend-primary-soft);
+  color: var(--frontend-primary-deep);
+}
+.alam-flatpickr .flatpickr-day:focus-visible {
+  outline: 2px solid var(--frontend-primary);
+  outline-offset: -2px;
+}
+
+/* Today — an outline, never mistakable for the filled selection. */
+.alam-flatpickr .flatpickr-day.today {
+  box-shadow: inset 0 0 0 1.5px var(--frontend-primary);
+  color: var(--frontend-primary-deep);
+  font-weight: 700;
+}
+.alam-flatpickr .flatpickr-day.today:hover { background: var(--frontend-primary-soft); }
+
+/* The selection — solid brand purple, and it stays selected under the cursor. */
+.alam-flatpickr .flatpickr-day.selected,
+.alam-flatpickr .flatpickr-day.selected:focus,
+.alam-flatpickr .flatpickr-day.selected.today {
+  background: var(--frontend-primary);
+  border-color: var(--frontend-primary);
+  box-shadow: none;
+  color: #fff;
+  font-weight: 700;
+}
+.alam-flatpickr .flatpickr-day.selected:hover {
+  background: var(--frontend-primary-deep);
+  color: #fff;
+}
+
+/* Unavailable — visibly closed, with no hover response at all. */
+.alam-flatpickr .flatpickr-day.flatpickr-disabled,
+.alam-flatpickr .flatpickr-day.flatpickr-disabled:hover,
+.alam-flatpickr .flatpickr-day.notAllowed {
+  background: var(--frontend-surface-soft);
+  color: #A6A2B0;
+  cursor: not-allowed;
+  opacity: 1;
+}
+.alam-flatpickr .flatpickr-day.prevMonthDay,
+.alam-flatpickr .flatpickr-day.nextMonthDay,
+.alam-flatpickr .flatpickr-day.prevMonthDay.flatpickr-disabled,
+.alam-flatpickr .flatpickr-day.nextMonthDay.flatpickr-disabled {
+  background: transparent;
+  color: #BFBBC8;
+}
+
+/* ---- Field state -------------------------------------------------------- */
+/* Flatpickr hides the real input and puts a readonly twin in front of it, so the
+   error styling the forms already use has to reach the twin as well. */
+.datepicker-field .input.is-invalid,
+.datepicker-field .input[aria-invalid="true"] {
+  border-color: #DC2626;
+}
+.datepicker-field .input.is-invalid:focus,
+.datepicker-field .input[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, .10);
+}
+
+@media (max-width: 400px) {
+  .flatpickr-calendar.alam-flatpickr { padding: 0.375rem; }
+  .alam-flatpickr .flatpickr-day { height: 2.375rem; line-height: 2.375rem; }
+}
+
+/* ==========================================================================
+   intl-tel-input — Alam Al-Munawara Theme
+   --------------------------------------------------------------------------
+   Loaded after vendor/intl-tel-input/css/intlTelInput.min.css, so these rules
+   replace the plugin's stock greys and blues. Every value comes from the tokens
+   at the top of this file, or from the Tailwind `alam` palette that mirrors
+   them — the control is meant to be indistinguishable from `.input`, the
+   Select2 control and the Flatpickr field standing next to it.
+
+   `.alam-iti` (container) and `.alam-iti-popup` / `.alam-iti-popup-container`
+   (the dropdown and the mobile fullscreen panel) are attached through the
+   plugin's `classNames` option in js/phone-input.js, so nothing here can leak
+   into other markup — including the popup, which is rendered outside the field.
+
+   Country rows are 16px and the search box is 16px: the site's 14px floor
+   applies to a country list a traveller reads on a phone too.
+   ========================================================================== */
+
+/* ---- Tokens the plugin itself reads ------------------------------------- */
+.alam-iti,
+.alam-iti-popup,
+.alam-iti-popup-container {
+  --iti-border-color: var(--frontend-border);
+  --iti-hover-color: var(--frontend-primary-soft);
+  --iti-country-selector-bg: var(--frontend-surface);
+  --iti-icon-color: var(--frontend-ink-muted);
+  --iti-spacer-horizontal: 0.875rem;      /* the horizontal padding of .input */
+  --iti-arrow-padding: 0.5rem;
+  --iti-flag-width: 22px;
+  --iti-strict-reject-flash-color: rgba(220, 38, 38, .10);
+}
+
+/* ---- The control -------------------------------------------------------- */
+/* Never let the plugin's inline-block wrapper break a responsive grid. */
+.alam-iti { display: block; width: 100%; max-width: 100%; }
+
+/* The country button overlays the left of the input, so the two only read as
+   one control while they share a border state. */
+.phone-field:hover .alam-iti input.iti__tel-input {
+  border-color: #9385C4;                  /* alam-400 — the Select2 hover step */
+}
+.alam-iti:has(.iti__selected-country:focus-visible) input.iti__tel-input,
+.alam-iti:has(.iti__selected-country[aria-expanded="true"]) input.iti__tel-input {
+  border-color: var(--frontend-primary);
+  box-shadow: 0 0 0 4px rgba(99, 86, 155, .10);   /* the same ring as .input */
+}
+.alam-iti input.iti__tel-input:focus { outline: none; }
+
+.alam-iti .iti__selected-country {
+  border-radius: var(--frontend-radius-control) 0 0 var(--frontend-radius-control);
+  color: var(--frontend-ink);
+  font-size: 1rem;                        /* 16px — same as .input */
+}
+.alam-iti .iti__selected-country-primary {
+  border-radius: var(--frontend-radius-control) 0 0 var(--frontend-radius-control);
+  transition: background-color .15s ease;
+}
+.alam-iti .iti__selected-dial-code {
+  margin-left: 0.375rem;
+  font-weight: 600;
+  color: var(--frontend-ink);
+}
+.alam-iti .iti__selected-country:focus-visible {
+  outline: 2px solid var(--frontend-primary);
+  outline-offset: -2px;
+}
+/* A divider keeps the flag+code half legible against the number without
+   detaching it from the field. */
+.alam-iti .iti__country-container::after {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  right: 0;
+  width: 1px;
+  background: var(--frontend-border);
+}
+.alam-iti .iti__arrow { border-color: var(--frontend-ink-muted); }
+.alam-iti .iti__selected-country[aria-expanded="true"] .iti__arrow { border-color: var(--frontend-primary); }
+
+/* ---- The popup ---------------------------------------------------------- */
+.alam-iti-popup {
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-control);
+  background-color: var(--frontend-surface);
+  box-shadow: 0 2px 4px rgba(37, 35, 49, .05), 0 18px 40px -22px rgba(62, 53, 101, .45);
+  overflow: hidden;
+  font-family: inherit;
+  color: var(--frontend-ink);
+}
+.iti--inline-country-selector .alam-iti-popup { margin-top: 6px; }
+.alam-iti-popup .iti__country-list { padding: 0.25rem; }
+.iti--inline-country-selector .alam-iti-popup .iti__country-list { max-height: 264px; }
+
+/* ---- Country rows ------------------------------------------------------- */
+.alam-iti-popup .iti__country {
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
+  font-size: 1rem;                        /* 16px — never smaller than the form */
+  line-height: 1.5;
+  color: var(--frontend-ink);
+}
+.alam-iti-popup .iti__dial-code { color: var(--frontend-ink-muted); }
+
+/* Pointer hover and keyboard highlight share one soft-purple state. */
+.alam-iti-popup .iti__country.iti__highlight {
+  background-color: var(--frontend-primary-soft);
+  color: var(--frontend-primary-dark);
+}
+.alam-iti-popup .iti__country.iti__highlight .iti__dial-code { color: var(--frontend-primary-deep); }
+
+/* The current country: solid brand purple with the plugin's own tick — the
+   same three-way treatment the Select2 dropdown uses. */
+.alam-iti-popup .iti__country[aria-selected="true"] {
+  background-color: var(--frontend-primary);
+  color: #fff;
+  font-weight: 600;
+}
+.alam-iti-popup .iti__country[aria-selected="true"] .iti__dial-code,
+.alam-iti-popup .iti__country[aria-selected="true"] .iti__country-check { color: #fff; }
+.alam-iti-popup .iti__country[aria-selected="true"].iti__highlight {
+  background-color: var(--frontend-primary-deep);
+  color: #fff;
+}
+.alam-iti-popup .iti__no-results {
+  padding: 1.25rem 0.875rem;
+  font-size: 1rem;
+  color: var(--frontend-ink-muted);
+}
+
+/* ---- Country search ----------------------------------------------------- */
+.alam-iti-popup .iti__search-input-wrapper { border-bottom-color: var(--frontend-primary-soft); }
+.alam-iti-popup .iti__search-input {
+  /* Only the vertical padding is ours. The horizontal padding is the plugin's
+     own calc() around the magnifier and the clear ×, both absolutely positioned
+     inside this input — overwrite it with a shorthand and the placeholder runs
+     under the icons. It follows --iti-spacer-horizontal, set with the other
+     tokens above. */
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  font-family: inherit;
+  font-size: 1rem;                        /* 16px — no zoom-on-focus on iOS */
+  line-height: 1.5;
+  color: var(--frontend-ink);
+  background: var(--frontend-surface);
+}
+.alam-iti-popup .iti__search-input::placeholder { color: #767281; }
+.alam-iti-popup .iti__search-input:focus { outline: none; }
+.alam-iti-popup:has(.iti__search-input:focus) .iti__search-input-wrapper {
+  border-bottom-color: var(--frontend-primary);
+  box-shadow: inset 0 -1px 0 0 var(--frontend-primary);
+}
+.alam-iti-popup .iti__search-icon,
+.alam-iti-popup .iti__search-clear { color: var(--frontend-ink-muted); }
+.alam-iti-popup .iti__search-clear:hover { color: var(--frontend-primary); }
+
+/* ---- Fullscreen popup (phones) ------------------------------------------ */
+.alam-iti-popup-container.iti--fullscreen-popup { --iti-mobile-popup-margin: 1rem; }
+.iti--fullscreen-popup .alam-iti-popup {
+  border-radius: var(--frontend-radius-card);
+  box-shadow: 0 24px 60px -20px rgba(37, 35, 49, .45);
+}
+.iti--fullscreen-popup .alam-iti-popup .iti__country { padding: 0.75rem 0.875rem; }
+
+/* ---- Error state -------------------------------------------------------- */
+/* The country selector and the number are one invalid control, matching the
+   red the rest of the forms already use. */
+.phone-field .input.is-invalid,
+.phone-field .input[aria-invalid="true"] { border-color: #DC2626; }
+.phone-field .input.is-invalid:focus,
+.phone-field .input[aria-invalid="true"]:focus { box-shadow: 0 0 0 4px rgba(220, 38, 38, .10); }
+.phone-field.is-invalid .alam-iti .iti__country-container::after { background: #DC2626; }
+
+/* ---- Disabled ----------------------------------------------------------- */
+.alam-iti input.iti__tel-input:disabled { background: var(--frontend-surface-soft); color: #767281; }
+.alam-iti:has(input.iti__tel-input:disabled) .iti__selected-country { opacity: .55; }
+
+/* ==========================================================================
+   Moyasar payment form — Alam Al-Munawara theme
+   --------------------------------------------------------------------------
+   Loaded after cdn.moyasar.com/mpf/<version>/moyasar.css (see
+   MOYASAR_FORM_VERSION). Moyasar's own Pay button ships a hardcoded blue with
+   no theming variables, and its rules are scoped behind chained ID selectors,
+   so matching that specificity needs !important here.
+
+   Only the idle colour is restyled to match .btn-primary — the busy/success/
+   fail state colours stay Moyasar's own, since those are payment-status
+   feedback, not brand colour.
+   ========================================================================== */
+.mysr-form-button:not(.mysr-form-busy):not(.mysr-form-success):not(.mysr-form-fail) {
+  background-color: var(--frontend-primary) !important;
+}
+.mysr-form-button:not(.mysr-form-busy):not(.mysr-form-success):not(.mysr-form-fail):hover {
+  background-color: var(--frontend-primary-deep) !important;
+}
+
+/* ==========================================================================
+   .page-contents — CMS / rich text content
+   --------------------------------------------------------------------------
+   Restyles arbitrary WYSIWYG output (page bodies, tour itineraries, policy
+   pages) that carries plain HTML tags with no utility classes of their own.
+   Every colour and spacing value reuses the frontend design tokens declared
+   above, and every directional value is a CSS logical property (inline-start
+   / inline-end / text-align: start) rather than a physical left/right, so
+   the block reads correctly under [dir="rtl"] with no separate override —
+   the same "logical by default" approach the RTL section below documents
+   for the rest of the site.
+   ========================================================================== */
+
+.page-contents {
+  --page-content-body-font-size: 1.0625rem;
+  --page-content-body-line-height: 1.75;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--frontend-ink);
+}
+
+.page-contents.page-sm {
+  --page-content-body-font-size: 1rem;
+  --page-content-body-line-height: 1.65;
+}
+
+/* Headings */
+.page-contents h1:not([class*="text-"]),
+.page-contents h2:not([class*="text-"]),
+.page-contents h3:not([class*="text-"]),
+.page-contents h4:not([class*="text-"]),
+.page-contents h5:not([class*="text-"]),
+.page-contents h6:not([class*="text-"]) {
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--frontend-ink);
+}
+
+.page-contents h1:not([class*="text-"]) { font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem); margin-top: 0; margin-bottom: .5rem; }
+.page-contents h2:not([class*="text-"]) { font-size: clamp(1.5rem, 1.3rem + 1vw, 2.25rem); margin-top: 2rem; margin-bottom: .5rem; }
+.page-contents h3:not([class*="text-"]) { font-size: clamp(1.3rem, 1.15rem + .75vw, 2rem); margin-top: 1.75rem; margin-bottom: .375rem; }
+.page-contents h4:not([class*="text-"]) { font-size: clamp(1.2rem, 1.1rem + .5vw, 1.75rem); margin-top: 1.5rem; margin-bottom: .25rem; }
+.page-contents h5:not([class*="text-"]) { font-size: clamp(1.1rem, 1.05rem + .3vw, 1.5rem); margin-top: 1.25rem; margin-bottom: .25rem; }
+.page-contents h6:not([class*="text-"]) { font-size: clamp(1rem, .95rem + .2vw, 1.25rem); text-transform: uppercase; letter-spacing: .08em; margin-top: 1rem; margin-bottom: .25rem; }
+
+/* Arabic has no case, and tracking pulls the joined script apart — the same
+   correction the eyebrow tokens get above. */
+[dir="rtl"] .page-contents h6:not([class*="text-"]) { text-transform: none; letter-spacing: 0; }
+
+/* Body copy */
+.page-contents p,
+.page-contents ul,
+.page-contents ol,
+.page-contents dl,
+.page-contents blockquote,
+.page-contents address {
+  font-size: var(--page-content-body-font-size);
+  line-height: var(--page-content-body-line-height);
+}
+
+.page-contents p {
+  margin-top: 1rem;
+  color: var(--frontend-ink-muted);
+}
+
+.page-contents :is(h1, h2, h3, h4, h5, h6, p):first-child {
+  margin-top: 0;
+}
+
+/* A CMS block can set its own text colour (a dark callout with a text-white
+   utility, say) — let its direct headings/paragraphs inherit that instead of
+   the muted tone above. */
+.page-contents [class*="text-"] > :is(h1, h2, h3, h4, h5, h6, p) {
+  color: inherit;
+}
+
+/* Inline text */
+.page-contents strong,
+.page-contents b { font-weight: 700; color: var(--frontend-ink); }
+
+.page-contents em,
+.page-contents i { font-style: italic; }
+
+.page-contents u { text-decoration: underline; text-underline-offset: 3px; }
+
+.page-contents s,
+.page-contents del { text-decoration: line-through; color: var(--frontend-ink-muted); }
+
+.page-contents ins { text-decoration: underline; text-decoration-color: var(--frontend-primary); color: var(--frontend-ink); }
+
+.page-contents mark { background: #FEF08A; color: var(--frontend-ink); padding: 0 .2em; border-radius: .2em; }
+
+.page-contents small { font-size: .875em; color: var(--frontend-ink-muted); }
+
+.page-contents sub,
+.page-contents sup { font-size: .75em; line-height: 0; }
+
+.page-contents abbr[title] { text-decoration: underline dotted; cursor: help; color: var(--frontend-ink); }
+
+.page-contents cite { font-style: italic; color: var(--frontend-ink-muted); }
+
+.page-contents dfn { font-style: italic; font-weight: 600; }
+
+.page-contents kbd {
+  display: inline-block;
+  padding: .15em .45em;
+  border: 1px solid var(--frontend-border);
+  border-bottom-width: 2px;
+  border-radius: .3em;
+  background: var(--frontend-surface-soft);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .85em;
+  line-height: 1.4;
+  color: var(--frontend-ink);
+}
+
+.page-contents samp {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .9em;
+  background: var(--frontend-surface-soft);
+  padding: .1em .35em;
+  border-radius: .25em;
+}
+
+.page-contents var { font-style: italic; color: var(--frontend-primary); }
+
+.page-contents code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .875em;
+  background: rgba(99, 86, 155, .08);
+  color: var(--frontend-primary-deep);
+  padding: .15em .4em;
+  border-radius: .3em;
+}
+
+.page-contents q { font-style: italic; color: var(--frontend-ink-muted); }
+.page-contents q::before { content: "\201C"; }
+.page-contents q::after  { content: "\201D"; }
+
+.page-contents a {
+  color: var(--frontend-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(99, 86, 155, .4);
+  transition: color 200ms ease, text-decoration-color 200ms ease;
+}
+.page-contents a:hover {
+  color: var(--frontend-primary-deep);
+  text-decoration-color: var(--frontend-primary-deep);
+}
+
+/* Cancels the global :focus-visible ring inside CMS content. */
+.page-contents :focus-visible {
+  border-radius: 0;
+  outline: none;
+  outline-offset: 0;
+}
+
+/* Blockquote — the accent bar sits on the reading-start edge, corner radius
+   included, so both flip together under [dir="rtl"]. */
+.page-contents blockquote {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  border-inline-start: 4px solid var(--frontend-primary);
+  background: rgba(99, 86, 155, .05);
+  border-start-end-radius: .75rem;
+  border-end-end-radius: .75rem;
+  color: var(--frontend-ink-muted);
+  font-style: italic;
+}
+.page-contents blockquote p { margin-top: 0; color: inherit; }
+.page-contents blockquote footer {
+  margin-top: .75rem;
+  font-size: .9rem;
+  font-style: normal;
+  color: var(--frontend-ink-muted);
+}
+
+/* Pre / code block */
+.page-contents pre {
+  margin-top: 1.75rem;
+  padding: 1.5rem;
+  overflow-x: auto;
+  background: var(--frontend-ink);
+  border-radius: var(--frontend-radius-card);
+  color: #E2E8F0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .925rem;
+  line-height: 1.75;
+}
+.page-contents pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+  border-radius: 0;
+}
+
+/* Horizontal rule */
+.page-contents hr {
+  margin: 2.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--frontend-border);
+}
+
+/* Lists — logical padding and a logical bullet offset, so a list indents
+   from the reading edge in both directions. */
+.page-contents ul,
+.page-contents ol {
+  margin-top: 1.25rem;
+  padding-inline-start: 1.75rem;
+  color: var(--frontend-ink-muted);
+}
+.page-contents ul { list-style-type: disc; }
+.page-contents ol { list-style-type: decimal; }
+.page-contents ul li::marker,
+.page-contents ol li::marker { color: var(--frontend-primary); }
+.page-contents li { margin-top: .4rem; line-height: inherit; }
+.page-contents li > ul,
+.page-contents li > ol { margin-top: .3rem; }
+
+/* Definition list */
+.page-contents dl { margin-top: 1.25rem; }
+.page-contents dt {
+  font-weight: 700;
+  color: var(--frontend-ink);
+  margin-top: 1rem;
+}
+.page-contents dd {
+  margin-inline-start: 1.5rem;
+  color: var(--frontend-ink-muted);
+}
+
+/* Table
+   `wrapPageContentTables()` in js/main.js wraps every CMS <table> in a
+   `.page-contents-table-wrap` div, because the scroll/card chrome cannot
+   live on the <table> itself: `display: block` on a <table> stops it from
+   being a table for layout purposes, so the browser drops in an anonymous,
+   shrink-to-fit table box for the row groups underneath it — `width: 100%`
+   then only reaches that outer block box, and the header/cell backgrounds
+   stop short of the card's actual width. Keeping the wrapper a plain block
+   element and the <table> a real `display: table` avoids that: the wrapper
+   owns the border, radius, shadow and horizontal scroll, the table just
+   stretches to fill it.
+   If JavaScript never runs, the table renders unwrapped — still styled
+   (borders, header, zebra stripes) but without the card chrome or the
+   scroll clipping, which degrades cleanly rather than breaking layout. */
+.page-contents-table-wrap {
+  margin-top: 1.75rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-card);
+  background: var(--frontend-surface);
+  box-shadow: 0 14px 34px -28px rgba(37, 35, 49, .35);
+}
+
+.page-contents table {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 1.75rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--page-content-body-font-size);
+  line-height: 1.6;
+}
+
+.page-contents-table-wrap table {
+  margin-top: 0;
+}
+
+.page-contents caption {
+  caption-side: top;
+  margin-bottom: .75rem;
+  font-size: .875rem;
+  font-weight: 700;
+  color: var(--frontend-primary);
+  text-align: start;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+[dir="rtl"] .page-contents caption { letter-spacing: 0; text-transform: none; }
+
+.page-contents th,
+.page-contents td {
+  padding: .75rem 1rem;
+  border-inline-end: 1px solid var(--frontend-border);
+  border-bottom: 1px solid var(--frontend-border);
+  text-align: start;
+  vertical-align: top;
+  transition: background-color 150ms ease;
+}
+
+.page-contents tr > :last-child { border-inline-end: 0; }
+
+.page-contents table > :last-child > tr:last-child > th,
+.page-contents table > :last-child > tr:last-child > td {
+  border-bottom: 0;
+}
+
+/* --frontend-primary-dark is the same deep purple the footer, page banners
+   and dark CMS sections already use (bg-alam-800) — the table header reads
+   as one more instance of that brand surface, not a generic dark table. */
+.page-contents th {
+  background: var(--frontend-primary-dark);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: .02em;
+}
+[dir="rtl"] .page-contents th { letter-spacing: 0; }
+
+.page-contents tfoot td {
+  background: var(--frontend-primary-faint);
+  font-size: .875rem;
+  color: var(--frontend-ink-muted);
+}
+
+.page-contents tbody tr:nth-child(even) td { background: var(--frontend-primary-faint); }
+
+/* A quiet purple wash on hover — the same feedback pattern as .option-card,
+   .toc-link and the other interactive surfaces on the site. Sits after the
+   zebra-stripe rule so it wins on both odd and even rows. */
+.page-contents tbody tr:hover td { background: var(--frontend-primary-soft); }
+
+/* Form elements — mirrors .input / .select / .btn so a form embedded in CMS
+   content reads the same as a hand-built one. */
+.page-contents form { margin-top: 1.75rem; }
+
+.page-contents fieldset {
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-card);
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.page-contents legend {
+  padding: 0 .5rem;
+  font-weight: 600;
+  font-size: .875rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--frontend-ink-muted);
+}
+[dir="rtl"] .page-contents legend { letter-spacing: 0; text-transform: none; }
+
+.page-contents label {
+  display: block;
+  font-size: .925rem;
+  font-weight: 500;
+  color: var(--frontend-ink);
+  margin-top: .5rem;
+}
+
+.page-contents input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="submit"]):not([type="reset"]):not([type="button"]),
+.page-contents textarea,
+.page-contents select {
+  display: block;
+  width: 100%;
+  padding: .625rem .875rem;
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-control);
+  background: var(--frontend-surface);
+  font-size: 1rem;
+  color: var(--frontend-ink);
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+  margin-top: .25rem;
+}
+.page-contents input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]):not([type="submit"]):not([type="reset"]):not([type="button"]):focus,
+.page-contents textarea:focus,
+.page-contents select:focus {
+  border-color: var(--frontend-primary);
+  box-shadow: 0 0 0 4px rgba(99, 86, 155, .10);
+}
+
+.page-contents textarea { resize: vertical; min-height: 7rem; }
+
+.page-contents input[type="color"] {
+  width: 3rem;
+  height: 2.25rem;
+  padding: .15rem;
+  border: 1px solid var(--frontend-border);
+  border-radius: .4rem;
+  cursor: pointer;
+  background: var(--frontend-surface);
+}
+
+.page-contents input[type="range"] {
+  display: block;
+  width: 100%;
+  accent-color: var(--frontend-primary);
+  margin-top: .25rem;
+}
+
+.page-contents input[type="checkbox"],
+.page-contents input[type="radio"] {
+  accent-color: var(--frontend-primary);
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.page-contents input[type="file"] {
+  font-size: .925rem;
+  color: var(--frontend-ink-muted);
+}
+
+.page-contents progress {
+  display: block;
+  width: 100%;
+  height: .625rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  appearance: none;
+  accent-color: var(--frontend-primary);
+}
+.page-contents progress::-webkit-progress-bar { background: var(--frontend-border); border-radius: 9999px; }
+.page-contents progress::-webkit-progress-value { background: var(--frontend-primary); border-radius: 9999px; }
+
+.page-contents meter {
+  display: block;
+  width: 100%;
+  height: .625rem;
+  border-radius: 9999px;
+  appearance: none;
+}
+.page-contents meter::-webkit-meter-bar { background: var(--frontend-border); border-radius: 9999px; }
+.page-contents meter::-webkit-meter-optimum-value { background: #22C55E; border-radius: 9999px; }
+
+.page-contents button,
+.page-contents input[type="submit"],
+.page-contents input[type="reset"],
+.page-contents input[type="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  padding: 1rem 1.75rem;
+  border: 0;
+  border-radius: var(--frontend-radius-control);
+  background: var(--frontend-primary);
+  color: #fff;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(37, 35, 49, .08);
+  transition: background-color 200ms ease;
+  margin-top: .5rem;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+.page-contents button:hover,
+.page-contents input[type="submit"]:hover { background: var(--frontend-primary-deep); }
+
+.page-contents button[type="reset"],
+.page-contents input[type="reset"] {
+  background: var(--frontend-surface-soft);
+  color: var(--frontend-ink);
+  box-shadow: 0 14px 30px rgba(37, 35, 49, .06);
+}
+.page-contents button[type="reset"]:hover,
+.page-contents input[type="reset"]:hover { background: var(--frontend-border); }
+
+.page-contents button[type="button"],
+.page-contents input[type="button"] {
+  background: var(--frontend-ink);
+}
+.page-contents button[type="button"]:hover,
+.page-contents input[type="button"]:hover { background: #111827; }
+
+/* Media */
+.page-contents figure {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+.page-contents figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--frontend-radius-control);
+}
+.page-contents figcaption {
+  margin-top: .6rem;
+  font-size: .875rem;
+  color: var(--frontend-ink-muted);
+  text-align: center;
+  font-style: italic;
+}
+
+.page-contents img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--frontend-radius-control);
+}
+
+.page-contents audio,
+.page-contents video {
+  display: block;
+  max-width: 100%;
+  margin-top: 1.5rem;
+  border-radius: var(--frontend-radius-control);
+}
+
+.page-contents iframe {
+  display: block;
+  max-width: 100%;
+  margin-top: 1.5rem;
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-card);
+}
+
+/* Semantic structure */
+.page-contents header,
+.page-contents main,
+.page-contents footer,
+.page-contents aside,
+.page-contents nav,
+.page-contents article,
+.page-contents section {
+  display: block;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px dashed var(--frontend-border);
+  border-radius: var(--frontend-radius-control);
+}
+
+/* A blog post's own <article> wrapper already carries the page chrome —
+   let it sit flush inside .page-contents instead of getting a second frame. */
+.page-contents.blog-post article {
+  border: none;
+  margin-top: 0;
+  padding: 0;
+}
+.page-contents.blog-post article p:first-child {
+  margin-top: 0;
+}
+
+/* A <footer> used as a blockquote citation is not the page's semantic
+   footer — it should not pick up the dashed structural box above. */
+.page-contents blockquote footer {
+  display: block;
+  margin-top: .75rem;
+  padding: 0;
+  border: 0;
+}
+
+.page-contents address {
+  font-style: normal;
+  color: var(--frontend-ink-muted);
+}
+
+/* Details / summary */
+.page-contents details {
+  margin-top: 1.25rem;
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-card);
+  overflow: hidden;
+}
+.page-contents summary {
+  padding: .875rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--frontend-surface-soft);
+  color: var(--frontend-ink);
+  user-select: none;
+  list-style: none;
+}
+.page-contents summary::-webkit-details-marker { display: none; }
+.page-contents details[open] summary { border-bottom: 1px solid var(--frontend-border); }
+.page-contents details > *:not(summary) { padding: 1rem 1.25rem; }
+
+/* Dialog */
+.page-contents dialog {
+  margin-top: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid var(--frontend-border);
+  border-radius: var(--frontend-radius-card);
+  background: var(--frontend-surface);
+  box-shadow: 0 18px 50px rgba(37, 35, 49, .1);
+  color: var(--frontend-ink);
+  width: 100%;
+  max-width: 28rem;
+}
+
+/* Miscellaneous */
+.page-contents time { font-size: .9rem; color: var(--frontend-ink-muted); }
+
+.page-contents data { font-variant-numeric: tabular-nums; color: var(--frontend-ink); }
+
+.page-contents output {
+  display: inline-block;
+  padding: .2em .5em;
+  background: rgba(99, 86, 155, .08);
+  color: var(--frontend-primary-deep);
+  border-radius: .3em;
+  font-weight: 600;
+}
+
+.page-contents ruby { font-size: 1rem; }
+.page-contents rt { font-size: .6em; color: var(--frontend-ink-muted); }
+
+.page-contents bdi,
+.page-contents bdo { color: var(--frontend-ink-muted); }
+
+/* Tour itinerary variant — a tighter body copy size for the step-by-step
+   schedule on the tour detail page. */
+.page-contents.tour-iti {
+  --page-content-body-font-size: 1rem;
+  --page-content-body-line-height: 1.75;
+}
+.page-contents.tour-iti p { margin-top: 0; }
+
+@media (max-width: 639px) {
+  .page-contents {
+    --page-content-body-font-size: 1rem;
+    --page-content-body-line-height: 1.65;
+  }
+  .page-contents blockquote { padding: 1.15rem 1.25rem; }
+  .page-contents fieldset { padding: 1.25rem; }
+  .page-contents th,
+  .page-contents td { padding: .65rem .8rem; }
+}
+
+/* ==========================================================================
+   Right-to-left corrections for the vendored plugins
+   --------------------------------------------------------------------------
+   Everything the site itself draws is already direction-agnostic: Tailwind's
+   logical utilities (ps/pe, ms/me, start/end, text-start/text-end) and the
+   flex and grid rows the browser mirrors on its own.
+
+   What is left is the three plugins, which each own markup this project cannot
+   reach with a utility class. The rules below are deliberately narrow — every
+   one is scoped to a `.alam-*` hook attached by js/select2-init.js,
+   js/datepicker.js or js/phone-input.js, so nothing here can leak into other
+   markup, and each fixes a value the plugin hard-codes in physical terms.
+
+   No separate rtl.css: this is the same stylesheet, compiled once, and English
+   pages simply never match [dir="rtl"].
+   ========================================================================== */
+
+/* ---- Select2 -------------------------------------------------------------
+   Select2 has its own RTL mode, switched on through the `dir` option in
+   js/select2-init.js, which handles the container. What it does not know about
+   is the Alam theme's chevron and tick, both CSS backgrounds positioned in
+   physical `right` values.
+   ------------------------------------------------------------------------ */
+[dir="rtl"] .alam-select2 .select2-selection--single .select2-selection__rendered {
+  padding: 0 0.875rem 0 2.5rem;   /* mirror of the LTR padding: chevron side swaps */
+}
+[dir="rtl"] .alam-select2 .select2-selection--single .select2-selection__arrow {
+  right: auto;
+  left: 0;
+  background-position: left 0.85rem center;
+}
+[dir="rtl"] .alam-select2 .select2-selection--single .select2-selection__clear {
+  margin-right: 0;
+  margin-left: 1.75rem;
+}
+[dir="rtl"] .alam-select2-dropdown .select2-results__option {
+  padding: 0.625rem 0.875rem 0.625rem 2.25rem;   /* room for the tick, now on the left */
+}
+[dir="rtl"] .alam-select2-dropdown .select2-results__option[aria-selected="true"] {
+  background-position: left 0.75rem center;
+}
+
+/* ---- Flatpickr -----------------------------------------------------------
+   Flatpickr draws its calendar left-to-right regardless of the document, so the
+   whole calendar container is turned round and the day grid follows. The month
+   arrows keep pointing the way the reader moves: in Arabic, "previous month" is
+   the chevron on the right.
+   ------------------------------------------------------------------------ */
+[dir="rtl"] .flatpickr-calendar.alam-flatpickr {
+  direction: rtl;
+  text-align: right;
+}
+[dir="rtl"] .alam-flatpickr .flatpickr-months .flatpickr-prev-month::before { content: "\f054"; }
+[dir="rtl"] .alam-flatpickr .flatpickr-months .flatpickr-next-month::before { content: "\f053"; }
+/* The year spinner is a number field: digits stay left-to-right inside it. */
+[dir="rtl"] .alam-flatpickr .flatpickr-current-month input.cur-year {
+  direction: ltr;
+  text-align: center;
+}
+
+/* ---- intl-tel-input ------------------------------------------------------
+   The plugin overlays the country button on one side of the input and pads the
+   input to clear it, both in physical values. In Arabic the number itself still
+   reads left to right — a telephone number is not Arabic text — so the input's
+   own direction is pinned while the control around it mirrors.
+   ------------------------------------------------------------------------ */
+[dir="rtl"] .alam-iti .iti__selected-country,
+[dir="rtl"] .alam-iti .iti__selected-country-primary {
+  border-radius: 0 var(--frontend-radius-control) var(--frontend-radius-control) 0;
+}
+[dir="rtl"] .alam-iti .iti__selected-dial-code {
+  margin-left: 0;
+  margin-right: 0.375rem;
+}
+[dir="rtl"] .alam-iti .iti__country-container::after {
+  right: auto;
+  left: 0;
+}
+/* The typed number, the dial code and the country search all hold Latin text
+   and Western digits, so they keep an explicit LTR flow inside the RTL page. */
+[dir="rtl"] .alam-iti input.iti__tel-input,
+[dir="rtl"] .alam-iti-popup .iti__search-input {
+  direction: ltr;
+  text-align: left;
+}
+[dir="rtl"] .alam-iti-popup .iti__country {
+  direction: rtl;
+  text-align: right;
+}
+[dir="rtl"] .alam-iti-popup .iti__dial-code {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* ---- Swiper --------------------------------------------------------------
+   The hero uses a cross-fade, which has no direction, and js/hero-slider.js
+   passes `rtl` so the pagination bullets and the internal index follow the
+   document. Nothing else needs mirroring — the slides are full-bleed
+   photography.
+   ------------------------------------------------------------------------ */
+[dir="rtl"] .hero-pagination { flex-direction: row-reverse; }
+
+/* ---- GLightbox overrides ---------------------------------------------
+   Brand-color touches on the vendored library's own chrome (backdrop tint,
+   close/prev/next buttons) — everything else is GLightbox's tested default
+   animation and behaviour. See js/lightbox-init.js and the
+   .attraction-lightbox-* rules above for the attraction popup's content.
+   ------------------------------------------------------------------------ */
+.goverlay { background: rgba(46, 39, 73, 0.85) !important; }
+.gclose,
+.gnext,
+.gprev {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+.gclose:hover,
+.gnext:hover,
+.gprev:hover { background: var(--frontend-primary); opacity: 1; }
+/* For an inline slide (the attraction popup only — the photo gallery's
+   slides are type: image and never produce these classes), GLightbox's own
+   element is simultaneously a flex container (.gslide-media), a scrolling
+   box with its own max-height (.gslide-inline — the same element, both
+   classes at once), with an independently overflow:auto child
+   (.ginlined-content). Combined with our own popup's `position: sticky`
+   header this let scrolled content visibly escape past the rounded corners
+   instead of clipping correctly. Neutralised here — no flex, no scroll, no
+   radius — so .attraction-lightbox (see above) is the only element that
+   lays out or scrolls the popup; GLightbox is left to do only what it is
+   reliable at: the backdrop, the close/prev/next chrome, and the open/close
+   animation. */
+.gslide-media.gslide-inline {
+  display: block;
+  overflow: visible;
+  max-height: none;
+  background: transparent;
+}
+.ginlined-content { overflow: visible; padding: 0; }
+/* The `clean` theme (assets/frontend/vendor/glightbox/css) puts its own flat
+   box-shadow directly on .gslide-media at desktop widths — a plain rectangle
+   with no border-radius, so it shows past the corners of our rounded card as
+   a mismatched second shadow behind .attraction-lightbox's own shadow-panel.
+   Higher specificity than the theme's `.glightbox-clean .gslide-media` rule,
+   and scoped to .gslide-inline so the photo gallery's own image shadow
+   (type: image, never gets this class) is untouched. `height: auto` drops
+   the fixed height that rule sets alongside it, which fought the popup's own
+   content-driven height. */
+.glightbox-clean .gslide-media.gslide-inline {
+  height: auto;
+  box-shadow: none;
+}
+/* .ginner-container centers its slide with a flex column, but it always
+   renders an empty .gslide-description sibling next to .gslide-media (title/
+   description GLightbox supports but this popup does not use) with
+   `flex: 1 0 100%` — with nothing in it, that still claims vertical space in
+   the flex layout and throws off centering. Only removed when the preceding
+   sibling is our attraction popup, so the photo gallery's slides (no
+   .gslide-inline) are untouched. */
+.gslide-media.gslide-inline ~ .gslide-description { display: none; }
+/* The `clean` theme defaults .gslide-image img to object-fit: cover — with
+   the photo gallery now opening a larger, uncropped "full" image (see
+   data-gallery-full in tour_details.php) rather than the 600x600 square grid
+   thumbnail, cover would crop that full photo to fit its computed box.
+   `contain` scales it to fit the viewport on whichever axis is shorter,
+   width or height, with nothing cut off. Only touches .gslide-image, which
+   the attraction popup (type: inline) never uses. */
+.gslide-image img { object-fit: contain; }
+
+/* Partial page navigation (js/htmx-init.js). A thin bar grows along the top
+   edge while a request is in flight — shown after a short delay so a fast
+   response never flashes it — and the outgoing content dims. */
+[x-cloak] { display: none !important; }
+
+.page-progress {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 60;
+  height: 3px;
+  background: theme('colors.alam.500');
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+[dir="rtl"] .page-progress {
+  transform-origin: right center;
+}
+
+/* is-loading: set by js/htmx-init.js while a page's plugin files load. */
+.page-progress.htmx-request,
+.page-progress.is-loading {
+  opacity: 1;
+  transition: opacity .2s ease .15s;
+  animation: page-progress-grow 8s cubic-bezier(.1, .7, .2, 1) .15s forwards;
+}
+
+@keyframes page-progress-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(.9); }
+}
+
+.is-page-loading #main {
+  opacity: .55;
+  transition: opacity .15s ease .1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Shared booking picker uses the native dialog's focus trap and top layer. */
+.booking-picker-dialog {
+  width: min(36rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  overflow: visible;
+}
+.booking-picker-dialog > div {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2rem);
+}
+.booking-picker-dialog header,
+.booking-picker-dialog footer,
+.booking-picker-dialog > div > p {
+  flex-shrink: 0;
+}
+.booking-picker-dialog [data-booking-picker-content] {
+  min-height: 0;
+  overflow: visible;
+}
+.booking-picker-dialog::backdrop {
+  background: rgb(24 20 35 / 60%);
+}
+.booking-picker-dialog [hidden] {
+  display: none;
+}
+
+/* Reusable quantity field with fixed minimum and assignment-based maximum. */
+.booking-vehicle-card {
+  @apply p-3 sm:p-4;
+}
+#booking-form aside [data-goto-step]:not([data-step-completed]),
+#mobile-summary [data-goto-step]:not([data-step-completed]) {
+  display: none;
+}
+.number-stepper {
+  @apply input;
+  display: flex;
+  padding: 0;
+  overflow: hidden;
+}
+.number-stepper:focus-within {
+  @apply border-alam-500 ring-4 ring-alam-500/10;
+}
+.number-stepper:has(input[aria-invalid="true"]) {
+  @apply border-red-600;
+}
+.number-stepper:has(input[aria-invalid="true"]):focus-within {
+  @apply ring-red-600/10;
+}
+.number-stepper button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2.75rem;
+  padding: 0;
+  line-height: 1;
+  color: var(--frontend-ink-muted);
+  font-size: 1.5rem;
+}
+.number-stepper button:hover {
+  color: var(--frontend-primary-dark);
+  background: var(--frontend-primary-soft);
+}
+.number-stepper button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.number-stepper button:focus-visible {
+  outline: 2px solid var(--frontend-primary);
+  outline-offset: -2px;
+}
+.number-stepper input {
+  width: 100%;
+  min-width: 0;
+  @apply border-x border-line-strong bg-white py-2.5 text-form-input text-ink focus:outline-none;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.number-stepper input::-webkit-inner-spin-button,
+.number-stepper input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Image-and-details choices mirror the admin user selector. */
+.booking-tour-option {
+  display: flex;
+  flex-direction: row;
+  direction: inherit;
+  align-items: flex-start;
+  gap: 0.75rem;
+  white-space: normal;
+  line-height: 1.4;
+}
+.booking-tour-option-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 4rem;
+  width: 4rem;
+  height: 3rem;
+  overflow: hidden;
+  border-radius: var(--frontend-radius-control);
+  background: var(--frontend-surface-soft);
+  color: var(--frontend-primary);
+  font-weight: 700;
+}
+.booking-tour-option-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.booking-tour-option-details {
+  flex: 1;
+  min-width: 0;
+  direction: inherit;
+}
+[dir="rtl"] .booking-tour-option-details {
+  direction: rtl;
+  text-align: right;
+}
+.booking-tour-option-title,
+.booking-tour-option-meta,
+.booking-tour-option-summary {
+  display: block;
+}
+.booking-tour-option-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.booking-tour-option-meta {
+  margin-top: 0.375rem;
+  color: var(--frontend-ink-muted);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+.alam-select2-dropdown .select2-results__option[aria-selected="true"] .booking-tour-option-meta {
+  color: #fff;
+}
+.booking-tour-option-summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  opacity: 0.85;
+}
+.booking-tour-select.alam-select2 .select2-selection--single {
+  display: flex;
+  align-items: center;
+  height: auto;
+  min-height: 4.5rem;
+}
+.booking-tour-select.alam-select2 .select2-selection__rendered {
+  width: 100%;
+  line-height: 1.4;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+.booking-tour-select.alam-select2 .select2-selection__arrow {
+  height: 24px;
+  top: 50%;
+  margin-top: -12px;
+  background-size: 22px;
+}
+
+/* SweetAlert2 sizes its icon, title and text in `em`, relative to the popup's own
+   font-size (see sweetalert2.all.min.js). Shrinking that one root value scales all
+   three together instead of overriding each element's size separately. The confirm
+   button is unaffected: it is skinned with .btn-primary (a fixed rem size), not the
+   library's own em-based button styles (buttonsStyling: false in bookingAlert()). */
+.booking-alert-popup {
+  font-size: 0.875rem;
+}
+
+/* Homepage availability alert (js/hero-search.js): SweetAlert2's default info
+   icon is light blue and its close ✕ is #ccc, almost invisible on white. Both
+   take the brand colours instead, and the countdown bar matches. */
+.availability-alert-popup .swal2-icon.swal2-info {
+  border-color: theme('colors.alam.500');
+  color: theme('colors.alam.500');
+}
+
+.availability-alert-popup .swal2-close {
+  color: theme('colors.ink.muted');
+}
+
+.availability-alert-popup .swal2-close:hover,
+.availability-alert-popup .swal2-close:focus-visible {
+  color: theme('colors.alam.600');
+}
+
+.availability-alert-popup .swal2-timer-progress-bar {
+  background: theme('colors.alam.500');
+}
