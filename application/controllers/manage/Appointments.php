@@ -184,11 +184,26 @@ class Appointments extends CI_Controller
             return;
         }
 
+        $text = $ok
+            ? 'Status changed to '.$status.'.'
+            : 'The status could not be changed. Please try again.';
+
+        // Confirmed and Cancelled email the client, but only when the status actually changes.
+        $sent = NULL;
+        if ($ok && $status !== $record[$this->tStatus]) {
+            $this->load->library('booking_request');
+            $sent = $this->booking_request->sendStatusEmail($id, $status);
+            if ($sent === TRUE) {
+                $text .= ' The client was emailed.';
+            } elseif ($sent === FALSE) {
+                $text .= ' The email to the client could not be sent; please contact them directly.';
+            }
+        }
+
         $this->session->set_flashdata('appointment_message', array(
-            'success' => $ok,
-            'text' => $ok
-                ? 'Status changed to '.$status.'.'
-                : 'The status could not be changed. Please try again.',
+            // A failed client email is shown as an error so it is not missed.
+            'success' => $ok && $sent !== FALSE,
+            'text' => $text,
         ));
         redirect(base_url('manage/'.$this->controller.'/view/'.$id));
     }

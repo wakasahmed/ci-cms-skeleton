@@ -179,7 +179,7 @@ $client = array(
                                     <option value="<?php echo $statusOption; ?>" <?php echo $currentStatus === $statusOption ? 'selected' : ''; ?>><?php echo $statusOption; ?></option>
                                 <?php } ?>
                             </select>
-                            <div class="form-text">Confirm the time with the client before marking a request Confirmed.</div>
+                            <div class="form-text">Confirm the time with the client before marking a request Confirmed. Changing the status to Confirmed or Cancelled emails the client.</div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Update Status</button>
                     </form>

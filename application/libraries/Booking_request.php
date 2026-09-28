@@ -16,6 +16,12 @@ class Booking_request
     const MAX_SERVICES = 10;
     const CLIENT_TEMPLATE_ID = 2;
 
+    /** Client emails sent when staff change a request's status (Manage > Appointments). */
+    const STATUS_TEMPLATE_IDS = array(
+        'Confirmed' => 3,
+        'Cancelled' => 4,
+    );
+
     /** Session key of the last saved request, shown on /book/confirmed. */
     const CONFIRMED_SESSION_KEY = 'booking_confirmed_id';
 
@@ -25,6 +31,7 @@ class Booking_request
     public function __construct()
     {
         $this->CI =& get_instance();
+        $this->CI->load->helper('frontend');
         $this->CI->load->model(array('Service_model', 'Artist_model', 'Offer_model'));
         $this->CI->load->library(array('booking_schedule', 'EmailService'));
     }
@@ -151,6 +158,32 @@ class Booking_request
         $this->CI->session->set_userdata(self::CONFIRMED_SESSION_KEY, $appointmentId);
 
         return $this->result('success');
+    }
+
+    /**
+     * Email the client that their request was confirmed or cancelled (email
+     * templates 3 and 4). Returns TRUE when sent, FALSE when it failed, and
+     * NULL when $status has no email.
+     */
+    public function sendStatusEmail($appointmentId, $status)
+    {
+        if (!isset(self::STATUS_TEMPLATE_IDS[$status])) {
+            return NULL;
+        }
+
+        $appointment = $this->get($appointmentId);
+        if ($appointment === NULL) {
+            return FALSE;
+        }
+
+        return $this->CI->emailservice->sendManagedTemplate(array(
+            'template_id' => self::STATUS_TEMPLATE_IDS[$status],
+            'to' => $appointment['customer_email'],
+            'values' => $this->emailValues($appointment),
+            'parser' => 'parseAppointmentShortTags',
+            'multiline_fields' => array(),
+            'label' => 'Appointment '.strtolower($status).' email',
+        ));
     }
 
     /** The request saved in this session, with its services, or NULL. */

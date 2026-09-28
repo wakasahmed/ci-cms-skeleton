@@ -68,4 +68,6 @@ $config['short_tag_entities'] = array(
 $config['short_tag_template_entities'] = array(
     1 => 'contact',
     2 => 'appointment',
+    3 => 'appointment',
+    4 => 'appointment',
 );
