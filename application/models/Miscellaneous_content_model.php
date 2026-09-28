@@ -124,8 +124,7 @@ class Miscellaneous_content_model extends CI_Model
         array $section,
         $locale,
         array $values,
-        $status,
-        array $arabic_invalidations = array()
+        $status
     )
     {
         $now = date('Y-m-d H:i:s');
@@ -140,15 +139,6 @@ class Miscellaneous_content_model extends CI_Model
                 .'VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE field_value=VALUES(field_value), updated_at=VALUES(updated_at)',
                 array($section_id, $locale, $field_key, $value, $now, $now)
             );
-        }
-        if ($locale === 'en') {
-            foreach (array_unique($arabic_invalidations) as $field_key) {
-                $this->db->query(
-                    'INSERT INTO miscellaneous_content_section_fields (section_id, locale, field_key, field_value, created_at, updated_at) '
-                    .'VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE field_value=VALUES(field_value), updated_at=VALUES(updated_at)',
-                    array($section_id, 'ar', $field_key, '', $now, $now)
-                );
-            }
         }
         if ($this->db->trans_status() === false) {
             $this->db->trans_rollback();

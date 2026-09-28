@@ -1,8 +1,7 @@
 {
     "license": "proprietary",
     "require": {
-        "google/cloud-recaptcha-enterprise": "^1.9.0",
-        "google/cloud-translate": "^1.16.0"
+        "google/cloud-recaptcha-enterprise": "^1.9.0"
     },
     "config": {
         "vendor-dir": "application/third_party/google_api",

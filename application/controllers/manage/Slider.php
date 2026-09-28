@@ -7,7 +7,7 @@ class Slider extends CI_Controller {
 	public $pKey = 'id';
 	public $moduleName = 'Slider Images';
 	public $moduleNameSingular = 'Slider Image';
-	public $moduleDesc = 'Manage localized slide content, images, display order, and visibility for this slider collection.';
+	public $moduleDesc = 'Manage slide content, images, display order, and visibility for this slider collection.';
 	public $controller = 'slider';
 	public $per_page = 10;
 	public $tStatus = 'status';
@@ -15,7 +15,6 @@ class Slider extends CI_Controller {
 	public $addEditView = 'addSlider';
 	public $user_data = array();
 
-	private $translationModule = 'slider';
 	private $imageDirectory = 'assets/frontend/images/slider';
 
 	public function __construct()
@@ -23,7 +22,7 @@ class Slider extends CI_Controller {
 		parent::__construct();
 		$this->user_data = $this->SqlModel->authAdmin($this->session->userdata('admin_auth'), $this->session->userdata('admin_id'));
 		if (empty($this->user_data)) redirect(base_url('manage/login'));
-		$this->load->library('manage_translation_service');
+		$this->load->helper('admin_input');
 	}
 
 	public function index($alert = 'page', $sliderID = 0, $sortby = 'order', $order = 'ASC', $status = '-', $keywords = '-', $pg_no = '')
@@ -49,16 +48,13 @@ class Slider extends CI_Controller {
 		$this->pagination->initialize(admin_pagination_config($baseUrl, $totalRows, $this->per_page, $uriSegment));
 		$recordSort = $sortby === 'order' ? 'order,id' : $sortby;
 		$records = $this->SqlModel->getRecords('*', $this->tblName, $recordSort, $order, $where, $search, $this->per_page, $offset, FALSE);
-		$recordIds = array();
-		foreach ($records as $record) $recordIds[] = (int) $record[$this->pKey];
-		$translationStatuses = empty($recordIds) ? array() : $this->manage_translation_service->statuses($this->translationModule, $recordIds);
 		$routeAlert = in_array($alert, array('success', 'editsuccess', 'deletesuccess', 'deleteerror', 'error'), TRUE) ? $alert : '';
 		$data = array(
 			'alert' => $this->session->flashdata('alert') ?: $routeAlert, 'page_title' => PROJECT_TITLE.' | '.$this->moduleName,
 			'userdata' => $this->user_data, 'sliderActive' => 1, 'slider_id' => (int) $group['sliders_id'], 'slider_name' => $group['sliders_title'],
-			'total_rows' => $totalRows, 'per_page' => $this->per_page, 'records' => $records, 'translation_statuses' => $translationStatuses,
+			'total_rows' => $totalRows, 'per_page' => $this->per_page, 'records' => $records,
 			'paginate' => $this->pagination->create_links(), 'sortby' => $sortby, 'order' => $order === 'ASC' ? 'DESC' : 'ASC', 'page_numb' => $offset,
-			'status' => $status, 'keywords' => $keywords, 'useManageTranslations' => TRUE,
+			'status' => $status, 'keywords' => $keywords,
 		);
 		$this->render($this->listView, $data);
 	}
@@ -69,8 +65,6 @@ class Slider extends CI_Controller {
 		if (empty($group)) return $this->redirectToGroups();
 		$isEdit = ($alert === 'edit');
 		$postedData = $this->session->flashdata($this->controller.'_data');
-		$requestedLocale = is_array($postedData) && isset($postedData['active_locale']) ? $postedData['active_locale'] : $this->input->get('lang', TRUE);
-		$activeLocale = $isEdit ? $this->manage_translation_service->locale($requestedLocale) : 'en';
 		$record = array();
 		if ($isEdit)
 		{
@@ -82,17 +76,16 @@ class Slider extends CI_Controller {
 				return $this->redirectToGroup($group['sliders_id']);
 			}
 		}
-		$localizedValues = $this->manage_translation_service->localized_values($this->translationModule, $record, $activeLocale);
-		if (is_array($postedData)) foreach (array_keys($localizedValues) as $control) if (array_key_exists($control, $postedData)) $localizedValues[$control] = $postedData[$control];
+		$textValues = array();
+		foreach ($this->textFields() as $column => $maxLength) $textValues[$column] = isset($record[$column]) ? $record[$column] : '';
+		if (is_array($postedData)) foreach (array_keys($textValues) as $column) if (array_key_exists($column, $postedData)) $textValues[$column] = $postedData[$column];
 		$data = array(
 			'sliderActive' => 1, 'alert' => $isEdit ? 'edit' : '', 'form_error' => $this->session->flashdata('form_error'),
-			'tbl_data' => $record, 'form_values' => $this->formValues($record, $activeLocale, $postedData),
-			'localized_values' => $localizedValues, 'active_locale' => $activeLocale,
-			'manage_locales' => $this->manage_translation_service->locales(),
-			'translation_state' => $isEdit ? $this->manage_translation_service->state($this->translationModule, $editID) : NULL,
+			'tbl_data' => $record, 'form_values' => $this->formValues($record, $postedData),
+			'text_values' => $textValues,
 			'page_title' => PROJECT_TITLE.' | '.($isEdit ? 'Edit' : 'Add').' '.$this->moduleNameSingular, 'userdata' => $this->user_data,
 			'slider_id' => (int) $group['sliders_id'], 'slider_name' => $group['sliders_title'], 'next_order' => $this->nextOrder($group['sliders_id']),
-			'useIconPicker' => TRUE, 'useColorPicker' => TRUE, 'useManageTranslations' => TRUE,
+			'useIconPicker' => TRUE, 'useColorPicker' => TRUE,
 		);
 		$this->render($this->addEditView, $data);
 	}
@@ -105,7 +98,7 @@ class Slider extends CI_Controller {
 		$image = $this->saveUploadedImage('slide_image');
 		if ($image['error'] !== '') return $this->formFailure('Slide image: '.$image['error'], $group['sliders_id']);
 		if ($image['filename'] === '') return $this->formFailure('A slide image is required.', $group['sliders_id']);
-		$data = $this->postedRecordData('en');
+		$data = $this->postedRecordData();
 		$data['slider_id'] = (int) $group['sliders_id'];
 		$data['order'] = $this->nextOrder($group['sliders_id']);
 		$data['image'] = $image['filename'];
@@ -119,7 +112,6 @@ class Slider extends CI_Controller {
 			return $this->formFailure('The slider image could not be saved. Please try again.', $group['sliders_id']);
 		}
 		$this->db->trans_commit();
-		$this->queueTranslationSafely($id);
 		$this->session->set_flashdata('alert', 'success');
 		$this->redirectToGroup($group['sliders_id']);
 	}
@@ -135,14 +127,13 @@ class Slider extends CI_Controller {
 			$this->session->set_flashdata('alert', 'error');
 			return $this->redirectToGroup($group['sliders_id']);
 		}
-		$activeLocale = $this->manage_translation_service->locale($this->input->post('active_locale', TRUE));
-		if (!$this->validPost($activeLocale)) return $this->formFailure('Check the slide content, colours, and status.', $group['sliders_id'], $editID, $activeLocale);
+		if (!$this->validPost()) return $this->formFailure('Check the slide content, colours, and status.', $group['sliders_id'], $editID);
 		$image = $this->saveUploadedImage('slide_image');
-		if ($image['error'] !== '') return $this->formFailure('Slide image: '.$image['error'], $group['sliders_id'], $editID, $activeLocale);
-		$data = $this->postedRecordData($activeLocale);
+		if ($image['error'] !== '') return $this->formFailure('Slide image: '.$image['error'], $group['sliders_id'], $editID);
+		$data = $this->postedRecordData();
 		$data['order'] = (int) $current['order'];
 		$data['updated_at'] = date('Y-m-d H:i:s');
-		$imageColumn = $activeLocale === 'ar' ? 'image_ar' : 'image';
+		$imageColumn = 'image';
 		if ($image['filename'] !== '') $data[$imageColumn] = $image['filename'];
 		$this->db->trans_begin();
 		$updated = $this->SqlModel->updateRecord($this->tblName, $data, array($this->pKey => $editID, 'slider_id' => (int) $group['sliders_id']));
@@ -150,18 +141,11 @@ class Slider extends CI_Controller {
 		{
 			$this->db->trans_rollback();
 			$this->deleteSliderImage($image['filename']);
-			return $this->formFailure('The slider image could not be updated. Please try again.', $group['sliders_id'], $editID, $activeLocale);
+			return $this->formFailure('The slider image could not be updated. Please try again.', $group['sliders_id'], $editID);
 		}
 		$this->db->trans_commit();
 		if ($image['filename'] !== '') $this->deleteSliderImage(isset($current[$imageColumn]) ? $current[$imageColumn] : '');
-		if ($activeLocale === 'en') $this->queueTranslationSafely($editID);
 		$this->session->set_flashdata('alert', 'editsuccess');
-		$redirectLocale = $this->input->post('redirect_lang', TRUE);
-		if (is_string($redirectLocale) && $redirectLocale !== '' && $this->manage_translation_service->locale($redirectLocale) === $redirectLocale)
-		{
-			redirect(base_url('manage/'.$this->controller.'/control/'.(int) $group['sliders_id'].'/edit/'.$editID.'?lang='.$redirectLocale));
-			return;
-		}
 		$this->redirectToGroup($group['sliders_id']);
 	}
 
@@ -218,7 +202,6 @@ class Slider extends CI_Controller {
 			return $this->redirectToGroup($data['slider_id']);
 		}
 		$this->db->trans_commit();
-		$this->queueTranslationSafely($newId);
 		redirect(base_url('manage/'.$this->controller.'/control/'.(int) $data['slider_id'].'/edit/'.$newId));
 	}
 
@@ -257,15 +240,17 @@ class Slider extends CI_Controller {
 		$this->load->view('admin/footer');
 	}
 
-	private function postedRecordData($locale)
+	private function postedRecordData()
 	{
-		$post = $this->input->post(NULL, FALSE);
-		$post = is_array($post) ? $post : array();
-		$data = $this->manage_translation_service->localized_post_data($this->translationModule, $locale, $post);
-		$suffix = $locale === 'ar' ? '_ar' : '';
-		foreach (array('button_1_icon', 'button_2_icon') as $field) $data[$field.$suffix] = $this->normalizeFontAwesomeIconClass($this->input->post($field));
-		foreach (array('button_1_url', 'button_2_url') as $field) $data[$field.$suffix] = $this->cleanString($this->input->post($field));
-		foreach (array('button_1_target', 'button_2_target') as $field) $data[$field.$suffix] = $this->input->post($field) === '_blank' ? '_blank' : '_self';
+		$data = array();
+		foreach ($this->textFields() as $column => $maxLength)
+		{
+			$value = trim((string) $this->input->post($column));
+			$data[$column] = $maxLength !== NULL && $this->stringLength($value) > $maxLength ? mb_substr($value, 0, $maxLength, 'UTF-8') : $value;
+		}
+		foreach (array('button_1_icon', 'button_2_icon') as $field) $data[$field] = $this->normalizeFontAwesomeIconClass($this->input->post($field));
+		foreach (array('button_1_url', 'button_2_url') as $field) $data[$field] = $this->cleanString($this->input->post($field));
+		foreach (array('button_1_target', 'button_2_target') as $field) $data[$field] = $this->input->post($field) === '_blank' ? '_blank' : '_self';
 		foreach ($this->colorFields() as $field)
 		{
 			$color = $this->normalizeRgba($this->input->post($field));
@@ -276,12 +261,11 @@ class Slider extends CI_Controller {
 		return $data;
 	}
 
-	private function validPost($locale)
+	private function validPost()
 	{
-		if (!in_array($locale, array('en', 'ar'), TRUE)) return FALSE;
 		if (!in_array($this->input->post('overlay'), array('Yes', 'No'), TRUE)) return FALSE;
 		if (!in_array($this->input->post($this->tStatus), array('Enable', 'Disable'), TRUE)) return FALSE;
-		foreach (array('localized_pre_heading', 'localized_heading', 'localized_button_1_text', 'localized_button_2_text', 'button_1_url', 'button_2_url') as $field) if ($this->stringLength(trim((string) $this->input->post($field))) > 255) return FALSE;
+		foreach (array('pre_heading', 'heading', 'button_1_text', 'button_2_text', 'button_1_url', 'button_2_url') as $field) if ($this->stringLength(trim((string) $this->input->post($field))) > 255) return FALSE;
 		foreach (array('button_1_icon', 'button_2_icon') as $field)
 		{
 			$value = trim((string) $this->input->post($field));
@@ -295,31 +279,27 @@ class Slider extends CI_Controller {
 		return TRUE;
 	}
 
-	private function formValues(array $record, $locale, $postedData)
+	private function formValues(array $record, $postedData)
 	{
 		$values = array('overlay' => 'Yes', 'status' => 'Enable', 'order' => 0, 'button_1_target' => '_self', 'button_2_target' => '_self');
 		foreach ($this->colorFields() as $field) $values[$field] = isset($record[$field]) ? $record[$field] : '';
 		foreach (array('overlay', 'status', 'order') as $field) if (isset($record[$field])) $values[$field] = $record[$field];
-		$suffix = $locale === 'ar' ? '_ar' : '';
 		foreach (array('button_1_icon', 'button_1_url', 'button_1_target', 'button_2_icon', 'button_2_url', 'button_2_target') as $field)
 		{
-			$column = $field.$suffix;
-			if (isset($record[$column])) $values[$field] = $record[$column];
+			if (isset($record[$field])) $values[$field] = $record[$field];
 		}
-		$imageColumn = $locale === 'ar' ? 'image_ar' : 'image';
-		$values['current_image'] = isset($record[$imageColumn]) ? basename((string) $record[$imageColumn]) : '';
+		$values['current_image'] = isset($record['image']) ? basename((string) $record['image']) : '';
 		if (is_array($postedData)) foreach (array_keys($values) as $field) if ($field !== 'current_image' && array_key_exists($field, $postedData)) $values[$field] = $postedData[$field];
 		return $values;
 	}
 
-	private function formFailure($message, $sliderID, $editID = 0, $locale = 'en')
+	private function formFailure($message, $sliderID, $editID = 0)
 	{
 		$posted = $this->input->post(NULL, FALSE);
 		if (!is_array($posted)) $posted = array();
-		$posted['active_locale'] = $this->manage_translation_service->locale($locale);
 		$this->session->set_flashdata($this->controller.'_data', $posted);
 		$this->session->set_flashdata('form_error', $message);
-		redirect(base_url('manage/'.$this->controller.'/control/'.(int) $sliderID.($editID > 0 ? '/edit/'.(int) $editID.'?lang='.$this->manage_translation_service->locale($locale) : '')));
+		redirect(base_url('manage/'.$this->controller.'/control/'.(int) $sliderID.($editID > 0 ? '/edit/'.(int) $editID.'' : '')));
 	}
 
 	private function sliderGroup($sliderID)
@@ -380,7 +360,6 @@ class Slider extends CI_Controller {
 		$ids = array();
 		foreach ($records as $record) $ids[] = (int) $record[$this->pKey];
 		$this->db->trans_begin();
-		foreach ($ids as $id) $this->manage_translation_service->delete_jobs($this->translationModule, $id);
 		$this->db->where_in($this->pKey, $ids)->delete($this->tblName);
 		if ($this->db->trans_status() === FALSE || $this->db->affected_rows() !== count($ids))
 		{
@@ -391,7 +370,6 @@ class Slider extends CI_Controller {
 		foreach ($records as $record)
 		{
 			$this->deleteSliderImage(isset($record['image']) ? $record['image'] : '');
-			$this->deleteSliderImage(isset($record['image_ar']) ? $record['image_ar'] : '');
 		}
 		return TRUE;
 	}
@@ -399,15 +377,23 @@ class Slider extends CI_Controller {
 	private function deleteSliderImage($filename)
 	{
 		if (!is_string($filename) || $filename === '' || basename($filename) !== $filename) return;
-		$this->db->from($this->tblName)->group_start()->where('image', $filename)->or_where('image_ar', $filename)->group_end();
+		$this->db->from($this->tblName)->where('image', $filename);
 		if ($this->db->count_all_results() > 0) return;
 		delete_uploaded_file(FCPATH.$this->imageDirectory, $filename);
 	}
 
-	private function queueTranslationSafely($slideId)
+	/**
+	 * Text columns edited on the form, with their maximum length (NULL for none).
+	 */
+	private function textFields()
 	{
-		try { $this->manage_translation_service->queue($this->translationModule, (int) $slideId); }
-		catch (Throwable $exception) { log_message('error', 'Slider translation could not be queued for record '.(int) $slideId.'.'); }
+		return array(
+			'pre_heading' => 255,
+			'heading' => 255,
+			'text' => NULL,
+			'button_1_text' => 255,
+			'button_2_text' => 255,
+		);
 	}
 
 	private function colorFields()

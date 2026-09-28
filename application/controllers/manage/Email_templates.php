@@ -6,13 +6,12 @@ class Email_templates extends CI_Controller
     public $pKey = 'id';
     public $moduleName = 'Email Templates';
     public $moduleNameSingular = 'Email Template';
-    public $moduleDesc = 'Manage reusable English and Arabic email subjects and content.';
+    public $moduleDesc = 'Manage reusable email subjects and content.';
     public $controller = 'email-templates';
     public $per_page = 10;
     public $listView = 'emailTemplates';
     public $addEditView = 'addEmailTemplate';
     public $user_data = array();
-    private $translationModule = 'email_templates';
 
     public function __construct()
     {
@@ -23,7 +22,7 @@ class Email_templates extends CI_Controller
             redirect(base_url('manage/login'));
             return;
         }
-        $this->load->library('manage_translation_service');
+        $this->load->helper('admin_input');
     }
 
     public function index($sortby = 'id', $order = 'ASC', $keywords = '-', $pgNo = '')
@@ -43,7 +42,7 @@ class Email_templates extends CI_Controller
         }
 
         $keywords = urldecode((string) $keywords);
-        $search = $keywords !== '-' ? array('cols' => 'name,subject,subject_ar,heading,heading_ar', 'value' => $keywords) : array();
+        $search = $keywords !== '-' ? array('cols' => 'name,subject,heading', 'value' => $keywords) : array();
         $baseUrl = base_url('manage/'.$this->controller.'/index/'.$sortby.'/'.$order.'/'.rawurlencode($keywords));
         $totalRows = $this->SqlModel->countRecords($this->tblName, array(), $search);
         $uriSegment = 7;
@@ -52,18 +51,15 @@ class Email_templates extends CI_Controller
         $this->pagination->initialize(admin_pagination_config($baseUrl, $totalRows, $this->per_page, $uriSegment));
         $recordSort = $sortby === 'name' ? 'name,'.$this->pKey : $sortby;
         $records = $this->SqlModel->getRecords('*', $this->tblName, $recordSort, $order, array(), $search, $this->per_page, $offset, FALSE);
-        $recordIds = array();
-        foreach ($records as $record) $recordIds[] = (int) $record[$this->pKey];
-        $translationStatuses = empty($recordIds) ? array() : $this->manage_translation_service->statuses($this->translationModule, $recordIds);
 
         $data = array(
             'alert' => $this->session->flashdata('alert'), 'page_title' => PROJECT_TITLE.' | '.$this->moduleName,
             'userdata' => $this->user_data, 'emailTemplatesActive' => 1,
             'total_rows' => $totalRows, 'per_page' => $this->per_page,
-            'records' => $records, 'translation_statuses' => $translationStatuses,
+            'records' => $records,
             'paginate' => $this->pagination->create_links(), 'sortby' => $sortby,
             'order' => $order === 'ASC' ? 'DESC' : 'ASC', 'page_numb' => $offset,
-            'keywords' => $keywords, 'useManageTranslations' => TRUE,
+            'keywords' => $keywords,
         );
         $this->render($this->listView, $data);
     }
@@ -81,8 +77,6 @@ class Email_templates extends CI_Controller
 
         $record = array();
         $postedData = $this->session->flashdata($this->controller.'_data');
-        $requestedLocale = is_array($postedData) && isset($postedData['active_locale']) ? $postedData['active_locale'] : $this->input->get('lang', TRUE);
-        $activeLocale = $isEdit ? $this->manage_translation_service->locale($requestedLocale) : 'en';
 
         if ($isEdit)
         {
@@ -97,22 +91,15 @@ class Email_templates extends CI_Controller
         }
 
         $viewRecord = $record;
-        if (is_array($postedData) && array_key_exists('name', $postedData) && !is_array($postedData['name']))
-        {
-            $viewRecord['name'] = $postedData['name'];
-        }
-
-        $localizedValues = $this->manage_translation_service->localized_values($this->translationModule, $record, $activeLocale);
         if (is_array($postedData))
         {
-            foreach (array_keys($localizedValues) as $control)
+            foreach (array('name', 'subject', 'heading', 'contents') as $field)
             {
-                if (array_key_exists($control, $postedData) && !is_array($postedData[$control])) $localizedValues[$control] = $postedData[$control];
+                if (array_key_exists($field, $postedData) && !is_array($postedData[$field])) $viewRecord[$field] = $postedData[$field];
             }
         }
 
-        $translationState = $isEdit ? $this->manage_translation_service->state($this->translationModule, $editID) : NULL;
-        $this->configureEditor($activeLocale);
+        $this->configureEditor();
         $this->load->library('Short_tags');
 
         $data = array(
@@ -120,10 +107,7 @@ class Email_templates extends CI_Controller
             'form_error' => $this->session->flashdata('form_error'), 'tbl_data' => $viewRecord,
             'page_title' => PROJECT_TITLE.' | '.($isEdit ? 'Edit' : 'Add').' '.$this->moduleNameSingular,
             'userdata' => $this->user_data,
-            'localized_values' => $localizedValues, 'active_locale' => $activeLocale,
-            'manage_locales' => $this->manage_translation_service->locales(),
-            'translation_state' => $translationState, 'useManageTranslations' => TRUE,
-            'short_tags' => $this->short_tags->forTemplate($editID, Short_tags::CHANNEL_EMAIL),
+            'short_tags' => $this->short_tags->forTemplate($editID),
             'short_tag_entity' => $this->short_tags->entityLabel($editID),
             'useShortTagPicker' => TRUE,
             'useSweetAlert' => TRUE,
@@ -142,11 +126,10 @@ class Email_templates extends CI_Controller
             return;
         }
 
-        $activeLocale = $this->manage_translation_service->locale($this->input->post('active_locale', TRUE));
         $error = $this->formErrorMessage();
-        if ($error !== '') return $this->formFailure($error, $editID, $activeLocale);
+        if ($error !== '') return $this->formFailure($error, $editID);
 
-        $data = $this->postedData($activeLocale);
+        $data = $this->postedData();
         $data['name'] = $this->truncate($this->scalarString('name'), 255);
 
         $this->db->trans_begin();
@@ -154,36 +137,26 @@ class Email_templates extends CI_Controller
         if (!$updated || $this->db->trans_status() === FALSE)
         {
             $this->db->trans_rollback();
-            return $this->formFailure('The email template could not be updated. Please try again.', $editID, $activeLocale);
+            return $this->formFailure('The email template could not be updated. Please try again.', $editID);
         }
         $this->db->trans_commit();
 
-        if ($activeLocale === 'en') $this->queueTranslationSafely($editID);
 
         $this->session->set_flashdata('alert', 'editsuccess');
-        $redirectLocale = $this->input->post('redirect_lang', TRUE);
-        if (is_string($redirectLocale) && $redirectLocale !== '' && $this->manage_translation_service->locale($redirectLocale) === $redirectLocale)
-        {
-            redirect(base_url('manage/'.$this->controller.'/control/edit/'.$editID.'?lang='.$redirectLocale));
-            return;
-        }
         redirect(base_url('manage/'.$this->controller));
     }
 
-    private function configureEditor($locale)
+    private function configureEditor()
     {
         $this->load->library('ckeditor');
         $this->load->library('ckfinder');
         $this->ckeditor->basePath = base_url().'assets/ckeditor/';
         $this->ckeditor->config['removePlugins'] = 'save, preview, newpage, forms, flash';
         $this->ckeditor->config['height'] = '340px';
-        $this->ckeditor->config['contentsLangDirection'] = $locale === 'ar' ? 'rtl' : 'ltr';
         $this->ckeditor->textareaAttributes = array(
-            'id' => 'localized_contents',
-            'data-translation-field' => 'localized_contents',
+            'id' => 'contents',
             'data-validate' => 'htmlrequired',
             'data-msg-htmlrequired' => 'Enter the email contents.',
-            'dir' => $locale === 'ar' ? 'rtl' : 'ltr',
             // Short tags go into the contents unless the subject or heading was focused last.
             'data-short-tag-target' => 'true',
             'data-short-tag-default' => 'true',
@@ -191,10 +164,14 @@ class Email_templates extends CI_Controller
         $this->ckfinder->SetupCKEditor($this->ckeditor, '../../../../assets/ckfinder/');
     }
 
-    private function postedData($locale)
+    private function postedData()
     {
-        $post = $this->input->post(NULL, FALSE);
-        return $this->manage_translation_service->localized_post_data($this->translationModule, $locale, is_array($post) ? $post : array());
+        return array(
+            'subject' => $this->truncate($this->scalarString('subject'), 255),
+            'heading' => $this->truncate($this->scalarString('heading'), 255),
+            // Email HTML authored by administrators in CKEditor.
+            'contents' => trim((string) $this->input->post('contents', FALSE)),
+        );
     }
 
     private function formErrorMessage()
@@ -203,15 +180,15 @@ class Email_templates extends CI_Controller
         if ($name === NULL || $name === '') return 'Enter a template name.';
         if ($this->length($name) > 255) return 'The name must not exceed 255 characters.';
 
-        $subject = $this->scalarString('localized_subject');
+        $subject = $this->scalarString('subject');
         if ($subject === NULL || $subject === '') return 'Enter an email subject.';
         if ($this->length($subject) > 255) return 'The subject must not exceed 255 characters.';
 
-        $heading = $this->scalarString('localized_heading');
+        $heading = $this->scalarString('heading');
         if ($heading === NULL) return 'Enter the required fields correctly.';
         if ($this->length($heading) > 255) return 'The heading must not exceed 255 characters.';
 
-        $contents = $this->input->post('localized_contents', FALSE);
+        $contents = $this->input->post('contents', FALSE);
         if (is_array($contents)) return 'Enter the required fields correctly.';
         if ($this->isContentEmpty((string) $contents)) return 'Enter the email contents.';
 
@@ -231,27 +208,15 @@ class Email_templates extends CI_Controller
         return trim(strip_tags($decoded)) === '';
     }
 
-    private function formFailure($message, $editID = 0, $locale = 'en')
+    private function formFailure($message, $editID = 0)
     {
         $posted = $this->input->post(NULL, FALSE);
         $posted = is_array($posted) ? $posted : array();
-        $posted['active_locale'] = $this->manage_translation_service->locale($locale);
         $this->session->set_flashdata($this->controller.'_data', $posted);
         $this->session->set_flashdata('form_error', $message);
-        redirect(base_url('manage/'.$this->controller.'/control'.($editID ? '/edit/'.(int) $editID.'?lang='.$this->manage_translation_service->locale($locale) : '')));
+        redirect(base_url('manage/'.$this->controller.'/control'.($editID ? '/edit/'.(int) $editID.'' : '')));
     }
 
-    private function queueTranslationSafely($id)
-    {
-        try
-        {
-            $this->manage_translation_service->queue($this->translationModule, (int) $id);
-        }
-        catch (Throwable $exception)
-        {
-            log_message('error', 'Email template translation could not be queued for record '.(int) $id.'.');
-        }
-    }
 
     private function truncate($value, $max)
     {

@@ -31,7 +31,7 @@ $contentImagePath = trim((string) $this->config->item(
             : '';
         $error = isset($errors[$name]) ? $errors[$name] : '';
         $group = $field['group'];
-        $isRequired = $locale === 'en' && $field['required'];
+        $isRequired = $field['required'];
         $column = isset($columnClasses[$field['layout']])
             ? $columnClasses[$field['layout']]
             : $columnClasses['full'];
@@ -115,8 +115,6 @@ $contentImagePath = trim((string) $this->config->item(
                             'id' => $id,
                             'rows' => 8,
                             'cols' => 60,
-                            'data-translation-field' => $name,
-                            'dir' => $locale === 'ar' ? 'rtl' : 'ltr',
                         );
                         if ($isRequired) {
                             $ckeditorAttributes['data-validate'] = 'htmlrequired';
@@ -124,12 +122,7 @@ $contentImagePath = trim((string) $this->config->item(
                         $this->ckeditor->textareaAttributes = $ckeditorAttributes;
                         echo $this->ckeditor->editor(
                             $name,
-                            (string) $value,
-                            array(
-                                'contentsLangDirection' => $locale === 'ar'
-                                    ? 'rtl'
-                                    : 'ltr',
-                            )
+                            (string) $value
                         );
                         ?>
                     <?php } elseif ($field['type'] === 'textarea') { ?>
@@ -139,7 +132,6 @@ $contentImagePath = trim((string) $this->config->item(
                             id="<?php echo $escape($id); ?>"
                             rows="5"
                             <?php echo $isRequired ? 'data-validate="required" required' : ''; ?>
-                            <?php echo $locale === 'ar' ? 'dir="rtl"' : ''; ?>
                         ><?php echo $escape($value); ?></textarea>
                     <?php } elseif ($field['type'] === 'select') { ?>
                         <select
@@ -166,7 +158,7 @@ $contentImagePath = trim((string) $this->config->item(
                             value="<?php echo $escape($value); ?>"
                             maxlength="255"
                             <?php echo $isRequired ? 'data-validate="required,maxlength[255]" required' : 'data-validate="maxlength[255]"'; ?>
-                            <?php echo ($locale === 'ar' && !$isURL) ? 'dir="rtl"' : ($isURL ? 'dir="ltr"' : ''); ?>
+                            <?php echo $isURL ? 'dir="ltr"' : ''; ?>
                         >
                     <?php } ?>
 

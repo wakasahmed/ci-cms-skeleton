@@ -961,14 +961,16 @@ Small inline configuration or server-generated values are acceptable when requir
 The CMS and the website are English only.
 
 - Store each text value in a single column. Do not add `_ar` or other per-locale columns.
-- Do not use `Manage_translation_service`, `config/manage_translations.php`, translation
-  badges, language switchers or translation polling in new or updated code. These are being
-  removed (Phase 3 of `PROJECT_PLAN.md`).
-- When a task touches a legacy module that still has Arabic fields or locale branches, and
-  the task is not the Phase 3 clean-up, leave them in place and mention them rather than
-  partially removing them.
-- Keep the unsaved-change protection pattern for long admin forms; it is not
-  translation-specific.
+- The translation stack (Google Cloud Translation, translation jobs and cron, translation
+  badges, language switchers, locale tabs) and the Countries module were removed in Phase 3.
+  Do not reintroduce them.
+- The `_ar` columns and `ar` section-field rows still exist in the database until the Phase 4
+  SQL runs. No code reads or writes them; never add code that does.
+- Web page section and miscellaneous content fields keep their `locale` column. Every read
+  and write uses the single `en` locale from `config/content_sections.php`.
+- The admin "Saving..." state is set by the shared `.validate` submit handler in `admin.js`
+  on any `[data-save-button]` (with its `[data-save-label]`) once validation passes. Use it
+  instead of page-specific save-button code.
 
 
 # Security and defensive coding

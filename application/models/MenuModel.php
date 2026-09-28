@@ -4,8 +4,8 @@ class MenuModel extends SqlModel
 {
     private $table = 'pages';
 
-    private $fields = 'page_id,page_parent_id,page_slug,page_slug_ar,'
-        .'page_name,page_name_ar,menu_name,menu_name_ar,'
+    private $fields = 'page_id,page_parent_id,page_slug,'
+        .'page_name,menu_name,'
         .'menu_parent_id,menu_order,menu_active';
 
     private $maxDepth = 2;

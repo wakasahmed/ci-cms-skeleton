@@ -317,6 +317,38 @@ reCAPTCHA Enterprise", remove `composer.json`, `composer.lock`, `third_party/goo
 **Done when:** grepping for `_ar'`, `'ar'`, `arabic`, `translation`, `whatsapp`, `places`
 returns no functional code, and all kept admin modules save and reload correctly.
 
+**Status: done (2026-09-28), branch `phase-3-english-only`.** Everything in 3.1–3.5 was
+removed or converted: the translation stack (services, cron, controller, job model, config,
+helper, partials, `manage-translations.js`, routes, `GOOGLE_TRANSLATION_*` and
+`GOOGLE_API_CA_BUNDLE` constants), Google Places, WhatsApp (controller, admin module,
+gateway, template service, views, JS, routes, constants), `google/cloud-translate` and its
+four dependencies, `application/language/arabic/` and `language/english/frontend_lang.php`,
+`Localized_model` (the frontend models now extend `SqlModel` and read plain columns), and
+the Arabic email view. Every kept admin module is English-only: Arabic fields, locale tabs,
+`_ar` reads/writes, RTL styling and translation badges are gone. `Seo`/`Frontend_seo` emit
+one un-prefixed URL per record with no hreflang alternates, and the admin "View" links no
+longer use `/en/`. The grep above now only matches the Alam frontend assets
+(`assets/frontend/js`) and Alam section definitions, which Phase 5 and Phase 6 replace.
+
+Changes to the plan made during this phase:
+
+- **Countries module removed here** (moved from Phase 2). Contact Requests lost its country
+  and website-language fields, filters and columns; its listing URL is now
+  `index/<sort>/<order>/<keywords>/<offset>`.
+- **Form Settings reduced** to the contact form's success message and subject list; the
+  tour, experience and plan-your-visit messages went with the translation config.
+- **Content sections keep their `locale` column.** Every read and write uses the single `en`
+  locale, so no schema change is needed there. The Arabic-draft workflow (copying English
+  into `ar` rows and blanking `ar` rows when English changed) was removed.
+- **Save button state.** `manage-translations.js` also set the "Saving..." button state. That
+  now lives in the shared `.validate` submit handler in `admin.js`, so every
+  `[data-save-button]` form gets it, not just the forms that had a language switcher.
+- **Slug generator.** `generateSlug()` in `custom.js` lost its Arabic branches and now
+  matches `Admin_slug::normalize()` exactly; the `data-slug-language` attribute was removed.
+- **Unused `EmailService::currencyUnit()` removed** (booking-only). The email
+  `format*()` helpers remain, English-only.
+- **Added to Phase 4 SQL:** see the additions below.
+
 ---
 
 ## Phase 4 — Database clean-up (run manually)
@@ -335,6 +367,17 @@ Provide `docs/sql/phase-4-cleanup.sql`, reviewed before execution and run only a
   `tax`, `payment_*`, `currency_unit_ar`).
 - `DELETE … WHERE locale = 'ar'` in `web_page_section_fields` and
   `miscellaneous_content_section_fields`.
+- Added in Phase 3:
+  - `contact_requests`: drop foreign key `fk_country_contact_request`, index
+    `contact_requests_country_idx`, and columns `country` and `website`. Do this before
+    dropping `countries`; `plan_your_visit.fk_country_pyt` also references `countries`, so
+    drop `plan_your_visit` first.
+  - `form_settings`: drop `plan_success`, `tour_success`, `experience_success`,
+    `pyt_interests`, `pyt_visit_time` and every `_ar` column.
+  - `site_settings`: drop `default_language` and `default_bg_ar` (with the other `_ar`
+    columns).
+  - Email templates 2–15 (Alam plan-your-visit and booking emails) are still in the
+    database; delete them as listed under Phase 2.
 - Add Blossom fields to `site_settings` (opening hours, map URL, Instagram URL, address note,
   dark/light logos if not covered).
 - Empty sample data (bookings, contact requests, login attempts, sessions) before seeding.

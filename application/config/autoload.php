@@ -112,7 +112,7 @@ $autoload['language'] = array();
 |
 */
 
-$autoload['model'] = array('SqlModel', 'Localized_model');
+$autoload['model'] = array('SqlModel');
 
 
 /* End of file autoload.php */

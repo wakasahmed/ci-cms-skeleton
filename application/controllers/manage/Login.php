@@ -371,7 +371,7 @@ class Login extends CI_Controller
             'site_settings' => $settings,
             'heading' => $subject,
             'body' => $body,
-        ), 'English');
+        ));
 
         if ($message === FALSE) {
             log_message('error', 'Password-reset email template could not be rendered.');

@@ -9,6 +9,12 @@ class Miscellaneous_contents extends CI_Controller
     private $listView = 'admin/content_sections/miscellaneous_list';
     private $editView = 'admin/content_sections/miscellaneous_edit';
 
+    /**
+     * Section fields are stored with a locale column; the site is English
+     * only, so every read and write uses this one locale.
+     */
+    private $locale = 'en';
+
     public function __construct()
     {
         parent::__construct();
@@ -24,7 +30,6 @@ class Miscellaneous_contents extends CI_Controller
         }
 
         $this->load->library('content_section_service');
-        $this->load->library('manage_translation_service');
     }
 
     public function index()
@@ -37,17 +42,11 @@ class Miscellaneous_contents extends CI_Controller
             return;
         }
 
-        $translationStates = $this->translationStatesFor(
-            $listing['sections']
-        );
-
         $this->render($this->listView, array(
             'page_title' => PROJECT_TITLE.' | '.$this->moduleName,
             'userdata' => $this->user_data,
             'contentSectionsActive' => 1,
-            'useManageTranslations' => TRUE,
             'sections' => $listing['sections'],
-            'translation_states' => $translationStates,
             'can_update' => $this->content_section_service->can(
                 'miscellaneous_contents.update',
                 $this->user_data
@@ -61,7 +60,7 @@ class Miscellaneous_contents extends CI_Controller
         $this->requirePermission('miscellaneous_contents.view');
 
         $key = $this->safeKey($encodedKey);
-        $locale = $this->requestedLocale($this->input->get('lang', TRUE));
+        $locale = $this->locale;
         $this->renderEditor($this->loadEditor($key, $locale), $locale);
     }
 
@@ -75,7 +74,7 @@ class Miscellaneous_contents extends CI_Controller
         }
 
         $key = $this->safeKey($encodedKey);
-        $locale = $this->requestedLocale($this->input->post('locale', TRUE));
+        $locale = $this->locale;
         $editor = $this->loadEditor($key, $locale);
         $post = $this->input->post(NULL, FALSE);
         $validated = $this->content_section_service->validate_miscellaneous(
@@ -106,14 +105,6 @@ class Miscellaneous_contents extends CI_Controller
             return;
         }
 
-        if ($locale === 'en') {
-            $this->queueTranslationSafely($key);
-        }
-
-        $targetLocale = $this->safeRedirectLocale(
-            $this->input->post('redirect_lang', TRUE),
-            $locale
-        );
         $this->session->set_flashdata(
             'content_sections_message',
             'Content section saved successfully.'
@@ -121,8 +112,7 @@ class Miscellaneous_contents extends CI_Controller
 
         redirect(
             base_url(
-                'manage/miscellaneous-contents/'.rawurlencode($key)
-                .'/edit?lang='.$targetLocale
+                'manage/miscellaneous-contents/'.rawurlencode($key).'/edit'
             )
         );
     }
@@ -203,12 +193,7 @@ class Miscellaneous_contents extends CI_Controller
         array $errors = array(),
         $errorMessage = ''
     ) {
-        $this->content_section_service->configure_ckeditor($locale);
-
-        $translationState = $this->manage_translation_service->state(
-            'miscellaneous_contents',
-            $editor['editor_section']['key']
-        );
+        $this->content_section_service->configure_ckeditor();
 
         $this->render($this->editView, array(
             'page_title' => PROJECT_TITLE.' | Edit '.$editor['definition']['label'],
@@ -216,14 +201,11 @@ class Miscellaneous_contents extends CI_Controller
             'contentSectionsActive' => 1,
             'useIconPicker' => TRUE,
             'useContentSections' => TRUE,
-            'useManageTranslations' => TRUE,
             'editor_section' => $editor['editor_section'],
             'locale' => $locale,
-            'locales' => $this->content_section_service->locales(),
             'errors' => $errors,
             'error_message' => $errorMessage,
             'success_message' => $this->session->flashdata('content_sections_message'),
-            'translation_state' => $translationState,
             'can_update' => $this->content_section_service->can(
                 'miscellaneous_contents.update',
                 $this->user_data
@@ -231,51 +213,6 @@ class Miscellaneous_contents extends CI_Controller
         ));
     }
 
-    private function queueTranslationSafely($key)
-    {
-        try {
-            $this->manage_translation_service->queue(
-                'miscellaneous_contents',
-                $key
-            );
-        } catch (Throwable $exception) {
-            log_message(
-                'error',
-                'Unable to queue miscellaneous content translation for '
-                .$key.': '.$exception->getMessage()
-            );
-        }
-    }
-
-    private function translationStatesFor(array $sections)
-    {
-        $keys = array();
-
-        foreach ($sections as $section) {
-            if (!empty($section['section_key'])) {
-                $keys[] = $section['section_key'];
-            }
-        }
-
-        if (empty($keys)) {
-            return array();
-        }
-
-        try {
-            return $this->manage_translation_service->states(
-                'miscellaneous_contents',
-                $keys
-            );
-        } catch (Throwable $exception) {
-            log_message(
-                'error',
-                'Unable to load miscellaneous content translation statuses: '
-                .$exception->getMessage()
-            );
-
-            return array();
-        }
-    }
 
     private function render($view, array $data)
     {
@@ -305,27 +242,6 @@ class Miscellaneous_contents extends CI_Controller
         }
     }
 
-    private function requestedLocale($locale)
-    {
-        if ($locale === NULL || $locale === '') {
-            $locale = 'en';
-        }
-
-        $locale = $this->content_section_service->locale($locale);
-        if ($locale === FALSE) {
-            show_404();
-            return 'en';
-        }
-
-        return $locale;
-    }
-
-    private function safeRedirectLocale($locale, $fallback)
-    {
-        $locale = $this->content_section_service->locale($locale);
-
-        return $locale === FALSE ? $fallback : $locale;
-    }
 
     private function jsonResponse(array $payload)
     {

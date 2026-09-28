@@ -7,7 +7,7 @@ class Pages extends CI_Controller {
 	public $pKey = 'page_id';
 	public $moduleName = 'Web Pages';
 	public $moduleNameSingular = 'Web Page';
-	public $moduleDesc = 'Manage website pages, localized content, publishing, SEO, and banners.';
+	public $moduleDesc = 'Manage website pages, content, publishing, SEO, and banners.';
 	public $controller = 'pages';
 	public $per_page = 10;
 	public $tStatus = 'page_status';
@@ -15,7 +15,6 @@ class Pages extends CI_Controller {
 	public $addEditView = 'addPage';
 	public $user_data = array();
 
-	private $translationModule = 'pages';
 	private $imageDirectory = 'assets/frontend/images/pages';
 	private $protectedPageMaxId = 20;
 
@@ -25,7 +24,7 @@ class Pages extends CI_Controller {
 		$this->user_data = $this->SqlModel->authAdmin($this->session->userdata('admin_auth'), $this->session->userdata('admin_id'));
 		if (empty($this->user_data)) redirect(base_url('manage/login'));
 		$this->load->library('content_section_service');
-		$this->load->library('manage_translation_service');
+		$this->load->helper('admin_input');
 	}
 
 	public function index($parentID = 0, $sortby = 'page_order', $order = 'ASC', $status = '-', $keywords = '-', $pgNo = '')
@@ -59,13 +58,11 @@ class Pages extends CI_Controller {
 			'userdata' => $this->user_data, 'pagesActive' => 1, 'parent_id' => $parentID,
 			'parent_name' => !empty($parent) ? $this->displayText($parent['page_name']) : '',
 			'total_rows' => $totalRows, 'per_page' => $this->per_page, 'records' => $records,
-			'translation_statuses' => empty($recordIds) ? array() : $this->manage_translation_service->statuses($this->translationModule, $recordIds),
 			'paginate' => $this->pagination->create_links(), 'sortby' => $sortby,
 			'order' => $order === 'ASC' ? 'DESC' : 'ASC', 'page_numb' => $offset,
 			'status' => $status, 'keywords' => $keywords, 'protected_page_max_id' => $this->protectedPageMaxId,
 			'sectionPageIds' => $this->content_section_service->configured_page_ids(),
 			'canUpdateSections' => $this->content_section_service->can('web_pages.update', $this->user_data),
-			'useManageTranslations' => TRUE,
 		);
 		$this->render($this->listView, $data);
 	}
@@ -84,21 +81,18 @@ class Pages extends CI_Controller {
 			return $this->redirectToListing($parentID);
 		}
 		$posted = $this->session->flashdata($this->controller.'_data');
-		$requestedLocale = is_array($posted) && isset($posted['active_locale']) ? $posted['active_locale'] : $this->input->get('lang', TRUE);
-		$activeLocale = $isEdit ? $this->manage_translation_service->locale($requestedLocale) : 'en';
-		$localizedValues = $this->manage_translation_service->localized_values($this->translationModule, $record, $activeLocale);
-		if (is_array($posted)) foreach (array_keys($localizedValues) as $control) if (array_key_exists($control, $posted)) $localizedValues[$control] = $posted[$control];
-		$this->configureEditor($activeLocale);
+		$textValues = array();
+		foreach ($this->textFields() as $column => $maxLength) $textValues[$column] = isset($record[$column]) ? $record[$column] : '';
+		if (is_array($posted)) foreach (array_keys($textValues) as $column) if (array_key_exists($column, $posted)) $textValues[$column] = $posted[$column];
+		$this->configureEditor();
 		$data = array(
 			'pagesActive' => 1, 'alert' => $isEdit ? 'edit' : '', 'form_error' => $this->session->flashdata('form_error'),
 			'page_title' => PROJECT_TITLE.' | '.($isEdit ? 'Edit' : 'Add').' '.$this->moduleNameSingular, 'userdata' => $this->user_data,
 			'parent_id' => $parentID, 'parent_name' => !empty($parent) ? $this->displayText($parent['page_name']) : '',
-			'tbl_data' => $record, 'form_values' => $this->formValues($record, $activeLocale, $posted),
-			'localized_values' => $localizedValues, 'active_locale' => $activeLocale,
-			'manage_locales' => $this->manage_translation_service->locales(),
-			'translation_state' => $isEdit ? $this->manage_translation_service->state($this->translationModule, $editID) : NULL,
+			'tbl_data' => $record, 'form_values' => $this->formValues($record, $posted),
+			'text_values' => $textValues,
 			'sliders' => $this->SqlModel->getRecords('sliders_id,sliders_title', 'sliders', 'sliders_title', 'ASC'),
-			'next_order' => $this->nextOrder($parentID), 'useColorPicker' => TRUE, 'useManageTranslations' => TRUE, 'useSweetAlert' => TRUE,
+			'next_order' => $this->nextOrder($parentID), 'useColorPicker' => TRUE, 'useSweetAlert' => TRUE,
 		);
 		$this->render($this->addEditView, $data);
 	}
@@ -107,13 +101,12 @@ class Pages extends CI_Controller {
 	{
 		$parentID = max(0, (int) $parentID);
 		if ($parentID > 0 && empty($this->pageRecord($parentID))) return $this->redirectToListing(0);
-		if (!$this->validPost('en')) return $this->formFailure('Enter a page name and valid slug, then check the publishing and banner settings.', $parentID);
-		$uploads = $this->savePageUploads('en');
+		if (!$this->validPost()) return $this->formFailure('Enter a page name and valid slug, then check the publishing and banner settings.', $parentID);
+		$uploads = $this->savePageUploads();
 		if ($uploads['error'] !== '') return $this->formFailure($uploads['error'], $parentID);
-		$data = $this->postedPageData('en');
+		$data = $this->postedPageData();
 		$data['page_parent_id'] = $parentID;
 		$data['page_slug'] = $this->uniqueSlug('page_slug', $this->normalizeSlug($this->input->post('page_slug')));
-		$data['page_name_ar'] = '';
 		$data['page_order'] = $this->nextOrder($parentID);
 		$data['page_added'] = $data['page_updated'] = date('Y-m-d H:i:s');
 		$data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
@@ -130,7 +123,6 @@ class Pages extends CI_Controller {
 			return $this->formFailure('The web page could not be saved. Please try again.', $parentID);
 		}
 		$this->db->trans_commit();
-		$this->queueTranslationSafely($id);
 		$this->session->set_flashdata('alert', 'success');
 		$this->redirectToListing($parentID);
 	}
@@ -145,13 +137,11 @@ class Pages extends CI_Controller {
 			$this->session->set_flashdata('alert', 'error');
 			return $this->redirectToListing($parentID);
 		}
-		$activeLocale = $this->manage_translation_service->locale($this->input->post('active_locale', TRUE));
-		if (!$this->validPost($activeLocale)) return $this->formFailure('Enter a page name and valid slug, then check the publishing and banner settings.', $parentID, $editID, $activeLocale);
-		$uploads = $this->savePageUploads($activeLocale);
-		if ($uploads['error'] !== '') return $this->formFailure($uploads['error'], $parentID, $editID, $activeLocale);
-		$data = $this->postedPageData($activeLocale);
-		$slugColumn = $activeLocale === 'ar' ? 'page_slug_ar' : 'page_slug';
-		$data[$slugColumn] = $this->uniqueSlug($slugColumn, $this->normalizeSlug($this->input->post('page_slug')), $editID);
+		if (!$this->validPost()) return $this->formFailure('Enter a page name and valid slug, then check the publishing and banner settings.', $parentID, $editID);
+		$uploads = $this->savePageUploads();
+		if ($uploads['error'] !== '') return $this->formFailure($uploads['error'], $parentID, $editID);
+		$data = $this->postedPageData();
+		$data['page_slug'] = $this->uniqueSlug('page_slug', $this->normalizeSlug($this->input->post('page_slug')), $editID);
 		$data['page_updated'] = $data['updated_at'] = date('Y-m-d H:i:s');
 		foreach ($uploads['files'] as $column => $filename) if ($filename !== '') $data[$column] = $filename;
 		$this->db->trans_begin();
@@ -160,18 +150,11 @@ class Pages extends CI_Controller {
 		{
 			$this->db->trans_rollback();
 			$this->cleanupNewUploads($uploads['files']);
-			return $this->formFailure('The web page could not be updated. Please try again.', $parentID, $editID, $activeLocale);
+			return $this->formFailure('The web page could not be updated. Please try again.', $parentID, $editID);
 		}
 		$this->db->trans_commit();
 		foreach ($uploads['files'] as $column => $filename) if ($filename !== '') $this->deletePageImage(isset($current[$column]) ? $current[$column] : '');
-		if ($activeLocale === 'en') $this->queueTranslationSafely($editID);
 		$this->session->set_flashdata('alert', 'editsuccess');
-		$redirectLocale = $this->input->post('redirect_lang', TRUE);
-		if (is_string($redirectLocale) && $redirectLocale !== '' && $this->manage_translation_service->locale($redirectLocale) === $redirectLocale)
-		{
-			redirect(base_url('manage/'.$this->controller.'/control/'.$parentID.'/'.$editID.'?lang='.$redirectLocale));
-			return;
-		}
 		$this->redirectToListing($parentID);
 	}
 
@@ -219,7 +202,6 @@ class Pages extends CI_Controller {
 		unset($data[$this->pKey]);
 		$data['page_name'] = $this->truncate($this->displayText($data['page_name']).' Duplicate', 255);
 		$data['page_slug'] = $this->uniqueSlug('page_slug', $this->normalizeSlug($data['page_slug'].'-copy'));
-		if (trim((string) $data['page_slug_ar']) !== '') $data['page_slug_ar'] = $this->uniqueSlug('page_slug_ar', $this->normalizeSlug($data['page_slug_ar'].'-copy'));
 		$data['page_order'] = $this->nextOrder($data['page_parent_id']);
 		$data['page_added'] = $data['page_updated'] = date('Y-m-d H:i:s');
 		$data['created_at'] = $data['updated_at'] = date('Y-m-d H:i:s');
@@ -232,7 +214,6 @@ class Pages extends CI_Controller {
 			return $this->redirectToListing($data['page_parent_id']);
 		}
 		$this->db->trans_commit();
-		$this->queueTranslationSafely($newID);
 		redirect(base_url('manage/'.$this->controller.'/control/'.(int) $data['page_parent_id'].'/'.$newID));
 	}
 
@@ -267,7 +248,7 @@ class Pages extends CI_Controller {
 	{
 		$this->output->set_content_type('application/json');
 		$id = (int) $id;
-		$allowed = array('og_image', 'og_image_ar', 'banner_background', 'banner_background_ar');
+		$allowed = $this->imageColumns();
 		$record = in_array($key, $allowed, TRUE) ? $this->pageRecord($id) : array();
 		if (empty($record))
 		{
@@ -289,24 +270,27 @@ class Pages extends CI_Controller {
 		$this->load->view('admin/footer');
 	}
 
-	private function configureEditor($locale)
+	private function configureEditor()
 	{
 		$this->load->library('ckeditor');
 		$this->load->library('ckfinder');
 		$this->ckeditor->basePath = base_url().'assets/ckeditor/';
 		$this->ckeditor->config['removePlugins'] = 'save, preview, newpage, forms, flash';
 		$this->ckeditor->config['height'] = '340px';
-		$this->ckeditor->config['contentsLangDirection'] = $locale === 'ar' ? 'rtl' : 'ltr';
-		$this->ckeditor->textareaAttributes = array('id' => 'localized_page_text', 'rows' => 8, 'cols' => 60, 'data-translation-field' => 'localized_page_text', 'dir' => $locale === 'ar' ? 'rtl' : 'ltr');
+		$this->ckeditor->textareaAttributes = array('id' => 'page_text', 'rows' => 8, 'cols' => 60);
 		$this->ckfinder->SetupCKEditor($this->ckeditor, '../../../../assets/ckfinder/');
 	}
 
-	private function postedPageData($locale)
+	private function postedPageData()
 	{
-		$post = $this->input->post(NULL, FALSE);
-		$post = is_array($post) ? $post : array();
-		$data = $this->manage_translation_service->localized_post_data($this->translationModule, $locale, $post);
-		foreach (array_keys($data) as $column) if ($column !== 'page_text' && $column !== 'page_text_ar') $data[$column] = $this->cleanPlainText($data[$column], $this->plainTextLimit($column));
+		$data = array();
+		foreach ($this->textFields() as $column => $maxLength)
+		{
+			// Rich text from CKEditor is kept as HTML; everything else is plain text.
+			$data[$column] = $column === 'page_text'
+				? trim((string) $this->input->post($column, FALSE))
+				: $this->cleanPlainText($this->input->post($column), $maxLength);
+		}
 		foreach ($this->colorFields() as $field)
 		{
 			$color = $this->normalizeRgba($this->input->post($field));
@@ -322,16 +306,13 @@ class Pages extends CI_Controller {
 		return $data;
 	}
 
-	private function validPost($locale)
+	private function validPost()
 	{
-		$post = $this->input->post(NULL, FALSE);
-		$post = is_array($post) ? $post : array();
-		if (!$this->manage_translation_service->required_localized_input_valid($this->translationModule, $locale, $post)) return FALSE;
+		if (trim((string) $this->input->post('page_name')) === '') return FALSE;
 		if ($this->normalizeSlug($this->input->post('page_slug')) === '' || $this->stringLength($this->normalizeSlug($this->input->post('page_slug'))) > 255) return FALSE;
 		if (!in_array($this->input->post($this->tStatus), array('Published', 'Un-Published'), TRUE)) return FALSE;
 		if (!in_array($this->input->post('banner_overlay'), array('Yes', 'No'), TRUE)) return FALSE;
-		foreach (array('localized_name', 'localized_page_title', 'localized_og_title', 'localized_banner_title', 'localized_banner_heading') as $field) if ($this->stringLength(trim((string) $this->input->post($field))) > 255) return FALSE;
-		if ($this->stringLength(trim((string) $this->input->post('localized_menu_name'))) > 100) return FALSE;
+		foreach ($this->textFields() as $field => $maxLength) if ($maxLength !== NULL && $this->stringLength(trim((string) $this->input->post($field))) > $maxLength) return FALSE;
 		$slider = $this->input->post('page_slider');
 		if ($slider !== NULL && $slider !== '' && (!ctype_digit((string) $slider) || $this->SqlModel->countRecords('sliders', array('sliders_id' => (int) $slider)) < 1)) return FALSE;
 		foreach ($this->colorFields() as $field)
@@ -342,33 +323,30 @@ class Pages extends CI_Controller {
 		return TRUE;
 	}
 
-	private function formValues(array $record, $locale, $posted)
+	private function formValues(array $record, $posted)
 	{
 		$values = array('page_slug' => '', 'page_status' => 'Published', 'page_slider' => 0, 'robots_index' => 1, 'robots_follow' => 1, 'show_top_banner' => 0, 'banner_overlay' => 'Yes', 'page_order' => 0, 'current_og_image' => '', 'current_banner_background' => '');
 		foreach ($this->colorFields() as $field) $values[$field] = isset($record[$field]) ? $record[$field] : '';
 		foreach (array('page_status', 'page_slider', 'robots_index', 'robots_follow', 'show_top_banner', 'banner_overlay', 'page_order') as $field) if (isset($record[$field])) $values[$field] = $record[$field];
-		$suffix = $locale === 'ar' ? '_ar' : '';
-		if (isset($record['page_slug'.$suffix])) $values['page_slug'] = $record['page_slug'.$suffix];
-		$values['current_og_image'] = isset($record['og_image'.$suffix]) ? basename((string) $record['og_image'.$suffix]) : '';
-		$values['current_banner_background'] = isset($record['banner_background'.$suffix]) ? basename((string) $record['banner_background'.$suffix]) : '';
+		if (isset($record['page_slug'])) $values['page_slug'] = $record['page_slug'];
+		$values['current_og_image'] = isset($record['og_image']) ? basename((string) $record['og_image']) : '';
+		$values['current_banner_background'] = isset($record['banner_background']) ? basename((string) $record['banner_background']) : '';
 		if (is_array($posted)) foreach (array_keys($values) as $field) if (strpos($field, 'current_') !== 0 && array_key_exists($field, $posted)) $values[$field] = $posted[$field];
 		return $values;
 	}
 
-	private function formFailure($message, $parentID, $editID = 0, $locale = 'en')
+	private function formFailure($message, $parentID, $editID = 0)
 	{
 		$posted = $this->input->post(NULL, FALSE);
 		if (!is_array($posted)) $posted = array();
-		$posted['active_locale'] = $this->manage_translation_service->locale($locale);
 		$this->session->set_flashdata($this->controller.'_data', $posted);
 		$this->session->set_flashdata('form_error', $message);
-		redirect(base_url('manage/'.$this->controller.'/control/'.(int) $parentID.($editID > 0 ? '/'.(int) $editID.'?lang='.$this->manage_translation_service->locale($locale) : '')));
+		redirect(base_url('manage/'.$this->controller.'/control/'.(int) $parentID.($editID > 0 ? '/'.(int) $editID.'' : '')));
 	}
 
-	private function savePageUploads($locale)
+	private function savePageUploads()
 	{
-		$suffix = $locale === 'ar' ? '_ar' : '';
-		$fields = array('og_image_upload' => 'og_image'.$suffix, 'banner_background_upload' => 'banner_background'.$suffix);
+		$fields = array('og_image_upload' => 'og_image', 'banner_background_upload' => 'banner_background');
 		$result = array('files' => array(), 'error' => '');
 		foreach ($fields as $field => $column)
 		{
@@ -429,7 +407,6 @@ class Pages extends CI_Controller {
 		$records = $this->db->where_in($this->pKey, $ids)->get($this->tblName)->result_array();
 		if (count($records) !== count($ids)) return FALSE;
 		$this->db->trans_begin();
-		foreach ($ids as $id) $this->manage_translation_service->delete_jobs($this->translationModule, $id);
 		$this->db->where_in($this->pKey, $ids)->delete($this->tblName);
 		if ($this->db->trans_status() === FALSE || $this->db->affected_rows() !== count($ids))
 		{
@@ -495,9 +472,7 @@ class Pages extends CI_Controller {
 		$suffix = 2;
 		while (TRUE)
 		{
-			// The public site finds a page by either slug column, so a slug another page already uses in
-			// English or Arabic would make two addresses ambiguous.
-			$this->db->from($this->tblName)->group_start()->where('page_slug', $candidate)->or_where('page_slug_ar', $candidate)->group_end();
+			$this->db->from($this->tblName)->where('page_slug', $candidate);
 			if ((int) $excludeID > 0) $this->db->where($this->pKey.' !=', (int) $excludeID);
 			if ($this->db->count_all_results() === 0) return $candidate;
 			$candidate = $this->truncate($base.'-'.$suffix++, 255);
@@ -525,11 +500,24 @@ class Pages extends CI_Controller {
 		return html_entity_decode((string) $value, ENT_QUOTES, 'UTF-8');
 	}
 
-	private function plainTextLimit($column)
+	/**
+	 * Text columns edited on the form, with their maximum length (NULL for none).
+	 */
+	private function textFields()
 	{
-		if (in_array($column, array('page_name', 'page_name_ar', 'page_title', 'page_title_ar', 'og_title', 'og_title_ar', 'banner_title', 'banner_title_ar', 'banner_heading', 'banner_heading_ar'), TRUE)) return 255;
-		if (in_array($column, array('menu_name', 'menu_name_ar'), TRUE)) return 100;
-		return NULL;
+		return array(
+			'page_name' => 255,
+			'menu_name' => 100,
+			'page_text' => NULL,
+			'page_title' => 255,
+			'meta_description' => NULL,
+			'meta_keywords' => NULL,
+			'og_title' => 255,
+			'og_description' => NULL,
+			'banner_title' => 255,
+			'banner_heading' => 255,
+			'banner_text' => NULL,
+		);
 	}
 
 	private function colorFields()
@@ -539,7 +527,7 @@ class Pages extends CI_Controller {
 
 	private function imageColumns()
 	{
-		return array('og_image', 'og_image_ar', 'banner_background', 'banner_background_ar');
+		return array('og_image', 'banner_background');
 	}
 
 	private function normalizeRgba($value)
@@ -562,12 +550,6 @@ class Pages extends CI_Controller {
 		if (isset($parts[3]) && !is_numeric($parts[3])) return '';
 		$alpha = isset($parts[3]) ? max(0, min(1, (float) $parts[3])) : 1;
 		return sprintf('rgba(%d, %d, %d, %s)', $channels[0], $channels[1], $channels[2], round($alpha, 2));
-	}
-
-	private function queueTranslationSafely($pageID)
-	{
-		try { $this->manage_translation_service->queue($this->translationModule, (int) $pageID); }
-		catch (Throwable $exception) { log_message('error', 'Page translation could not be queued for record '.(int) $pageID.'.'); }
 	}
 
 	private function truncate($value, $maxLength)

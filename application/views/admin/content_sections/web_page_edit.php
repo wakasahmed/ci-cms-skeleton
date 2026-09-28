@@ -5,7 +5,6 @@ $escape = function ($value) {
 
 $pageID = (int) $page['page_id'];
 $pageName = html_entity_decode((string) $page['page_name'], ENT_QUOTES, 'UTF-8');
-$languageBaseURL = base_url('manage/web-pages/'.$pageID.'/sections');
 $firstErrorName = '';
 
 if (!empty($errors)) {
@@ -23,30 +22,11 @@ if (!empty($errors)) {
 <section
     class="admin-records-listing web-page-sections-editor"
     aria-labelledby="web-page-sections-title"
-    data-translation-poll
-    data-module="web_page_sections"
-    data-status-url="<?php echo $escape(base_url('manage/translations/statuses')); ?>"
-    data-poll-seconds="4"
-    data-locale="<?php echo $escape($locale); ?>"
 >
     <?php $this->load->view('admin/partials/module_header', array(
         'title' => $pageName.' Sections',
         'description' => 'Manage the reusable content blocks for '.$pageName.'.',
         'id' => 'web-page-sections-title',
-        'actions_view' => 'admin/content_sections/_language_switch',
-        'actions_data' => array(
-            'language_base_url' => $languageBaseURL,
-            'locales' => $locales,
-            'locale' => $locale,
-            'translation_module' => 'web_page_sections',
-            'translation_entity_id' => $pageID,
-            'translation_status' => isset($translation_state['status'])
-                ? $translation_state['status']
-                : 'MISSING',
-            'translation_ready' => isset($translation_state['status'])
-                && $translation_state['status'] === 'SUCCEEDED',
-            'can_update' => $can_update,
-        ),
     )); ?>
 
     <?php if ($success_message) { ?>
@@ -69,12 +49,9 @@ if (!empty($errors)) {
         enctype="multipart/form-data"
         novalidate
         data-content-sections-form
-        data-manage-language-form
         data-submit-lock
         data-first-error="<?php echo $escape($firstErrorName); ?>"
     >
-        <input type="hidden" name="locale" value="<?php echo $escape($locale); ?>">
-        <input type="hidden" name="redirect_lang" value="<?php echo $escape($locale); ?>" data-redirect-locale>
         <?php if ($this->config->item('csrf_protection')) { ?>
             <input
                 type="hidden"
@@ -87,7 +64,7 @@ if (!empty($errors)) {
             <fieldset disabled>
         <?php } ?>
 
-        <div class="card admin-card web-page-sections-card" dir="<?php echo $locale === 'ar' ? 'rtl' : 'ltr'; ?>">
+        <div class="card admin-card web-page-sections-card">
             <div class="card-header web-page-sections-card-header">
                 <div>
                     <h2 class="card-title mb-1">Content blocks</h2>
@@ -96,10 +73,7 @@ if (!empty($errors)) {
                 <span class="web-page-sections-count"><?php echo count($editor_sections); ?> section<?php echo count($editor_sections) === 1 ? '' : 's'; ?></span>
             </div>
 
-            <div
-                class="card-body content-locale-panel"
-                dir="<?php echo $locale === 'ar' ? 'rtl' : 'ltr'; ?>"
-            >
+            <div class="card-body">
                 <div class="accordion admin-form-accordion content-sections-accordion" id="webPageSections" data-section-sortable>
                     <?php foreach ($editor_sections as $index => $section) { ?>
                         <?php
@@ -211,5 +185,3 @@ if (!empty($errors)) {
         </div>
     </form>
 </section>
-
-<?php $this->load->view('admin/content_sections/_language_modal'); ?>

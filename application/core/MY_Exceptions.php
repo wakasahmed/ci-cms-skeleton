@@ -8,9 +8,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * booking reference on the public site, or a missing record in an admin
  * controller).
  *
- * - The Frontend controller resolves the visitor's locale (English/Arabic)
- *   in its constructor and defines FRONTEND_LOCALE once that happens, so
- *   that case reuses its own bilingual 404 page.
+ * - A public (Frontend controller) request reuses the site's own 404 page.
  * - Any /manage/* request reuses the admin area's branded, sidebar-less
  *   shell (the same one the login screen uses) since the admin may or may
  *   not still be signed in.
@@ -32,7 +30,7 @@ class MY_Exceptions extends CI_Exceptions
             log_message('error', '404 Page Not Found: ' . $page);
         }
 
-        if (defined('FRONTEND_LOCALE') && $CI instanceof Frontend) {
+        if ($CI instanceof Frontend) {
             $CI->error_404();
             $CI->output->_display();
             exit(4); // EXIT_UNKNOWN_FILE

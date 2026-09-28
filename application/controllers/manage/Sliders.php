@@ -203,7 +203,7 @@ class Sliders extends CI_Controller {
 		$groups = $this->db->where_in($this->pKey, $ids)->get($this->tblName)->result_array();
 		if (count($groups) !== count($ids)) return 'error';
 		if ($this->sliderGroupsAreAssigned($ids)) return 'blocked';
-		$slides = $this->db->select('image,image_ar')->where_in('slider_id', $ids)->get('slider')->result_array();
+		$slides = $this->db->select('image')->where_in('slider_id', $ids)->get('slider')->result_array();
 		$this->db->trans_begin();
 		$this->db->where_in('slider_id', $ids)->delete('slider');
 		$this->db->where_in($this->pKey, $ids)->delete($this->tblName);
@@ -217,7 +217,6 @@ class Sliders extends CI_Controller {
 		foreach ($slides as $slide)
 		{
 			$this->deleteSliderImage(isset($slide['image']) ? $slide['image'] : '');
-			$this->deleteSliderImage(isset($slide['image_ar']) ? $slide['image_ar'] : '');
 		}
 		return 'success';
 	}
@@ -230,7 +229,7 @@ class Sliders extends CI_Controller {
 	private function deleteSliderImage($filename)
 	{
 		if (!is_string($filename) || $filename === '' || basename($filename) !== $filename) return;
-		$this->db->from('slider')->group_start()->where('image', $filename)->or_where('image_ar', $filename)->group_end();
+		$this->db->from('slider')->where('image', $filename);
 		if ($this->db->count_all_results() > 0) return;
 		delete_uploaded_file(FCPATH.'assets/frontend/images/slider', $filename);
 	}

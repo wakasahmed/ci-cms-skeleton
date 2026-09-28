@@ -65,19 +65,6 @@
       panel.addEventListener('hidden.bs.collapse', writeStoredKeys);
     });
 
-    // Reuses the same "before submit" hook admin.js already calls on any
-    // form.validate, so the Save button behaves like the rest of the admin.
-    if (form) {
-      form.manageTranslationSetSaving = function () {
-        form.querySelectorAll('[data-save-button]').forEach(function (button) {
-          button.disabled = true;
-          button.setAttribute('aria-disabled', 'true');
-          var label = button.querySelector('[data-save-label]');
-          if (label) label.textContent = 'Saving...';
-        });
-      };
-    }
-
     // Same "open the collapsible containing the first missing required
     // field" logic as addPage.php: a required field can be hidden inside a
     // collapsed section, so the browser's own validation message would

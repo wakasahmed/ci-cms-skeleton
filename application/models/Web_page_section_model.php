@@ -111,8 +111,7 @@ class Web_page_section_model extends CI_Model
         $locale,
         array $values,
         array $statuses,
-        array $order,
-        array $arabic_invalidations = array()
+        array $order
     )
     {
         $now = date('Y-m-d H:i:s');
@@ -134,23 +133,6 @@ class Web_page_section_model extends CI_Model
                 );
             }
         }
-        if ($locale === 'en') {
-            foreach ($arabic_invalidations as $section_key => $field_keys) {
-                if (!isset($sections_by_key[$section_key])) {
-                    continue;
-                }
-
-                $section_id = (int) $sections_by_key[$section_key]['section_id'];
-                foreach (array_unique($field_keys) as $field_key) {
-                    $this->db->query(
-                        'INSERT INTO web_page_section_fields (section_id, locale, field_key, field_value, created_at, updated_at) '
-                        .'VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE field_value=VALUES(field_value), updated_at=VALUES(updated_at)',
-                        array($section_id, 'ar', $field_key, '', $now, $now)
-                    );
-                }
-            }
-        }
-
         $this->db
             ->where('page_id', (int) $page_id)
             ->update('pages', array('updated_at' => $now));

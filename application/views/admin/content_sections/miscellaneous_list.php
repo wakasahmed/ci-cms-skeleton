@@ -15,10 +15,6 @@ $totalSections = count($sections);
 <section
     class="admin-records-listing miscellaneous-contents-listing"
     aria-labelledby="miscellaneous-contents-title"
-    data-translation-poll
-    data-module="miscellaneous_contents"
-    data-status-url="<?php echo $escape(base_url('manage/translations/statuses')); ?>"
-    data-poll-seconds="4"
 >
     <?php $this->load->view('admin/partials/module_header', array(
         'title' => 'Miscellaneous Contents',
@@ -39,7 +35,6 @@ $totalSections = count($sections);
                     <thead>
                         <tr>
                             <th class="miscellaneous-section-column" scope="col">Content block</th>
-                            <th class="miscellaneous-arabic-column" scope="col">Translation</th>
                             <th class="miscellaneous-status-column" scope="col">Status</th>
                             <th scope="col" class="d-none d-md-table-cell">Created On</th>
                             <th scope="col" class="d-none d-md-table-cell">Updated On</th>
@@ -55,11 +50,6 @@ $totalSections = count($sections);
                                     .rawurlencode($section['section_key']).'/edit'
                                 );
                                 $sectionLabel = $escape($section['section_label']);
-                                $translationStatus = isset(
-                                    $translation_states[$section['section_key']]['status']
-                                )
-                                    ? $translation_states[$section['section_key']]['status']
-                                    : 'MISSING';
                                 ?>
                                 <tr>
                                     <td class="miscellaneous-section-column">
@@ -71,15 +61,6 @@ $totalSections = count($sections);
                                             <span class="miscellaneous-section-name"><?php echo $sectionLabel; ?></span>
                                         <?php } ?>
                                        
-                                    </td>
-                                    <td class="miscellaneous-arabic-column">
-                                        <?php $this->load->view(
-                                            'admin/partials/translation_status_badge',
-                                            array(
-                                                'translation_status' => $translationStatus,
-                                                'translation_entity_id' => $section['section_key'],
-                                            )
-                                        ); ?>
                                     </td>
                                     <td class="miscellaneous-status-column">
                                         <?php if ($can_update) { ?>
@@ -120,7 +101,7 @@ $totalSections = count($sections);
                             <?php } ?>
                         <?php } else { ?>
                             <tr>
-                                <td class="pages-empty-state" colspan="6">
+                                <td class="pages-empty-state" colspan="5">
                                     <strong>No content blocks are configured.</strong>
                                     <span>Add a section to the content configuration to make it available here.</span>
                                 </td>

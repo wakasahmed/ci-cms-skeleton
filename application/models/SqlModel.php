@@ -5,7 +5,6 @@ class SqlModel extends CI_Model
 
     private $table;
     private $result;
-    public $langPrefix = '';
 
     public function __construct()
     {
@@ -343,14 +342,11 @@ class SqlModel extends CI_Model
     //For getting navigation
     public function getNav($page_id = 0)
     {
-        $nav = $this->getRecords('page_parent_id,menu_parent_id,menu_name,menu_name_ar,page_name,page_slug,page_slug_ar,page_id', 'pages', 'menu_order', 'ASC', array('page_status' => 'Published', 'menu_active' => 1, 'menu_parent_id' => 0));
+        $nav = $this->getRecords('page_parent_id,menu_parent_id,menu_name,page_name,page_slug,page_id', 'pages', 'menu_order', 'ASC', array('page_status' => 'Published', 'menu_active' => 1, 'menu_parent_id' => 0));
         $html = "";
         if (!empty($nav)) {
-            if ($this->langPrefix == "_ar") {
-                $nav = array_reverse($nav);
-            }
             foreach ($nav as $n) {
-                $nnav = $this->getRecords('page_parent_id,menu_parent_id,menu_name,menu_name_ar,page_name,page_slug,page_slug_ar,page_id', 'pages', 'menu_order', 'ASC', array('page_status' => 'Published', 'menu_active' => 1, 'menu_parent_id' => $n['page_id']));
+                $nnav = $this->getRecords('page_parent_id,menu_parent_id,menu_name,page_name,page_slug,page_id', 'pages', 'menu_order', 'ASC', array('page_status' => 'Published', 'menu_active' => 1, 'menu_parent_id' => $n['page_id']));
 
                 $innerHtml = "";
                 $active = "";
@@ -360,11 +356,11 @@ class SqlModel extends CI_Model
                         if ($nn['page_id'] == $page_id) {
                             $active = "active";
                         }
-                        $innerHtml .= '<li><a  title="' . $nn['menu_name'.$this->langPrefix] . '" href="' . base_url($nn['page_slug'.$this->langPrefix] . '.html') . '">' . $nn['menu_name'.$this->langPrefix] . '</a></li>';
+                        $innerHtml .= '<li><a  title="' . $nn['menu_name'] . '" href="' . base_url($nn['page_slug'] . '.html') . '">' . $nn['menu_name'] . '</a></li>';
                     }
                     $innerHtml .= '</ul>';
                 }
-                $html .= '<li ' . ((!empty($nnav)) ? 'class="submenu"' : '') . '><a  class="' . (($page_id == $n['page_id']) ? ' active ' : '') . ' ' . $active . ' ' . ((!empty($nnav)) ? ' show-submenu ' : '') . ' " title="' . $n['menu_name'.$this->langPrefix] . '" href="' . (($n['page_id']=="1") ? base_url() : base_url($n['page_slug'.$this->langPrefix] . '.html')) . '">' . $n['menu_name'.$this->langPrefix] . ((!empty($nnav)) ? ' <i class="icon-down-open-mini"></i> ' : '') . '</a>' . $innerHtml;
+                $html .= '<li ' . ((!empty($nnav)) ? 'class="submenu"' : '') . '><a  class="' . (($page_id == $n['page_id']) ? ' active ' : '') . ' ' . $active . ' ' . ((!empty($nnav)) ? ' show-submenu ' : '') . ' " title="' . $n['menu_name'] . '" href="' . (($n['page_id']=="1") ? base_url() : base_url($n['page_slug'] . '.html')) . '">' . $n['menu_name'] . ((!empty($nnav)) ? ' <i class="icon-down-open-mini"></i> ' : '') . '</a>' . $innerHtml;
 
                 $html .= '</li>';
 
@@ -413,12 +409,12 @@ class SqlModel extends CI_Model
     {
         $subhtml = "";
         if (strpos($html, '{subpages}') !== FALSE) {
-            $subPages = $this->runQuery("SELECT p.`page_slug`,p.`page_slug_ar`,p.`page_name` FROM pages p WHERE p.`page_status`='Published' AND p.`created_at`='0000-00-00 00:00:00' AND p.`page_parent_id`=" . $page_id . " ORDER BY p.`page_order` ASC");
+            $subPages = $this->runQuery("SELECT p.`page_slug`,p.`page_name` FROM pages p WHERE p.`page_status`='Published' AND p.`created_at`='0000-00-00 00:00:00' AND p.`page_parent_id`=" . $page_id . " ORDER BY p.`page_order` ASC");
             if (!empty($subPages)) {
                 $subhtml .= '<blockquote class="orange"><div class="button-wrapper">';
                 $i = 1;
                 foreach ($subPages as $s) {
-                    $subhtml .= '<a href="' . base_url($s['page_slug'.$this->langPrefix]) . '.html">' . $s['page_name'] . '</a>';
+                    $subhtml .= '<a href="' . base_url($s['page_slug']) . '.html">' . $s['page_name'] . '</a>';
                     if ($i < count($subPages)) {
                         $subhtml .= '<br><br>';
                     }
@@ -437,23 +433,20 @@ class SqlModel extends CI_Model
 
     }
 
-    public function getFoot($type = "", $locale = NULL)
+    /**
+     * Footer menu links. $emailFooter formats them for the branded email
+     * footer: separated by bullets instead of "- " prefixes.
+     */
+    public function getFoot($type = "", $emailFooter = FALSE)
     {
         $html = "";
         if ($type != "one" && $type != "two" && $type != "three") {
             return $html;
         }
 
-        $isLocalizedFooter = $locale !== NULL;
-        $languagePrefix = $this->langPrefix;
-        if ($locale !== NULL) {
-            $locale = strtolower(trim((string) $locale));
-            $languagePrefix = in_array($locale, array('ar', 'arabic'), TRUE) ? '_ar' : '';
-        }
-
         $type = "_" . strtolower($type);
         $foot = $this->runQuery(
-            "SELECT page_id,menu_name,menu_name_ar,page_slug,page_slug_ar "
+            "SELECT page_id,menu_name,page_slug "
             ."FROM pages WHERE menu_parent_id".$type." = '0' "
             ."AND menu_active".$type." = 1 ORDER BY menu_order".$type." ASC"
         );
@@ -462,13 +455,13 @@ class SqlModel extends CI_Model
 
         if (count($foot) > 0) {
             foreach ($foot as $f) {
-                if ($isLocalizedFooter && $footCnt > 1) {
+                if ($emailFooter && $footCnt > 1) {
                     $html .= '<span class="footer-link-separator" aria-hidden="true">&bull;</span>';
                 }
 
-                $linkPrefix = $isLocalizedFooter ? '' : '- ';
-                $html .= '<a href="'.base_url($f['page_slug'.$languagePrefix].'.html').'">'.$linkPrefix
-                    .$f['menu_name'.$languagePrefix].'</a>';
+                $linkPrefix = $emailFooter ? '' : '- ';
+                $html .= '<a href="'.base_url($f['page_slug'].'.html').'">'.$linkPrefix
+                    .$f['menu_name'].'</a>';
                 $footCnt++;
             }
         }

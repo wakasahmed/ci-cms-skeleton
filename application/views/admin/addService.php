@@ -166,7 +166,7 @@ $addonRow = function ($label, $price) {
                                             value="<?php echo $value('service_name'); ?>"
                                             class="form-control<?php echo $isEdit ? '' : ' auto-slug-source'; ?><?php echo $invalidClass('service_name'); ?>"
                                             data-validate="required,maxlength[150]"
-                                            <?php if (!$isEdit) { ?>data-slug-target="#service_slug" data-slug-language="en"<?php } ?>
+                                            <?php if (!$isEdit) { ?>data-slug-target="#service_slug"<?php } ?>
                                             placeholder="Gel Manicure"
                                             required
                                         >
@@ -187,7 +187,7 @@ $addonRow = function ($label, $price) {
                                             data-validate="required,maxlength[160]"
                                             required
                                         >
-                                        <button type="button" class="btn btn-outline-secondary generate-slug" data-slug-source="#service_name" data-slug-target="#service_slug" data-slug-language="en">
+                                        <button type="button" class="btn btn-outline-secondary generate-slug" data-slug-source="#service_name" data-slug-target="#service_slug">
                                             <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
                                             <span class="d-none d-sm-inline">Generate</span>
                                         </button>

@@ -1,5 +1,13 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 
+/**
+ * Form Settings: text shown by the public forms (singleton record).
+ *
+ * Holds the contact form's confirmation message and its subject options.
+ * Settings for the booking-request form are added in Phase 6 of
+ * PROJECT_PLAN.md.
+ */
 class Form_settings extends CI_Controller
 {
     public $tblName = 'form_settings';
@@ -8,30 +16,30 @@ class Form_settings extends CI_Controller
     public $moduleName = 'Form Settings';
     public $controller = 'form-settings';
     public $listView = 'formSettings';
-    public $translationModule = 'form_settings';
     public $user_data = array();
 
     public function __construct()
     {
         parent::__construct();
+
         $this->user_data = $this->SqlModel->authAdmin(
             $this->session->userdata('admin_auth'),
             $this->session->userdata('admin_id')
         );
 
-        if (empty($this->user_data))
-        {
+        if (empty($this->user_data)) {
             redirect(base_url('manage/login'));
+
             return;
         }
 
-        if ($this->SqlModel->checkAccess('access_settings', $this->user_data) === FALSE)
-        {
+        if ($this->SqlModel->checkAccess('access_settings', $this->user_data) === FALSE) {
             redirect(ADMIN_URL);
+
             return;
         }
 
-        $this->load->library('manage_translation_service');
+        $this->load->helper('admin_input');
     }
 
     public function index()
@@ -43,43 +51,26 @@ class Form_settings extends CI_Controller
         $record = is_array($record) ? $record : array();
 
         $posted = $this->session->flashdata($this->controller.'_data');
-        $requestedLocale = is_array($posted) && isset($posted['active_locale'])
-            ? $posted['active_locale']
-            : $this->input->get('lang', TRUE);
-        $activeLocale = $this->manage_translation_service->locale($requestedLocale);
-        $localizedValues = $this->manage_translation_service->localized_values(
-            $this->translationModule,
-            $record,
-            $activeLocale
-        );
 
-        if (is_array($posted))
-        {
-            foreach ($localizedValues as $control => $value)
-            {
-                if (isset($posted[$control]) && !is_array($posted[$control]))
-                {
-                    $localizedValues[$control] = (string) $posted[$control];
+        if (is_array($posted)) {
+            foreach ($this->fields() as $field) {
+                if (isset($posted[$field]) && !is_array($posted[$field])) {
+                    $record[$field] = (string) $posted[$field];
                 }
             }
         }
 
-        $translationState = empty($record)
-            ? NULL
-            : $this->manage_translation_service->state($this->translationModule, $this->recordId);
+        $invalidFields = $this->session->flashdata($this->controller.'_invalid');
 
         $data = array(
             'formSettingsActive' => 1,
             'page_title' => PROJECT_TITLE.' | '.$this->moduleName,
             'alert' => $this->session->flashdata('alert'),
             'form_error' => $this->session->flashdata('form_error'),
+            'invalid_fields' => is_array($invalidFields) ? $invalidFields : array(),
             'userdata' => $this->user_data,
             'tbl_data' => $record,
-            'localized_values' => $localizedValues,
-            'manage_locales' => $this->manage_translation_service->locales(),
-            'active_locale' => $activeLocale,
-            'translation_state' => $translationState,
-            'useManageTranslations' => TRUE,
+            'useAccordionValidation' => TRUE,
         );
 
         $this->load->view('admin/header', $data);
@@ -94,108 +85,54 @@ class Form_settings extends CI_Controller
             $this->tblName,
             array($this->pKey => $this->recordId)
         );
-        $activeLocale = $this->manage_translation_service->locale(
-            $this->input->post('active_locale', TRUE)
-        );
 
-        if (empty($current))
-        {
-            return $this->formFailure(
-                'The Form Settings record is missing. Run the provided database query first.',
-                $activeLocale
-            );
+        if (empty($current)) {
+            return $this->formFailure('The Form Settings record is missing.');
         }
 
-        $post = $this->input->post(NULL, FALSE);
-        $post = is_array($post) ? $post : array();
+        $data = array(
+            'contact_success' => admin_clean_text($this->input->post('contact_success')),
+            'contact_subject' => admin_clean_lines($this->input->post('contact_subject'), 30, 150),
+        );
+        $invalid = array();
 
-        if (!$this->manage_translation_service->required_localized_input_valid(
-            $this->translationModule,
-            $activeLocale,
-            $post
-        ))
-        {
-            return $this->formFailure(
-                'Complete all required form setting fields.',
-                $activeLocale
-            );
+        foreach ($data as $field => $value) {
+            if ($value === '') {
+                $invalid[] = $field;
+            }
         }
 
-        $data = $this->manage_translation_service->localized_post_data(
-            $this->translationModule,
-            $activeLocale,
-            $post
-        );
-
-        $this->db->trans_begin();
-        $updated = $this->SqlModel->updateRecord(
-            $this->tblName,
-            $data,
-            array($this->pKey => $this->recordId)
-        );
-
-        if (!$updated || $this->db->trans_status() === FALSE)
-        {
-            $this->db->trans_rollback();
-
-            return $this->formFailure(
-                'The Form Settings could not be saved. No changes were applied.',
-                $activeLocale
-            );
+        if (!empty($invalid)) {
+            return $this->formFailure('Complete all required form setting fields.', $invalid);
         }
 
-        $this->db->trans_commit();
-
-        if ($activeLocale === 'en')
-        {
-            $this->queueTranslationSafely();
+        if (!$this->SqlModel->updateRecord($this->tblName, $data, array($this->pKey => $this->recordId))) {
+            return $this->formFailure('The Form Settings could not be saved. No changes were applied.');
         }
 
         $this->session->set_flashdata('alert', 'success');
-        $redirectLocale = $this->input->post('redirect_lang', TRUE);
-        if (is_string($redirectLocale)
-            && $redirectLocale !== ''
-            && $this->manage_translation_service->locale($redirectLocale) === $redirectLocale)
-        {
-            redirect(base_url('manage/'.$this->controller.'?lang='.$redirectLocale));
-            return;
-        }
-
-        redirect(base_url('manage/'.$this->controller.'?lang='.$activeLocale));
+        redirect(base_url('manage/'.$this->controller));
     }
 
-    private function formFailure($message, $locale)
+    /**
+     * Columns edited on the form.
+     */
+    private function fields()
     {
-        $posted = $this->input->post(NULL, FALSE);
-        $posted = is_array($posted) ? $posted : array();
-        $posted['active_locale'] = $this->manage_translation_service->locale($locale);
-
-        $this->session->set_flashdata($this->controller.'_data', $posted);
-        $this->session->set_flashdata('form_error', $message);
-        redirect(
-            base_url(
-                'manage/'.$this->controller.'?lang='.
-                $this->manage_translation_service->locale($locale)
-            )
+        return array(
+            'contact_success',
+            'contact_subject',
         );
     }
 
-    private function queueTranslationSafely()
+    private function formFailure($message, $invalidFields = array())
     {
-        try
-        {
-            $this->manage_translation_service->queue(
-                $this->translationModule,
-                $this->recordId
-            );
-        }
-        catch (Throwable $exception)
-        {
-            log_message(
-                'error',
-                'Form Settings translation could not be queued for record '.
-                $this->recordId.'.'
-            );
-        }
+        $posted = $this->input->post(NULL, FALSE);
+
+        $this->session->set_flashdata($this->controller.'_data', is_array($posted) ? $posted : array());
+        $this->session->set_flashdata($this->controller.'_invalid', $invalidFields);
+        $this->session->set_flashdata('form_error', $message);
+
+        redirect(base_url('manage/'.$this->controller));
     }
 }

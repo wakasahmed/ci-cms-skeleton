@@ -28,7 +28,7 @@ $escape = function ($value) { return htmlspecialchars((string) $value, ENT_QUOTE
     ),
 )); ?>
 
-<section class="admin-records-listing" aria-labelledby="email-templates-title" data-translation-poll data-module="email_templates" data-status-url="<?php echo base_url('manage/translations/statuses'); ?>" data-poll-seconds="4">
+<section class="admin-records-listing" aria-labelledby="email-templates-title">
     <?php $this->load->view('admin/partials/module_header', array('title' => $this->moduleName, 'description' => $this->moduleDesc, 'id' => 'email-templates-title')); ?>
 
     <div class="pages-listing-toolbar">
@@ -48,7 +48,6 @@ $escape = function ($value) { return htmlspecialchars((string) $value, ENT_QUOTE
                         <th scope="col"<?php if ($sortAria('name') !== '') { ?> aria-sort="<?php echo $sortAria('name'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('name'); ?>">Name <i class="bi <?php echo $sortIcon('name'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                         <th scope="col"<?php if ($sortAria('subject') !== '') { ?> aria-sort="<?php echo $sortAria('subject'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('subject'); ?>">Subject <i class="bi <?php echo $sortIcon('subject'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                         <th scope="col" class="d-none d-md-table-cell"<?php if ($sortAria('heading') !== '') { ?> aria-sort="<?php echo $sortAria('heading'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('heading'); ?>">Heading <i class="bi <?php echo $sortIcon('heading'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
-                        <th scope="col">Translation</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
@@ -66,7 +65,6 @@ $escape = function ($value) { return htmlspecialchars((string) $value, ENT_QUOTE
                                 <td><a class="pages-name-link" href="<?php echo $editUrl; ?>"><?php echo $escapedName; ?></a></td>
                                 <td><?php echo $escape($record['subject']); ?></td>
                                 <td class="d-none d-md-table-cell"><?php echo $escape((string) $record['heading']); ?></td>
-                                <td><?php $this->load->view('admin/partials/translation_status_badge', array('translation_status' => isset($translation_statuses[(string) $id]) ? $translation_statuses[(string) $id] : 'MISSING', 'translation_entity_id' => $id)); ?></td>
                                 <td class="pages-actions-cell">
                                     <a class="admin-action-icon font16" href="<?php echo $editUrl; ?>" aria-label="Edit <?php echo $escapedName; ?>" title="Edit" data-bs-toggle="tooltip"><i class="bi bi-pencil" aria-hidden="true"></i></a>
                                 </td>

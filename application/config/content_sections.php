@@ -1,8 +1,9 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
+// The site is English only. Section fields keep a locale column, so this is
+// the single locale they are read and written with.
 $config['content_locales'] = array(
     'en' => array('label' => 'English', 'direction' => 'ltr'),
-    'ar' => array('label' => 'Arabic', 'direction' => 'rtl'),
 );
 
 $config['default_content_locale'] = 'en';

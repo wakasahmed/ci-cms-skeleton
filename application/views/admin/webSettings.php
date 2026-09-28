@@ -94,13 +94,9 @@ $sectionFooter = function () {
 
                 <?php $sectionHeader('general', 'General Settings', 'Website identity, public URL, and availability.', 'bi-info-circle'); ?>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
+                        <div class="admin-field mb-3">
                             <label class="form-label is-required" for="website_title">Website Name</label>
                             <input type="text" name="website_title" id="website_title" maxlength="255" value="<?php echo $value('website_title'); ?>" class="form-control<?php echo $isInvalid('website_title') ? ' is-invalid' : ''; ?>" data-validate="required" required placeholder="My Website">
-                        </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label is-required" for="website_title_ar">Website Name (Arabic)</label>
-                            <input type="text" name="website_title_ar" id="website_title_ar" maxlength="255" value="<?php echo $value('website_title_ar'); ?>" class="form-control<?php echo $isInvalid('website_title_ar') ? ' is-invalid' : ''; ?>" data-validate="required" required dir="rtl" lang="ar" placeholder="اسم الموقع">
                         </div>
                     </div>
                     <div class="admin-field mb-3">
@@ -109,14 +105,6 @@ $sectionFooter = function () {
                         <div class="form-text">The public web address shown to customers. A scheme (https://) is not required.</div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-0 col-md-6">
-                            <label class="form-label" for="default_language">Default Language</label>
-                            <select autocomplete="off" class="form-select select2<?php echo $isInvalid('default_language') ? ' is-invalid' : ''; ?>" name="default_language" id="default_language" data-minimum-results-for-search="-1">
-                                <option value="English" <?php echo (!isset($web['default_language']) || $web['default_language'] === 'English') ? 'selected' : ''; ?>>English</option>
-                                <option value="Arabic" <?php echo (isset($web['default_language']) && $web['default_language'] === 'Arabic') ? 'selected' : ''; ?>>Arabic</option>
-                            </select>
-                            <div class="form-text">The language shown to visitors by default.</div>
-                        </div>
                         <div class="admin-field mb-0 col-md-6">
                             <label class="form-label" for="under_construction">Website Under Construction</label>
                             <select autocomplete="off" class="form-select select2<?php echo $isInvalid('under_construction') ? ' is-invalid' : ''; ?>" name="under_construction" id="under_construction" data-minimum-results-for-search="-1">
@@ -175,13 +163,9 @@ $sectionFooter = function () {
 
                 <?php $sectionHeader('contact', 'Contact Information', 'Address, phone, and email shown to customers.', 'bi-geo-alt'); ?>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="address">Address (English)</label>
+                        <div class="admin-field mb-3">
+                            <label class="form-label" for="address">Address</label>
                             <textarea name="address" id="address" rows="3" class="form-control<?php echo $isInvalid('address') ? ' is-invalid' : ''; ?>" placeholder="Address"><?php echo $value('address'); ?></textarea>
-                        </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="address_ar">Address (Arabic)</label>
-                            <textarea name="address_ar" id="address_ar" rows="3" class="form-control<?php echo $isInvalid('address_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar" placeholder="العنوان"><?php echo $value('address_ar'); ?></textarea>
                         </div>
                     </div>
                     <div class="row">
@@ -198,13 +182,9 @@ $sectionFooter = function () {
 
                 <?php $sectionHeader('currency', 'Currency', 'The currency shown with prices.', 'bi-cash-coin'); ?>
                     <div class="row">
-                        <div class="admin-field mb-0 col-md-6">
+                        <div class="admin-field mb-0">
                             <label class="form-label is-required" for="currency_unit">Currency Unit</label>
                             <input type="text" name="currency_unit" id="currency_unit" maxlength="255" value="<?php echo $value('currency_unit'); ?>" class="form-control<?php echo $isInvalid('currency_unit') ? ' is-invalid' : ''; ?>" data-validate="required" required placeholder="zł">
-                        </div>
-                        <div class="admin-field mb-0 col-md-6">
-                            <label class="form-label is-required" for="currency_unit_ar">Currency Unit (Arabic)</label>
-                            <input type="text" name="currency_unit_ar" id="currency_unit_ar" maxlength="255" value="<?php echo $value('currency_unit_ar'); ?>" class="form-control<?php echo $isInvalid('currency_unit_ar') ? ' is-invalid' : ''; ?>" data-validate="required" required dir="rtl" lang="ar" placeholder="ريال سعودي">
                         </div>
                     </div>
                 <?php $sectionFooter(); ?>
@@ -216,14 +196,9 @@ $sectionFooter = function () {
                         <div class="form-text">Enter one email address per line.</div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
+                        <div class="admin-field mb-3">
                             <label class="form-label" for="sender_name">Sender Name</label>
                             <input type="text" name="sender_name" id="sender_name" maxlength="255" value="<?php echo $value('sender_name'); ?>" class="form-control<?php echo $isInvalid('sender_name') ? ' is-invalid' : ''; ?>" placeholder="Sender Name">
-                            <div class="form-text">Leave blank to use the website name.</div>
-                        </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="sender_name_ar">Sender Name (Arabic)</label>
-                            <input type="text" name="sender_name_ar" id="sender_name_ar" maxlength="255" value="<?php echo $value('sender_name_ar'); ?>" class="form-control<?php echo $isInvalid('sender_name_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar" placeholder="اسم المرسل">
                             <div class="form-text">Leave blank to use the website name.</div>
                         </div>
                     </div>
@@ -234,22 +209,13 @@ $sectionFooter = function () {
                     </div>
                 <?php $sectionFooter(); ?>
 
-                <?php $sectionHeader('backgrounds', 'Default Backgrounds', 'Fallback background imagery for English and Arabic pages.', 'bi-image'); ?>
+                <?php $sectionHeader('backgrounds', 'Default Backgrounds', 'Fallback background imagery for pages.', 'bi-image'); ?>
                     <div class="admin-field mb-4">
                         <?php $this->load->view('admin/partials/file_upload', array(
-                            'name' => 'uploadfile3', 'id' => 'uploadfile3', 'label' => 'Default Background Image (English)',
+                            'name' => 'uploadfile3', 'id' => 'uploadfile3', 'label' => 'Default Background Image',
                             'allowed_types' => 'jpg|jpeg|png', 'required' => FALSE,
                             'current_path' => $currentImage('default_bg', 'assets/frontend/images/bg/'),
                             'preview_alt' => 'Current default background', 'preview_shape' => 'square', 'preview_size' => 132,
-                            'help' => 'Recommended size: 1000 x 470px. Allowed: JPG, JPEG, PNG. Max 10 MB.',
-                        )); ?>
-                    </div>
-                    <div class="admin-field mb-0">
-                        <?php $this->load->view('admin/partials/file_upload', array(
-                            'name' => 'uploadfile4', 'id' => 'uploadfile4', 'label' => 'Default Background Image (Arabic)',
-                            'allowed_types' => 'jpg|jpeg|png', 'required' => FALSE,
-                            'current_path' => $currentImage('default_bg_ar', 'assets/frontend/images/bg/'),
-                            'preview_alt' => 'Current Arabic default background', 'preview_shape' => 'square', 'preview_size' => 132,
                             'help' => 'Recommended size: 1000 x 470px. Allowed: JPG, JPEG, PNG. Max 10 MB.',
                         )); ?>
                     </div>
@@ -282,73 +248,45 @@ $sectionFooter = function () {
 
                 <?php $sectionHeader('footer', 'Footer', 'Footer columns, contact copy, and copyright text.', 'bi-layout-text-window-reverse'); ?>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
+                        <div class="admin-field mb-3">
                             <label class="form-label" for="website_intro">About Website / Organization</label>
                             <textarea name="website_intro" id="website_intro" rows="3" class="form-control<?php echo $isInvalid('website_intro') ? ' is-invalid' : ''; ?>"><?php echo $value('website_intro'); ?></textarea>
                         </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="website_intro_ar">About Website / Organization (Arabic)</label>
-                            <textarea name="website_intro_ar" id="website_intro_ar" rows="3" class="form-control<?php echo $isInvalid('website_intro_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar"><?php echo $value('website_intro_ar'); ?></textarea>
-                        </div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
+                        <div class="admin-field mb-3">
                             <label class="form-label" for="foot_col_1">Heading 1</label>
                             <input type="text" name="foot_col_1" id="foot_col_1" maxlength="255" value="<?php echo $value('foot_col_1'); ?>" class="form-control<?php echo $isInvalid('foot_col_1') ? ' is-invalid' : ''; ?>">
                         </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="foot_col_1_ar">Heading 1 (Arabic)</label>
-                            <input type="text" name="foot_col_1_ar" id="foot_col_1_ar" maxlength="255" value="<?php echo $value('foot_col_1_ar'); ?>" class="form-control<?php echo $isInvalid('foot_col_1_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar">
-                        </div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
+                        <div class="admin-field mb-3">
                             <label class="form-label" for="foot_col_2">Heading 2</label>
                             <input type="text" name="foot_col_2" id="foot_col_2" maxlength="255" value="<?php echo $value('foot_col_2'); ?>" class="form-control<?php echo $isInvalid('foot_col_2') ? ' is-invalid' : ''; ?>">
                         </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="foot_col_2_ar">Heading 2 (Arabic)</label>
-                            <input type="text" name="foot_col_2_ar" id="foot_col_2_ar" maxlength="255" value="<?php echo $value('foot_col_2_ar'); ?>" class="form-control<?php echo $isInvalid('foot_col_2_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar">
-                        </div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
+                        <div class="admin-field mb-3">
                             <label class="form-label" for="foot_col_3">Heading 3</label>
                             <input type="text" name="foot_col_3" id="foot_col_3" maxlength="255" value="<?php echo $value('foot_col_3'); ?>" class="form-control<?php echo $isInvalid('foot_col_3') ? ' is-invalid' : ''; ?>">
                         </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="foot_col_3_ar">Heading 3 (Arabic)</label>
-                            <input type="text" name="foot_col_3_ar" id="foot_col_3_ar" maxlength="255" value="<?php echo $value('foot_col_3_ar'); ?>" class="form-control<?php echo $isInvalid('foot_col_3_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar">
-                        </div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
+                        <div class="admin-field mb-3">
                             <label class="form-label" for="foot_col_4">Heading 4</label>
                             <input type="text" name="foot_col_4" id="foot_col_4" maxlength="255" value="<?php echo $value('foot_col_4'); ?>" class="form-control<?php echo $isInvalid('foot_col_4') ? ' is-invalid' : ''; ?>">
                         </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="foot_col_4_ar">Heading 4 (Arabic)</label>
-                            <input type="text" name="foot_col_4_ar" id="foot_col_4_ar" maxlength="255" value="<?php echo $value('foot_col_4_ar'); ?>" class="form-control<?php echo $isInvalid('foot_col_4_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar">
-                        </div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-3 col-md-6">
+                        <div class="admin-field mb-3">
                             <label class="form-label" for="copyright_text">Copyright Text</label>
                             <input type="text" name="copyright_text" id="copyright_text" maxlength="255" value="<?php echo $value('copyright_text'); ?>" class="form-control<?php echo $isInvalid('copyright_text') ? ' is-invalid' : ''; ?>">
                         </div>
-                        <div class="admin-field mb-3 col-md-6">
-                            <label class="form-label" for="copyright_text_ar">Copyright Text (Arabic)</label>
-                            <input type="text" name="copyright_text_ar" id="copyright_text_ar" maxlength="255" value="<?php echo $value('copyright_text_ar'); ?>" class="form-control<?php echo $isInvalid('copyright_text_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar">
-                        </div>
                     </div>
                     <div class="row">
-                        <div class="admin-field mb-0 col-md-6">
+                        <div class="admin-field mb-0">
                             <label class="form-label" for="contact_text">Contact Text</label>
                             <textarea name="contact_text" id="contact_text" rows="3" class="form-control<?php echo $isInvalid('contact_text') ? ' is-invalid' : ''; ?>"><?php echo $value('contact_text'); ?></textarea>
-                        </div>
-                        <div class="admin-field mb-0 col-md-6">
-                            <label class="form-label" for="contact_text_ar">Contact Text (Arabic)</label>
-                            <textarea name="contact_text_ar" id="contact_text_ar" rows="3" class="form-control<?php echo $isInvalid('contact_text_ar') ? ' is-invalid' : ''; ?>" dir="rtl" lang="ar"><?php echo $value('contact_text_ar'); ?></textarea>
                         </div>
                     </div>
                 <?php $sectionFooter(); ?>

@@ -1,9 +1,11 @@
 <?php
-$hasActiveFilters = ($keywords !== '-' || $website !== '-' || $country > 0);
+$hasActiveFilters = ($keywords !== '-');
 $addUrl = base_url('manage/'.$this->controller.'/control');
 $clearUrl = base_url('manage/'.$this->controller.'/index/'.$sortby.'/'.$order);
-$sortUrl = function ($column) use ($order, $website, $country, $keywords, $page_numb) {
-    return base_url('manage/'.$this->controller.'/index/'.$column.'/'.$order.'/'.$website.'/'.$country.'/'.rawurlencode($keywords).'/'.$page_numb);
+$sortUrl = function ($column) use ($order, $keywords, $page_numb) {
+    return base_url(
+        'manage/'.$this->controller.'/index/'.$column.'/'.$order.'/'.rawurlencode($keywords).'/'.$page_numb
+    );
 };
 $sortIcon = function ($column) use ($sortby, $order) {
     if ($sortby !== $column) return 'bi-arrow-down-up';
@@ -25,17 +27,6 @@ $sortAria = function ($column) use ($sortby, $order) {
         <form class="pages-filter-form" id="contact-requests-filter-form" role="search">
             <div class="pages-search-control"><label class="visually-hidden" for="search_keywords">Search contact requests</label><span class="pages-search-icon" aria-hidden="true"><i class="bi bi-search"></i></span><input class="form-control" type="search" value="<?php echo $keywords !== '-' ? htmlspecialchars($keywords, ENT_QUOTES, 'UTF-8') : ''; ?>" id="search_keywords" placeholder="Search name, email, subject, or message..." autocomplete="off"></div>
             <button class="btn btn-outline-secondary pages-search-submit" type="submit"><i class="bi bi-search" aria-hidden="true"></i><span class="d-none d-sm-inline">Search</span></button>
-            <div class="pages-status-control"><label class="visually-hidden" for="search_website">Filter by website</label><select class="form-select select2" id="search_website" data-minimum-results-for-search="-1">
-                    <option value="-">All Websites</option>
-                    <option value="English" <?php echo $website === 'English' ? 'selected' : ''; ?>>English</option>
-                    <option value="Arabic" <?php echo $website === 'Arabic' ? 'selected' : ''; ?>>Arabic</option>
-                </select></div>
-            <div class="pages-status-control"><label class="visually-hidden" for="search_country">Filter by country</label><select class="form-select select2" id="search_country">
-                    <option value="0">All Countries</option>
-                    <?php foreach ($countries as $countryOption) { ?>
-                    <option value="<?php echo (int) $countryOption['id']; ?>" <?php echo $country === (int) $countryOption['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($countryOption['name'], ENT_QUOTES, 'UTF-8'); ?></option>
-                    <?php } ?>
-                </select></div>
             <?php if ($hasActiveFilters) { ?><a class="btn btn-outline-secondary pages-clear-filters" href="<?php echo $clearUrl; ?>">Clear filters</a><?php } ?>
         </form>
     </div>
@@ -54,8 +45,6 @@ $sortAria = function ($column) use ($sortby, $order) {
                         <th scope="col"<?php if ($sortAria('email') !== '') { ?> aria-sort="<?php echo $sortAria('email'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('email'); ?>">Email <i class="bi <?php echo $sortIcon('email'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                         <th scope="col"<?php if ($sortAria('subject') !== '') { ?> aria-sort="<?php echo $sortAria('subject'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('subject'); ?>">Subject <i class="bi <?php echo $sortIcon('subject'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                         <th scope="col"<?php if ($sortAria('phone') !== '') { ?> aria-sort="<?php echo $sortAria('phone'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('phone'); ?>">Phone <i class="bi <?php echo $sortIcon('phone'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
-                        <th scope="col"<?php if ($sortAria('country') !== '') { ?> aria-sort="<?php echo $sortAria('country'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('country'); ?>">Country <i class="bi <?php echo $sortIcon('country'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
-                        <th scope="col"<?php if ($sortAria('website') !== '') { ?> aria-sort="<?php echo $sortAria('website'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('website'); ?>">Website <i class="bi <?php echo $sortIcon('website'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                         <th scope="col" class="d-none d-md-table-cell"<?php if ($sortAria('created_at') !== '') { ?> aria-sort="<?php echo $sortAria('created_at'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('created_at'); ?>">Created On <i class="bi <?php echo $sortIcon('created_at'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                         <th scope="col" class="d-none d-md-table-cell"<?php if ($sortAria('updated_at') !== '') { ?> aria-sort="<?php echo $sortAria('updated_at'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl('updated_at'); ?>">Updated On <i class="bi <?php echo $sortIcon('updated_at'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                         <th scope="col">Actions</th>
@@ -71,7 +60,6 @@ $sortAria = function ($column) use ($sortby, $order) {
                             $email = htmlspecialchars((string) $record['email'], ENT_QUOTES, 'UTF-8');
                             $subject = htmlspecialchars((string) $record['subject'], ENT_QUOTES, 'UTF-8');
                             $phone = trim((string) $record['phone']);
-                            $countryName = trim((string) $record['country_name']);
                     ?>
                             <tr id="<?php echo $this->controller.'-'.$id; ?>" data-record-id="<?php echo $id; ?>">
                                 <td class="pages-select-column"><input name="records[]" class="form-check-input cselect" value="<?php echo $id; ?>" type="checkbox" aria-label="Select <?php echo $escapedName; ?>"></td>
@@ -80,8 +68,6 @@ $sortAria = function ($column) use ($sortby, $order) {
                                 <td><a href="mailto:<?php echo $email; ?>"><?php echo $email; ?></a></td>
                                 <td><?php echo $subject; ?></td>
                                 <td><?php echo $phone !== '' ? htmlspecialchars($phone, ENT_QUOTES, 'UTF-8') : '<span class="pages-cell-meta">&mdash;</span>'; ?></td>
-                                <td><?php echo $countryName !== '' ? htmlspecialchars($countryName, ENT_QUOTES, 'UTF-8') : '<span class="pages-cell-meta">&mdash;</span>'; ?></td>
-                                <td><?php echo htmlspecialchars((string) $record['website'], ENT_QUOTES, 'UTF-8'); ?></td>
                                 <td class="d-none d-md-table-cell"><time datetime="<?php echo date('c', strtotime($record['created_at'])); ?>"><?php echo date(ADMIN_DATE_FORMAT, strtotime($record['created_at'])); ?><span class="pages-cell-meta"><?php echo date(ADMIN_TIME_FORMAT, strtotime($record['created_at'])); ?></span></time></td>
                                 <td class="d-none d-md-table-cell"><time datetime="<?php echo date('c', strtotime($record['updated_at'])); ?>"><?php echo date(ADMIN_DATE_FORMAT, strtotime($record['updated_at'])); ?><span class="pages-cell-meta"><?php echo date(ADMIN_TIME_FORMAT, strtotime($record['updated_at'])); ?></span></time></td>
                                 <td class="pages-actions-cell">
@@ -92,7 +78,7 @@ $sortAria = function ($column) use ($sortby, $order) {
                             </tr>
                         <?php }
                     } else { ?><tr class="nodrag">
-                            <td class="pages-empty-state" colspan="11"><strong><?php echo $hasActiveFilters ? 'No contact requests match your filters.' : 'No contact requests found.'; ?></strong><span><?php echo $hasActiveFilters ? 'Try changing your search or filters.' : 'Contact requests submitted through the website will appear here.'; ?></span></td>
+                            <td class="pages-empty-state" colspan="9"><strong><?php echo $hasActiveFilters ? 'No contact requests match your filters.' : 'No contact requests found.'; ?></strong><span><?php echo $hasActiveFilters ? 'Try changing your search or filters.' : 'Contact requests submitted through the website will appear here.'; ?></span></td>
                         </tr><?php } ?>
                 </tbody>
             </table>
@@ -136,8 +122,6 @@ $sortAria = function ($column) use ($sortby, $order) {
                         array('email', 'Email Address', 'bi-envelope'),
                         array('subject', 'Subject', 'bi-chat-left-text'),
                         array('phone', 'Phone', 'bi-telephone'),
-                        array('country', 'Country', 'bi-globe2'),
-                        array('website', 'Website', 'bi-window'),
                         array('message', 'Message', 'bi-chat-square-text', 'contact-request-detail-wide'),
                         array('created_at', 'Created', 'bi-calendar2-check'),
                         array('updated_at', 'Updated', 'bi-calendar2-check'),
@@ -164,9 +148,7 @@ $sortAria = function ($column) use ($sortby, $order) {
 <script>
     jQuery(function($) {
         var $form = $('#contact-requests-filter-form'),
-            $search = $('#search_keywords'),
-            $website = $('#search_website'),
-            $country = $('#search_country');
+            $search = $('#search_keywords');
         var $rows = $('#multiDel .cselect'),
             $all = $('#all-checkbox'),
             $bulk = $('#contact-requests-bulk-actions'),
@@ -178,7 +160,7 @@ $sortAria = function ($column) use ($sortby, $order) {
 
         function applyFilters() {
             var keyword = $.trim($search.val());
-            window.location = filterUrl + '/' + $website.val() + '/' + $country.val() + '/' + (keyword === '' ? '-' : encodeURIComponent(keyword));
+            window.location = filterUrl + '/' + (keyword === '' ? '-' : encodeURIComponent(keyword));
         }
 
         function updateSelection() {
@@ -192,8 +174,6 @@ $sortAria = function ($column) use ($sortby, $order) {
             event.preventDefault();
             applyFilters();
         });
-        $website.on('change', applyFilters);
-        $country.on('change', applyFilters);
         $rows.on('change', updateSelection);
         $all.on('change', function() {
             window.setTimeout(updateSelection, 0);

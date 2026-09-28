@@ -20,7 +20,6 @@ class ComposerStaticInit1385ec3803910678aa5a3c6c8bd3bccc
         ),
         'R' => 
         array (
-            'Rize\\' => 5,
             'Ramsey\\Uuid\\' => 12,
             'Ramsey\\Collection\\' => 18,
         ),
@@ -30,10 +29,6 @@ class ComposerStaticInit1385ec3803910678aa5a3c6c8bd3bccc
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Http\\Client\\' => 16,
             'Psr\\Cache\\' => 10,
-        ),
-        'M' => 
-        array (
-            'Monolog\\' => 8,
         ),
         'G' => 
         array (
@@ -47,9 +42,7 @@ class ComposerStaticInit1385ec3803910678aa5a3c6c8bd3bccc
             'Google\\Protobuf\\' => 16,
             'Google\\LongRunning\\' => 19,
             'Google\\Iam\\' => 11,
-            'Google\\Cloud\\Translate\\' => 23,
             'Google\\Cloud\\RecaptchaEnterprise\\' => 33,
-            'Google\\Cloud\\Core\\' => 18,
             'Google\\Cloud\\' => 13,
             'Google\\Auth\\' => 12,
             'Google\\Api\\' => 11,
@@ -61,7 +54,6 @@ class ComposerStaticInit1385ec3803910678aa5a3c6c8bd3bccc
             'GPBMetadata\\Google\\Longrunning\\' => 31,
             'GPBMetadata\\Google\\Logging\\' => 27,
             'GPBMetadata\\Google\\Iam\\' => 23,
-            'GPBMetadata\\Google\\Cloud\\Translate\\' => 35,
             'GPBMetadata\\Google\\Cloud\\Recaptchaenterprise\\' => 45,
             'GPBMetadata\\Google\\Cloud\\' => 25,
             'GPBMetadata\\Google\\Api\\' => 23,
@@ -84,10 +76,6 @@ class ComposerStaticInit1385ec3803910678aa5a3c6c8bd3bccc
         'Symfony\\Polyfill\\Php80\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-php80',
-        ),
-        'Rize\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/rize/uri-template/src/Rize',
         ),
         'Ramsey\\Uuid\\' => 
         array (
@@ -113,10 +101,6 @@ class ComposerStaticInit1385ec3803910678aa5a3c6c8bd3bccc
         'Psr\\Cache\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/cache/src',
-        ),
-        'Monolog\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
         ),
         'GuzzleHttp\\Psr7\\' => 
         array (
@@ -158,17 +142,9 @@ class ComposerStaticInit1385ec3803910678aa5a3c6c8bd3bccc
         array (
             0 => __DIR__ . '/..' . '/google/common-protos/src/Iam',
         ),
-        'Google\\Cloud\\Translate\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/google/cloud-translate/src',
-        ),
         'Google\\Cloud\\RecaptchaEnterprise\\' => 
         array (
             0 => __DIR__ . '/..' . '/google/cloud-recaptcha-enterprise/src',
-        ),
-        'Google\\Cloud\\Core\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/google/cloud-core/src',
         ),
         'Google\\Cloud\\' => 
         array (
@@ -213,10 +189,6 @@ class ComposerStaticInit1385ec3803910678aa5a3c6c8bd3bccc
         'GPBMetadata\\Google\\Iam\\' => 
         array (
             0 => __DIR__ . '/..' . '/google/common-protos/metadata/Iam',
-        ),
-        'GPBMetadata\\Google\\Cloud\\Translate\\' => 
-        array (
-            0 => __DIR__ . '/..' . '/google/cloud-translate/metadata',
         ),
         'GPBMetadata\\Google\\Cloud\\Recaptchaenterprise\\' => 
         array (

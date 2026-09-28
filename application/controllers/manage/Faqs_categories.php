@@ -25,7 +25,7 @@ class Faqs_categories extends CI_Controller {
 		{
 			redirect(base_url('manage/login'));
 		}
-		$this->load->library('manage_translation_service');
+		$this->load->helper('admin_input');
 	}
 
 	public function index($sortby = 'cat_order', $order = 'ASC', $status = '-', $hidden = '-', $keywords = '-', $pg_no = '')
@@ -50,7 +50,7 @@ class Faqs_categories extends CI_Controller {
 		$where = array();
 		if ($status !== '-') $where[$this->tStatus] = $status;
 		if ($hidden !== '-') $where[$this->colPrefix.'hidden'] = $hidden;
-		$search = $keywords !== '-' ? array('cols' => $this->colPrefix.'name,'.$this->colPrefix.'name_ar', 'value' => $keywords) : array();
+		$search = $keywords !== '-' ? array('cols' => $this->colPrefix.'name', 'value' => $keywords) : array();
 		$baseUrl = base_url('manage/'.$this->controller.'/index/'.$sortby.'/'.$order.'/'.$status.'/'.$hidden.'/'.rawurlencode($keywords));
 		$totalRows = $this->SqlModel->countRecords($this->tblName, $where, $search);
 		$uriSegment = 9;
@@ -60,18 +60,14 @@ class Faqs_categories extends CI_Controller {
 		$recordSort = $sortby === $this->colPrefix.'order' ? $sortby.','.$this->colPrefix.'name' : $sortby;
 		$listingFields = $this->tblName.'.*, (SELECT COUNT(*) FROM '.$this->faqsTable.' WHERE '.$this->faqsTable.'.faq_cat_id = '.$this->tblName.'.'.$this->pKey.') AS faq_count';
 		$records = $this->SqlModel->getRecords($listingFields, $this->tblName, $recordSort, $order, $where, $search, $this->per_page, $offset, FALSE);
-		$recordIds = array();
-		foreach ($records as $record) $recordIds[] = (int) $record[$this->pKey];
-		$translationStatuses = empty($recordIds) ? array() : $this->manage_translation_service->statuses('faqs_categories', $recordIds);
 		$data = array(
 			'alert' => $this->session->flashdata('alert'), 'page_title' => PROJECT_TITLE.' | '.$this->moduleName,
 			'userdata' => $this->user_data, 'faqsCategoriesActive' => 1,
 			'total_rows' => $totalRows, 'per_page' => $this->per_page,
-			'records' => $records, 'translation_statuses' => $translationStatuses,
+			'records' => $records,
 			'paginate' => $this->pagination->create_links(), 'sortby' => $sortby,
 			'order' => $order === 'ASC' ? 'DESC' : 'ASC', 'page_numb' => $offset,
 			'status' => $status, 'hidden' => $hidden, 'keywords' => $keywords,
-			'useManageTranslations' => TRUE,
 			'protected_category_id' => $this->protectedCategoryId,
 		);
 		$this->render($this->listView, $data);
@@ -82,8 +78,6 @@ class Faqs_categories extends CI_Controller {
 		$isEdit = ($alert === 'edit');
 		$record = array();
 		$postedData = $this->session->flashdata($this->controller.'_data');
-		$requestedLocale = is_array($postedData) && isset($postedData['active_locale']) ? $postedData['active_locale'] : $this->input->get('lang', TRUE);
-		$activeLocale = $isEdit ? $this->manage_translation_service->locale($requestedLocale) : 'en';
 		if ($isEdit)
 		{
 			$editID = (int) $editID;
@@ -97,38 +91,27 @@ class Faqs_categories extends CI_Controller {
 		}
 
 		$viewRecord = $record;
-		if (is_array($postedData) && array_key_exists($this->tStatus, $postedData))
-		{
-			$viewRecord[$this->tStatus] = $postedData[$this->tStatus];
-		}
-		if (is_array($postedData) && array_key_exists($this->colPrefix.'hidden', $postedData))
-		{
-			$viewRecord[$this->colPrefix.'hidden'] = $postedData[$this->colPrefix.'hidden'];
-		}
-		$localizedValues = $this->manage_translation_service->localized_values('faqs_categories', $record, $activeLocale);
 		if (is_array($postedData))
 		{
-			foreach (array_keys($localizedValues) as $control) if (array_key_exists($control, $postedData)) $localizedValues[$control] = $postedData[$control];
+			foreach (array($this->colPrefix.'name', $this->colPrefix.'short_description', $this->tStatus, $this->colPrefix.'hidden') as $field)
+			{
+				if (array_key_exists($field, $postedData)) $viewRecord[$field] = $postedData[$field];
+			}
 		}
-		$translationState = $isEdit ? $this->manage_translation_service->state('faqs_categories', $editID) : NULL;
 		$data = array(
 			'faqsCategoriesActive' => 1, 'alert' => $isEdit ? 'edit' : '',
 			'form_error' => $this->session->flashdata('form_error'), 'tbl_data' => $viewRecord,
 			'page_title' => PROJECT_TITLE.' | '.($isEdit ? 'Edit' : 'Add').' '.$this->moduleNameSingular,
 			'userdata' => $this->user_data,
-			'localized_values' => $localizedValues, 'active_locale' => $activeLocale,
-			'manage_locales' => $this->manage_translation_service->locales(),
-			'translation_state' => $translationState, 'useManageTranslations' => TRUE,
 		);
 		$this->render($this->addEditView, $data);
 	}
 
 	public function addRecord()
 	{
-		$activeLocale = 'en';
-		if (!$this->validRequiredInput($activeLocale)) return $this->formFailure('Enter the required category name fields.');
+		if (!$this->validRequiredInput()) return $this->formFailure('Enter the category name.');
 
-		$data = $this->postedCategoryData($activeLocale);
+		$data = $this->postedCategoryData();
 		$this->load->library('admin_record_sorter');
 		$data[$this->colPrefix.'order'] = $this->admin_record_sorter->nextOrder($this->controller);
 		$data[$this->colPrefix.'added'] = date('Y-m-d H:i:s');
@@ -137,7 +120,6 @@ class Faqs_categories extends CI_Controller {
 		$id = $this->SqlModel->insertRecord($this->tblName, $data);
 		if (!$id) return $this->formFailure('The record could not be saved. Please try again.');
 
-		$this->queueTranslationSafely($id);
 		$this->session->set_flashdata('alert', 'success');
 		redirect(base_url('manage/'.$this->controller));
 	}
@@ -145,7 +127,6 @@ class Faqs_categories extends CI_Controller {
 	public function editRecord($editID = '')
 	{
 		$editID = (int) $editID;
-		$activeLocale = $this->manage_translation_service->locale($this->input->post('active_locale', TRUE));
 		$current = $this->SqlModel->getSingleRecord($this->tblName, array($this->pKey => $editID));
 		if (empty($current))
 		{
@@ -153,22 +134,15 @@ class Faqs_categories extends CI_Controller {
 			redirect(base_url('manage/'.$this->controller));
 			return;
 		}
-		if (!$this->validRequiredInput($activeLocale)) return $this->formFailure('Enter the required category name fields.', $editID, $activeLocale);
+		if (!$this->validRequiredInput()) return $this->formFailure('Enter the category name.', $editID);
 
-		$data = $this->postedCategoryData($activeLocale);
+		$data = $this->postedCategoryData();
 		$data[$this->colPrefix.'updated'] = date('Y-m-d H:i:s');
 
 		$updated = $this->SqlModel->updateRecord($this->tblName, $data, array($this->pKey => $editID));
-		if (!$updated) return $this->formFailure('The record could not be updated. Please try again.', $editID, $activeLocale);
+		if (!$updated) return $this->formFailure('The record could not be updated. Please try again.', $editID);
 
-		if ($activeLocale === 'en') $this->queueTranslationSafely($editID);
 		$this->session->set_flashdata('alert', 'editsuccess');
-		$redirectLocale = $this->input->post('redirect_lang', TRUE);
-		if (is_string($redirectLocale) && $redirectLocale !== '' && $this->manage_translation_service->locale($redirectLocale) === $redirectLocale)
-		{
-			redirect(base_url('manage/'.$this->controller.'/control/edit/'.$editID.'?lang='.$redirectLocale));
-			return;
-		}
 		redirect(base_url('manage/'.$this->controller));
 	}
 
@@ -219,7 +193,6 @@ class Faqs_categories extends CI_Controller {
 			redirect(base_url('manage/'.$this->controller));
 			return;
 		}
-		$this->queueTranslationSafely($newId);
 		redirect(base_url('manage/'.$this->controller.'/control/edit/'.$newId));
 	}
 
@@ -231,31 +204,30 @@ class Faqs_categories extends CI_Controller {
 		$this->load->view('admin/footer');
 	}
 
-	private function postedCategoryData($locale)
+	private function postedCategoryData()
 	{
 		$status = $this->input->post($this->tStatus);
 		$hidden = $this->input->post($this->colPrefix.'hidden');
-		$data = array(
+
+		return array(
+			$this->colPrefix.'name' => admin_clean_text($this->input->post($this->colPrefix.'name'), 255),
+			$this->colPrefix.'short_description' => admin_clean_text($this->input->post($this->colPrefix.'short_description')),
 			$this->tStatus => in_array($status, array('Enable', 'Disable'), TRUE) ? $status : 'Disable',
 			$this->colPrefix.'hidden' => in_array($hidden, array('Yes', 'No'), TRUE) ? $hidden : 'No',
 		);
-		$post = $this->input->post(NULL, FALSE);
-		return array_merge($data, $this->manage_translation_service->localized_post_data('faqs_categories', $locale, is_array($post) ? $post : array()));
 	}
 
-	private function validRequiredInput($locale)
+	private function validRequiredInput()
 	{
-		$post = $this->input->post(NULL, FALSE);
-		return $this->manage_translation_service->required_localized_input_valid('faqs_categories', $locale, is_array($post) ? $post : array());
+		return admin_clean_text($this->input->post($this->colPrefix.'name')) !== '';
 	}
 
-	private function formFailure($message, $editID = 0, $locale = 'en')
+	private function formFailure($message, $editID = 0)
 	{
 		$posted = $this->input->post(NULL, FALSE);
-		if (is_array($posted)) $posted['active_locale'] = $this->manage_translation_service->locale($locale);
 		$this->session->set_flashdata($this->controller.'_data', is_array($posted) ? $posted : array());
 		$this->session->set_flashdata('form_error', $message);
-		redirect(base_url('manage/'.$this->controller.'/control'.($editID ? '/edit/'.(int) $editID.'?lang='.$this->manage_translation_service->locale($locale) : '')));
+		redirect(base_url('manage/'.$this->controller.'/control'.($editID ? '/edit/'.(int) $editID : '')));
 	}
 
 	private function deleteCategoryRecords(array $ids)
@@ -269,7 +241,6 @@ class Faqs_categories extends CI_Controller {
 		if ($this->db->where_in('faq_cat_id', $ids)->count_all_results($this->faqsTable) > 0) return 'blocked';
 
 		$this->db->trans_begin();
-		foreach ($ids as $id) $this->manage_translation_service->delete_jobs('faqs_categories', $id);
 		$this->db->where_in($this->pKey, $ids)->delete($this->tblName);
 		if ($this->db->trans_status() === FALSE || $this->db->affected_rows() !== count($ids))
 		{
@@ -281,15 +252,4 @@ class Faqs_categories extends CI_Controller {
 		return 'success';
 	}
 
-	private function queueTranslationSafely($categoryId)
-	{
-		try
-		{
-			$this->manage_translation_service->queue('faqs_categories', (int) $categoryId);
-		}
-		catch (Throwable $exception)
-		{
-			log_message('error', 'FAQ category translation could not be queued for record '.(int) $categoryId.'.');
-		}
-	}
 }

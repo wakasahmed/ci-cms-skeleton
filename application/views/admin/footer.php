@@ -57,10 +57,6 @@ window.contName = window.AdminConfig.controllerName;
 <script src="<?php echo ADMIN_ASSETS; ?>vendor/sweetalert2/sweetalert2.all.min.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/vendor/sweetalert2/sweetalert2.all.min.js'); ?>"></script>
 <?php } ?>
 
-<?php if (!empty($useContentSections) || !empty($useManageTranslations)) { ?>
-<script src="<?php echo ADMIN_ASSETS; ?>js/manage-translations.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/manage-translations.js'); ?>"></script>
-<?php } ?>
-
 <?php if (!empty($useContentSections)) { ?>
 <script src="<?php echo ADMIN_ASSETS; ?>js/content-sections.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/content-sections.js'); ?>"></script>
 <?php } ?>
@@ -95,10 +91,6 @@ window.contName = window.AdminConfig.controllerName;
 
 <?php if (!empty($useShortTagPicker)) { ?>
 <script src="<?php echo ADMIN_ASSETS; ?>js/short-tag-picker.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/short-tag-picker.js'); ?>"></script>
-<?php } ?>
-
-<?php if (!empty($useWhatsappTemplates)) { ?>
-<script src="<?php echo ADMIN_ASSETS; ?>js/whatsapp-templates.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/whatsapp-templates.js'); ?>"></script>
 <?php } ?>
 
 <?php if ($hasMultiUpload) { ?>

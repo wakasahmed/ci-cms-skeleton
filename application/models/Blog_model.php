@@ -3,28 +3,27 @@
 /**
  * Read-only blog queries backing the public frontend.
  *
- * Selects only the columns the frontend actually renders and resolves
- * bilingual columns to the requested locale in the query itself. Every
+ * Selects only the columns the frontend actually renders. Every
  * listing/detail/related method attaches category data through the same
  * batched aggregator (attachCategoryData()), so a post's primary category,
  * every enabled category it is assigned to, and the stable category ids used
  * for filtering are always computed the same way.
  */
-class Blog_model extends Localized_model
+class Blog_model extends SqlModel
 {
     /** Published homepage posts with their first enabled category attached. */
-    public function get_homepage_posts($limit = 3, $locale = 'en')
+    public function get_homepage_posts($limit = 3)
     {
-        return $this->attachCategoryData($this->queryPublishedPosts($locale, $limit), $locale);
+        return $this->attachCategoryData($this->queryPublishedPosts($limit));
     }
 
     /**
      * Published blog posts, featured first, then most recent. Used by the
      * homepage, which does not need pagination or category filtering.
      */
-    public function get_blog_posts($limit = 0, $locale = 'en')
+    public function get_blog_posts($limit = 0)
     {
-        return $this->queryPublishedPosts($locale, $limit);
+        return $this->queryPublishedPosts($limit);
     }
 
     /**
@@ -32,11 +31,11 @@ class Blog_model extends Localized_model
      * category. `$offset`/`$limit` are applied in SQL — the caller never
      * loads the full table to slice it in PHP.
      */
-    public function get_blog_listing($categoryId, $offset, $limit, $locale = 'en')
+    public function get_blog_listing($categoryId, $offset, $limit)
     {
-        $rows = $this->queryPublishedPosts($locale, $limit, 0, $categoryId, $offset);
+        $rows = $this->queryPublishedPosts($limit, 0, $categoryId, $offset);
 
-        return $this->attachCategoryData($rows, $locale);
+        return $this->attachCategoryData($rows);
     }
 
     /**
@@ -62,14 +61,12 @@ class Blog_model extends Localized_model
     /**
      * Enabled blog categories in their managed order for Blog navigation.
      */
-    public function get_blog_category_nav($locale = 'en')
+    public function get_blog_category_nav()
     {
-        $locale = $this->normalizeLocale($locale);
-
         $this->db->select(implode(',', array(
             'bc.cat_id',
             'bc.cat_slug',
-            $this->localizedColumn('bc.cat_name', $locale, 'cat_name'),
+            'bc.cat_name',
         )), false);
         $this->db->from('blog_categories bc');
         $this->db->where('bc.cat_status', 'Enable');
@@ -85,9 +82,8 @@ class Blog_model extends Localized_model
      * unknown or the category is disabled, so the caller can fall back to
      * the full listing predictably.
      */
-    public function get_category_by_slug($slug, $locale = 'en')
+    public function get_category_by_slug($slug)
     {
-        $locale = $this->normalizeLocale($locale);
         $slug = trim((string) $slug);
         if ($slug === '') {
             return null;
@@ -109,19 +105,19 @@ class Blog_model extends Localized_model
             'banner_text_color_2',
             'robots_index',
             'robots_follow',
-            $this->localizedColumn('cat_name', $locale),
-            $this->localizedColumn('cat_desc', $locale),
-            $this->localizedColumn('cat_contents', $locale),
-            $this->localizedColumn('page_title', $locale),
-            $this->localizedColumn('meta_description', $locale),
-            $this->localizedColumn('meta_keywords', $locale),
-            $this->localizedColumn('og_title', $locale),
-            $this->localizedColumn('og_description', $locale),
-            $this->localizedColumn('og_image', $locale),
-            $this->localizedColumn('banner_title', $locale),
-            $this->localizedColumn('banner_heading', $locale),
-            $this->localizedColumn('banner_text', $locale),
-            $this->localizedColumn('banner_background', $locale),
+            'cat_name',
+            'cat_desc',
+            'cat_contents',
+            'page_title',
+            'meta_description',
+            'meta_keywords',
+            'og_title',
+            'og_description',
+            'og_image',
+            'banner_title',
+            'banner_heading',
+            'banner_text',
+            'banner_background',
         )), false);
         $this->db->from('blog_categories');
         $this->db->where('cat_slug', $slug);
@@ -132,15 +128,13 @@ class Blog_model extends Localized_model
     }
 
     /**
-     * One published post by its English or Arabic managed slug — the same
-     * bilingual-slug convention Webpage_model::get_page() uses for pages.
+     * One published post by its managed slug.
      * Returns null for an empty, unknown or unpublished slug so the
      * controller can return a proper 404 rather than falling back to
      * another post.
      */
-    public function get_post_by_slug($slug, $locale = 'en')
+    public function get_post_by_slug($slug)
     {
-        $locale = $this->normalizeLocale($locale);
         $slug = trim((string) $slug);
         if ($slug === '') {
             return null;
@@ -168,37 +162,30 @@ class Blog_model extends Localized_model
             'banner_text_color_2',
             'robots_index',
             'robots_follow',
-            /* Both managed slugs, unresolved, so canonical and hreflang URLs can
-               name each locale's own slug. */
-            'blog_slug AS seo_slug_en',
-            'blog_slug_ar AS seo_slug_ar',
-            $this->localizedColumn('blog_slug', $locale),
-            $this->localizedColumn('blog_name', $locale),
-            $this->localizedColumn('blog_short_description', $locale),
-            $this->localizedColumn('blog_text', $locale),
-            $this->localizedColumn('page_title', $locale),
-            $this->localizedColumn('meta_description', $locale),
-            $this->localizedColumn('meta_keywords', $locale),
-            $this->localizedColumn('og_title', $locale),
-            $this->localizedColumn('og_description', $locale),
-            $this->localizedColumn('og_image', $locale),
-            $this->localizedColumn('banner_title', $locale),
-            $this->localizedColumn('banner_heading', $locale),
-            $this->localizedColumn('banner_text', $locale),
-            $this->localizedColumn('banner_background', $locale),
+            'blog_slug',
+            'blog_name',
+            'blog_short_description',
+            'blog_text',
+            'page_title',
+            'meta_description',
+            'meta_keywords',
+            'og_title',
+            'og_description',
+            'og_image',
+            'banner_title',
+            'banner_heading',
+            'banner_text',
+            'banner_background',
         )), false);
         $this->db->from('blogs');
-        $this->db->group_start();
         $this->db->where('blog_slug', $slug);
-        $this->db->or_where('blog_slug_ar', $slug);
-        $this->db->group_end();
         $this->db->where('blog_status', 'Published');
         $row = $this->db->get()->row_array();
         if ($row === null) {
             return null;
         }
 
-        $rows = $this->attachCategoryData(array($row), $locale);
+        $rows = $this->attachCategoryData(array($row));
 
         return $rows[0];
     }
@@ -207,11 +194,11 @@ class Blog_model extends Localized_model
      * Featured-first, most-recent posts for the article side rail, excluding
      * the article being read.
      */
-    public function get_rail_posts($excludeId, $limit, $locale = 'en')
+    public function get_rail_posts($excludeId, $limit)
     {
-        $rows = $this->queryPublishedPosts($locale, $limit, $excludeId);
+        $rows = $this->queryPublishedPosts($limit, $excludeId);
 
-        return $this->attachCategoryData($rows, $locale);
+        return $this->attachCategoryData($rows);
     }
 
     /**
@@ -225,9 +212,8 @@ class Blog_model extends Localized_model
      * A short article list comes back with fewer cards rather than a
      * repeated one.
      */
-    public function get_related_posts($currentId, array $railIds, array $categoryIds, $limit, $locale = 'en')
+    public function get_related_posts($currentId, array $railIds, array $categoryIds, $limit)
     {
-        $locale = $this->normalizeLocale($locale);
         $currentId = (int) $currentId;
         $limit = max(0, (int) $limit);
         $categoryIds = array_values(array_unique(array_filter(array_map('intval', $categoryIds))));
@@ -241,8 +227,8 @@ class Blog_model extends Localized_model
             'b.blog_added',
             'b.blog_pdate',
             'b.blog_featured',
-            $this->localizedColumn('b.blog_name', $locale, 'blog_name'),
-            $this->localizedColumn('b.blog_short_description', $locale, 'blog_short_description'),
+            'b.blog_name',
+            'b.blog_short_description',
         ));
 
         $railExclude = array_values(array_unique(array_merge(
@@ -280,7 +266,7 @@ class Blog_model extends Localized_model
             $related = array_merge($related, $this->db->get()->result_array());
         }
 
-        return $this->attachCategoryData($related, $locale);
+        return $this->attachCategoryData($related);
     }
 
     /**
@@ -317,10 +303,8 @@ class Blog_model extends Localized_model
      * drops one post (the article currently being read); `$offset` is only
      * meaningful together with `$limit`.
      */
-    private function queryPublishedPosts($locale, $limit = 0, $excludeId = 0, $categoryId = 0, $offset = 0)
+    private function queryPublishedPosts($limit = 0, $excludeId = 0, $categoryId = 0, $offset = 0)
     {
-        $locale = $this->normalizeLocale($locale);
-
         $this->db->select(implode(',', array(
             'b.blog_id',
             'b.blog_slug',
@@ -330,8 +314,8 @@ class Blog_model extends Localized_model
             'b.blog_added',
             'b.blog_pdate',
             'b.blog_featured',
-            $this->localizedColumn('b.blog_name', $locale, 'blog_name'),
-            $this->localizedColumn('b.blog_short_description', $locale, 'blog_short_description'),
+            'b.blog_name',
+            'b.blog_short_description',
         )), false);
         $this->db->from('blogs b');
 
@@ -364,9 +348,9 @@ class Blog_model extends Localized_model
      * to a batch of post rows in one query — the aggregation every listing,
      * detail, related-post and homepage method shares.
      */
-    private function attachCategoryData(array $rows, $locale)
+    private function attachCategoryData(array $rows)
     {
-        $relations = $this->getBlogCategoryRelations(array_column($rows, 'blog_id'), $locale);
+        $relations = $this->getBlogCategoryRelations(array_column($rows, 'blog_id'));
 
         foreach ($rows as &$row) {
             $blogId = (int) $row['blog_id'];
@@ -388,9 +372,8 @@ class Blog_model extends Localized_model
      * `cat_order`, batched into one query. Returns
      * [blog_id => [['id' => ..., 'slug' => ..., 'label' => ...], ...]].
      */
-    private function getBlogCategoryRelations(array $blogIds, $locale)
+    private function getBlogCategoryRelations(array $blogIds)
     {
-        $locale = $this->normalizeLocale($locale);
         $blogIds = array_values(array_unique(array_filter(array_map('intval', $blogIds))));
         if (empty($blogIds)) {
             return array();
@@ -400,7 +383,7 @@ class Blog_model extends Localized_model
             'bac.bc_blog_id AS blog_id',
             'bc.cat_id',
             'bc.cat_slug',
-            $this->localizedColumn('bc.cat_name', $locale, 'cat_name'),
+            'bc.cat_name',
         )), false);
         $this->db->from('blog_assigned_cat bac');
         $this->db->join('blog_categories bc', 'bc.cat_id = bac.bc_cat_id');

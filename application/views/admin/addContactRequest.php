@@ -3,8 +3,6 @@ $isEdit = ($alert === 'edit' && !empty($tbl_data[$this->pKey]));
 $crumb = $isEdit ? 'Edit' : 'Add';
 $action = base_url('manage/'.$this->controller.'/'.($isEdit ? 'editRecord/'.(int) $tbl_data[$this->pKey] : 'addRecord'));
 $value = function ($key) use ($tbl_data) { return isset($tbl_data[$key]) ? htmlspecialchars((string) $tbl_data[$key], ENT_QUOTES, 'UTF-8') : ''; };
-$selectedCountry = isset($tbl_data['country']) ? (int) $tbl_data['country'] : 0;
-$selectedWebsite = isset($tbl_data['website']) && $tbl_data['website'] === 'Arabic' ? 'Arabic' : 'English';
 ?>
 <?php $this->load->view('admin/partials/breadcrumb', array('items' => array(array('label' => $this->moduleName, 'url' => ADMIN_URL.$this->controller), array('label' => $crumb.' '.$this->moduleNameSingular, 'active' => TRUE)))); ?>
 
@@ -23,28 +21,10 @@ $selectedWebsite = isset($tbl_data['website']) && $tbl_data['website'] === 'Arab
                 </div>
                 <div class="row">
                     <div class="admin-field mb-3 col-md-6"><label class="form-label is-required" for="email">Email</label><input type="email" name="email" id="email" maxlength="100" value="<?php echo $value('email'); ?>" class="form-control" data-validate="required,email" required placeholder="name@example.com"></div>
-                    <div class="admin-field mb-3 col-md-6"><label class="form-label" for="phone">Phone</label><input type="tel" name="phone" id="phone" maxlength="50" value="<?php echo $value('phone'); ?>" class="form-control intl-phone" data-initial-country="sa" data-validate="intlPhone" autocomplete="tel" placeholder="Phone number"></div>
+                    <div class="admin-field mb-3 col-md-6"><label class="form-label" for="phone">Phone</label><input type="tel" name="phone" id="phone" maxlength="50" value="<?php echo $value('phone'); ?>" class="form-control intl-phone" data-initial-country="pl" data-validate="intlPhone" autocomplete="tel" placeholder="Phone number"></div>
                 </div>
                 <div class="admin-field mb-3"><label class="form-label is-required" for="subject">Subject</label><input type="text" name="subject" id="subject" maxlength="255" value="<?php echo $value('subject'); ?>" class="form-control" data-validate="required" required placeholder="Subject"></div>
                 <div class="admin-field mb-3"><label class="form-label is-required" for="message">Message</label><textarea rows="6" name="message" id="message" class="form-control" data-validate="required" required placeholder="Message"><?php echo $value('message'); ?></textarea></div>
-                <div class="row">
-                    <div class="admin-field mb-3 col-md-6">
-                        <label class="form-label" for="country">Country</label>
-                        <select class="form-select select2" name="country" id="country" data-placeholder="Select Country">
-                            <option value="">Select Country</option>
-                            <?php foreach ($countries as $countryOption) { ?>
-                            <option value="<?php echo (int) $countryOption['id']; ?>" <?php echo $selectedCountry === (int) $countryOption['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($countryOption['name'], ENT_QUOTES, 'UTF-8'); ?></option>
-                            <?php } ?>
-                        </select>
-                    </div>
-                    <div class="admin-field mb-3 col-md-6">
-                        <label class="form-label is-required" for="website">Website</label>
-                        <select class="form-select select2" name="website" id="website" data-minimum-results-for-search="-1" required>
-                            <option value="English" <?php echo $selectedWebsite === 'English' ? 'selected' : ''; ?>>English</option>
-                            <option value="Arabic" <?php echo $selectedWebsite === 'Arabic' ? 'selected' : ''; ?>>Arabic</option>
-                        </select>
-                    </div>
-                </div>
                 <hr>
                 <div class="row">
                     <div class="admin-field mb-3 col-md-6"><label class="form-label" for="ip">IP Address</label><input type="text" name="ip" id="ip" maxlength="50" value="<?php echo $value('ip'); ?>" class="form-control" placeholder="0.0.0.0"></div>

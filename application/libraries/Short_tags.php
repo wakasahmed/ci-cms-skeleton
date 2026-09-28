@@ -2,18 +2,14 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Short tags available to an email or WhatsApp notification template.
+ * Short tags available to an email notification template.
  *
- * Email and WhatsApp templates for the same notification share the template ID
- * the code sends, so both use the same entity's tags. Tag names come from
- * EmailService::shortTagFields(), the list the emails are actually filled from;
- * config/short_tags.php only adds labels, example values and the template map.
+ * Tag names come from EmailService::shortTagFields(), the list the emails are
+ * actually filled from; config/short_tags.php only adds labels, example values
+ * and the template map.
  */
 class Short_tags
 {
-    const CHANNEL_EMAIL = 'email';
-    const CHANNEL_WHATSAPP = 'whatsapp';
-
     private $CI;
     private $loaded = false;
 
@@ -24,20 +20,20 @@ class Short_tags
     }
 
     /**
-     * Tags for a template with their example values, e.g. array('book_name' => 'Ahmed Khan').
-     * Emails also get the entity's HTML tags; WhatsApp templates cannot use them.
+     * Tags for a template with their example values, e.g. array('first_name' => 'Anna'),
+     * including the entity's HTML tags.
      */
-    public function forTemplate($templateId, $channel = self::CHANNEL_EMAIL)
+    public function forTemplate($templateId)
     {
         $entityKey = $this->entityKey($templateId);
         if ($entityKey === '') {
             return array();
         }
 
-        $names = $this->CI->emailservice->shortTagFields($entityKey);
-        if ($channel !== self::CHANNEL_WHATSAPP) {
-            $names = array_merge($names, $this->CI->emailservice->htmlShortTags($entityKey));
-        }
+        $names = array_merge(
+            $this->CI->emailservice->shortTagFields($entityKey),
+            $this->CI->emailservice->htmlShortTags($entityKey)
+        );
 
         $entity = $this->entity($entityKey);
         $examples = isset($entity['examples']) && is_array($entity['examples'])

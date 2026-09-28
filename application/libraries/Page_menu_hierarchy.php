@@ -7,9 +7,8 @@
  * an 'active' tree capped at $maxDepth levels, and a flat 'available' list.
  *
  * Operates on plain arrays only (no DB access), so callers must first fetch
- * rows with generic keys: page_id, page_parent_id, page_slug, page_slug_ar,
- * page_name, page_name_ar, menu_name, menu_name_ar, menu_parent_id,
- * menu_order and menu_active (the model aliases its type-specific columns to
+ * rows with generic keys: page_id, page_parent_id, page_slug, page_name,
+ * menu_name, menu_parent_id, menu_order and menu_active (the model aliases its type-specific columns to
  * these generic names in SQL).
  */
 class Page_menu_hierarchy
@@ -165,11 +164,8 @@ class Page_menu_hierarchy
             'page_id' => (int) $row['page_id'],
             'page_parent_id' => (int) $row['page_parent_id'],
             'page_slug' => isset($row['page_slug']) ? (string) $row['page_slug'] : '',
-            'page_slug_ar' => isset($row['page_slug_ar']) ? (string) $row['page_slug_ar'] : '',
             'page_name' => (string) $row['page_name'],
-            'page_name_ar' => (string) $row['page_name_ar'],
             'menu_name' => (string) $row['menu_name'],
-            'menu_name_ar' => (string) $row['menu_name_ar'],
             'menu_order' => (int) $row['menu_order'],
             'children' => $children,
         );

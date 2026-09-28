@@ -39,8 +39,7 @@ class Email_test extends CI_Controller
         $subject = 'Mailgun Test Email - '.$sentAt;
         $message = '<p>This is a test email sent from '.htmlspecialchars((string) PROJECT_TITLE, ENT_QUOTES, 'UTF-8').
             ' to confirm the Mailgun SMTP configuration is working correctly.</p>'.
-            '<p>Sent at: '.$sentAt.'</p>'.
-            '<p dir="rtl" lang="ar">هذه رسالة اختبار للتأكد من أن إعدادات البريد الإلكتروني تعمل بشكل صحيح.</p>';
+            '<p>Sent at: '.$sentAt.'</p>';
         $altMessage = 'This is a test email sent from '.PROJECT_TITLE.
             ' to confirm the Mailgun SMTP configuration is working correctly.'.
             "\n".'Sent at: '.$sentAt;

@@ -228,7 +228,7 @@ class Admins extends CI_Controller {
 			'site_settings' => $settings,
 			'heading' => $subject,
 			'body' => $body,
-		), 'English');
+		));
 
 		if ($message === FALSE)
 		{

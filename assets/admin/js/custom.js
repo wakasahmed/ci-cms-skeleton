@@ -269,24 +269,26 @@ jQuery(document).ready(function ($) {
 		$("#tag_slug").val(input);
 	});
 	
-	function generateSlug(value, language) {
+	// Mirrors Admin_slug::normalize() so the slug shown while typing is the one saved.
+	function generateSlug(value) {
 		var input = String(value || '').trim();
 		if (typeof input.normalize === 'function') {
 			input = input.normalize('NFKD');
 		}
 
-		// Remove Latin combining marks, Arabic diacritics, and tatweel.
-		input = input
-			.replace(/[\u0300-\u036f]/g, '')
-			.replace(/[\u0610-\u061a\u0640\u064b-\u065f\u0670\u06d6-\u06ed]/g, '')
-			.toLocaleLowerCase(language === 'ar' ? 'ar' : 'en');
-
+		var combiningMarks;
 		var unsupportedCharacters;
 		try {
+			combiningMarks = new RegExp('\\p{Mn}+', 'gu');
 			unsupportedCharacters = new RegExp('[^\\p{L}\\p{N}]+', 'gu');
 		} catch (error) {
-			unsupportedCharacters = /[^a-z0-9\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]+/gi;
+			combiningMarks = /[\u0300-\u036f]+/g;
+			unsupportedCharacters = /[^a-z0-9]+/gi;
 		}
+
+		input = input
+			.replace(combiningMarks, '')
+			.toLowerCase();
 
 		return input
 			.replace(unsupportedCharacters, '-')
@@ -298,7 +300,7 @@ jQuery(document).ready(function ($) {
 		var button = $(this);
 		var source = $(button.data('slug-source'));
 		var target = $(button.data('slug-target'));
-		var slug = generateSlug(source.val(), button.data('slug-language'));
+		var slug = generateSlug(source.val());
 
 		target.val(slug).trigger('change').focus();
 	});
@@ -308,7 +310,7 @@ jQuery(document).ready(function ($) {
 		var target = $(source.data('slug-target'));
 		if (!target.length) return;
 
-		target.val(generateSlug(this.value, source.data('slug-language'))).trigger('change');
+		target.val(generateSlug(this.value)).trigger('change');
 	});
 
 	$("#area_name").on('keyup',function(){

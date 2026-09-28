@@ -33,7 +33,7 @@ class Frontend_presenter
         return is_string($value) ? trim($value) : '';
     }
 
-    /** Return the localized menu name stored for a published CMS page. */
+    /** Return the menu name stored for a published CMS page. */
     public function menuLabel($pageId)
     {
         $pages = $this->CI->config->item('frontend_pages');
@@ -42,11 +42,7 @@ class Frontend_presenter
             return '';
         }
 
-        $field = defined('FRONTEND_LOCALE') && FRONTEND_LOCALE === 'ar'
-            ? 'menu_name_ar'
-            : 'menu_name';
-
-        return $this->text($pages[$pageId], $field);
+        return $this->text($pages[$pageId], 'menu_name');
     }
 
     public function line($key, array $params = array())
@@ -98,7 +94,6 @@ class Frontend_presenter
 
     public function managedPageConfig(
         array $page,
-        $locale,
         $active,
         $breadcrumbPageId,
         $bannerSize = 'default',
@@ -132,7 +127,7 @@ class Frontend_presenter
         $crumbs = array(
             array(
                 'label' => $this->menuLabel(1),
-                'href' => base_url($locale === 'ar' ? 'ar' : 'en'),
+                'href' => base_url(),
             ),
             array('label' => $this->menuLabel($breadcrumbPageId)),
         );

@@ -11,10 +11,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | one place. This file only adds what the code does not have:
 |
 | label     heading shown above the tag picker
-| examples  sample value per tag: shown as a hint in the tag picker and sent
-|           to Meta, which requires one for each WhatsApp named parameter at
-|           review time. A tag without an example here falls back to a
-|           readable version of its name, so add one when adding a tag.
+| examples  sample value per tag, shown as a hint in the tag picker. A tag
+|           without an example here falls back to a readable version of its
+|           name, so add one when adding a tag.
 |
 */
 $config['short_tag_entities'] = array(
@@ -43,8 +42,7 @@ $config['short_tag_entities'] = array(
 | Entity per notification
 |--------------------------------------------------------------------------
 |
-| Keyed by template ID. Email and WhatsApp templates for the same notification
-| share the ID the code sends, so they use the same entity's tags.
+| Keyed by email template ID.
 |
 */
 $config['short_tag_template_entities'] = array(

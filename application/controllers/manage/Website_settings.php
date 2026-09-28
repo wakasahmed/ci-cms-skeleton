@@ -11,29 +11,29 @@ class Website_settings extends CI_Controller {
     public $user_data = array();
 
     private $textColumns = array(
-        'website_title', 'website_title_ar', 'website_url', 'default_language', 'under_construction',
-        'address', 'address_ar', 'phone', 'email',
+        'website_title', 'website_url', 'under_construction',
+        'address', 'phone', 'email',
         'facebook', 'twitter', 'instagram', 'linkedin', 'youtube',
-        'notification_emails', 'sender_name', 'sender_name_ar', 'sender_email',
-        'website_intro', 'website_intro_ar', 'foot_col_1', 'foot_col_1_ar', 'foot_col_2', 'foot_col_2_ar',
-        'foot_col_3', 'foot_col_3_ar', 'foot_col_4', 'foot_col_4_ar', 'copyright_text', 'copyright_text_ar',
-        'contact_text', 'contact_text_ar',
+        'notification_emails', 'sender_name', 'sender_email',
+        'website_intro', 'foot_col_1', 'foot_col_2',
+        'foot_col_3', 'foot_col_4', 'copyright_text',
+        'contact_text',
         'script_after_head', 'script_before_head', 'script_after_body', 'script_before_body',
-        'currency_unit', 'currency_unit_ar',
+        'currency_unit',
     );
 
     private $fieldSections = array(
-        'website_title' => 'general', 'website_title_ar' => 'general', 'website_url' => 'general',
-        'default_language' => 'general', 'under_construction' => 'general',
-        'address' => 'contact', 'address_ar' => 'contact', 'phone' => 'contact', 'email' => 'contact',
+        'website_title' => 'general', 'website_url' => 'general',
+        'under_construction' => 'general',
+        'address' => 'contact', 'phone' => 'contact', 'email' => 'contact',
         'facebook' => 'social', 'twitter' => 'social', 'instagram' => 'social', 'linkedin' => 'social', 'youtube' => 'social',
-        'notification_emails' => 'email', 'sender_name' => 'email', 'sender_name_ar' => 'email', 'sender_email' => 'email',
-        'website_intro' => 'footer', 'website_intro_ar' => 'footer', 'foot_col_1' => 'footer', 'foot_col_1_ar' => 'footer', 'foot_col_2' => 'footer', 'foot_col_2_ar' => 'footer',
-        'foot_col_3' => 'footer', 'foot_col_3_ar' => 'footer', 'foot_col_4' => 'footer', 'foot_col_4_ar' => 'footer', 'copyright_text' => 'footer', 'copyright_text_ar' => 'footer',
-        'contact_text' => 'footer', 'contact_text_ar' => 'footer',
+        'notification_emails' => 'email', 'sender_name' => 'email', 'sender_email' => 'email',
+        'website_intro' => 'footer', 'foot_col_1' => 'footer', 'foot_col_2' => 'footer',
+        'foot_col_3' => 'footer', 'foot_col_4' => 'footer', 'copyright_text' => 'footer',
+        'contact_text' => 'footer',
         'script_after_head' => 'scripts', 'script_before_head' => 'scripts',
         'script_after_body' => 'scripts', 'script_before_body' => 'scripts',
-        'currency_unit' => 'currency', 'currency_unit_ar' => 'currency',
+        'currency_unit' => 'currency',
     );
 
     /**
@@ -41,7 +41,7 @@ class Website_settings extends CI_Controller {
      * previous behavior: only plain identity text, never URLs/scripts/free
      * text, since htmlspecialchars() would corrupt those on save.
      */
-    private $escapedColumns = array('website_title', 'website_title_ar');
+    private $escapedColumns = array('website_title');
 
     private $uploadFields = array(
         'uploadfile'  => array('column' => 'logo', 'directory' => 'assets/frontend/images/logo/', 'max_width' => 4000, 'max_height' => 4000, 'section' => 'branding', 'required' => TRUE),
@@ -49,7 +49,6 @@ class Website_settings extends CI_Controller {
         'uploadfile5' => array('column' => 'logo_white', 'directory' => 'assets/frontend/images/logo/', 'max_width' => 4000, 'max_height' => 4000, 'section' => 'branding', 'required' => TRUE),
         'uploadfile6' => array('column' => 'favicon', 'directory' => 'assets/frontend/images/logo/', 'max_width' => 4000, 'max_height' => 4000, 'section' => 'branding', 'required' => TRUE),
         'uploadfile3' => array('column' => 'default_bg', 'directory' => 'assets/frontend/images/bg/', 'max_width' => 0, 'max_height' => 0, 'section' => 'backgrounds', 'required' => FALSE),
-        'uploadfile4' => array('column' => 'default_bg_ar', 'directory' => 'assets/frontend/images/bg/', 'max_width' => 0, 'max_height' => 0, 'section' => 'backgrounds', 'required' => FALSE),
     );
 
     private $uploadAllowedTypes = 'jpg|jpeg|png';
@@ -194,7 +193,7 @@ class Website_settings extends CI_Controller {
             $values[$column] = trim((string) $raw);
         }
 
-        foreach (array('website_title', 'website_title_ar') as $requiredColumn)
+        foreach (array('website_title') as $requiredColumn)
         {
             if (isset($values[$requiredColumn]) && ($values[$requiredColumn] === '' || strlen($values[$requiredColumn]) > 255))
             {
@@ -206,12 +205,6 @@ class Website_settings extends CI_Controller {
         if (isset($values['website_url']) && ($values['website_url'] === '' || !$this->isValidLooseUrl($values['website_url'])))
         {
             $invalidFields[] = 'website_url';
-            $errorSections['general'] = TRUE;
-        }
-
-        if (isset($values['default_language']) && !in_array($values['default_language'], array('English', 'Arabic'), TRUE))
-        {
-            $invalidFields[] = 'default_language';
             $errorSections['general'] = TRUE;
         }
 
@@ -248,7 +241,7 @@ class Website_settings extends CI_Controller {
             $errorSections['email'] = TRUE;
         }
 
-        foreach (array('sender_name', 'sender_name_ar') as $senderColumn)
+        foreach (array('sender_name') as $senderColumn)
         {
             if (isset($values[$senderColumn]) && strlen($values[$senderColumn]) > 255)
             {
@@ -263,7 +256,7 @@ class Website_settings extends CI_Controller {
             $errorSections['email'] = TRUE;
         }
 
-        foreach (array('foot_col_1', 'foot_col_1_ar', 'foot_col_2', 'foot_col_2_ar', 'foot_col_3', 'foot_col_3_ar', 'foot_col_4', 'foot_col_4_ar', 'copyright_text', 'copyright_text_ar') as $footerColumn)
+        foreach (array('foot_col_1', 'foot_col_2', 'foot_col_3', 'foot_col_4', 'copyright_text') as $footerColumn)
         {
             if (isset($values[$footerColumn]) && strlen($values[$footerColumn]) > 255)
             {
@@ -272,7 +265,7 @@ class Website_settings extends CI_Controller {
             }
         }
 
-        foreach (array('currency_unit', 'currency_unit_ar') as $requiredColumn)
+        foreach (array('currency_unit') as $requiredColumn)
         {
             if (isset($values[$requiredColumn]) && ($values[$requiredColumn] === '' || strlen($values[$requiredColumn]) > 255))
             {

@@ -7,7 +7,7 @@ $sortingEnabled = !$hasFilters && $sortby === 'cat_order' && $order === 'DESC';
 ?>
 <?php $this->load->view('admin/partials/breadcrumb', array('items' => array(array('label' => 'Blogs', 'url' => base_url('manage/blogs')), array('label' => $this->moduleName, 'active' => TRUE)))); ?>
 <?php $this->load->view('admin/partials/crud_alert', array('module_name' => 'Blog category', 'status' => $alert)); ?>
-<section class="admin-records-listing" aria-labelledby="blog-categories-title" data-translation-poll data-module="blog_categories" data-status-url="<?php echo base_url('manage/translations/statuses'); ?>" data-poll-seconds="4">
+<section class="admin-records-listing" aria-labelledby="blog-categories-title">
     <?php $this->load->view('admin/partials/module_header', array('title' => $this->moduleName, 'description' => $this->moduleDesc, 'id' => 'blog-categories-title', 'action_url' => base_url('manage/blog-categories/control'), 'action_label' => 'Add '.$this->moduleNameSingular)); ?>
     <div class="pages-listing-toolbar">
         <form class="pages-filter-form" id="categories-filter-form" role="search">
@@ -22,21 +22,20 @@ $sortingEnabled = !$hasFilters && $sortby === 'cat_order' && $order === 'DESC';
         <?php if ($this->config->item('csrf_protection')) { ?><input type="hidden" name="<?php echo htmlspecialchars($this->security->get_csrf_token_name(), ENT_QUOTES, 'UTF-8'); ?>" value="<?php echo htmlspecialchars($this->security->get_csrf_hash(), ENT_QUOTES, 'UTF-8'); ?>"><?php } ?>
         <div class="table-responsive pages-table-responsive" tabindex="0" aria-label="Blog categories table">
             <table id="table-blog-categories" class="table pages-listing-table admin-records-table"<?php if ($sortingEnabled) { ?> data-sortable-records data-sort-handle=".pages-drag-handle" data-sort-url="<?php echo base_url('manage/blog-categories/categoryorder'); ?>" data-sort-offset="<?php echo (int) $page_numb; ?>"<?php } ?>>
-                <thead><tr><?php if ($sortingEnabled) { ?><th scope="col"><span class="visually-hidden">Reorder</span></th><?php } ?><th class="pages-select-column" scope="col"><input class="form-check-input" type="checkbox" id="all-checkbox" aria-label="Select all categories"></th><?php $heading('cat_id', 'ID', 'd-none d-md-table-cell'); $heading('cat_name', 'Name'); ?><th scope="col">Translation</th><?php $heading('cat_status', 'Status'); $heading('cat_added', 'Created On', 'd-none d-md-table-cell'); $heading('cat_updated', 'Updated On', 'd-none d-md-table-cell'); ?><th scope="col">Actions</th></tr></thead>
+                <thead><tr><?php if ($sortingEnabled) { ?><th scope="col"><span class="visually-hidden">Reorder</span></th><?php } ?><th class="pages-select-column" scope="col"><input class="form-check-input" type="checkbox" id="all-checkbox" aria-label="Select all categories"></th><?php $heading('cat_id', 'ID', 'd-none d-md-table-cell'); $heading('cat_name', 'Name'); ?><?php $heading('cat_status', 'Status'); $heading('cat_added', 'Created On', 'd-none d-md-table-cell'); $heading('cat_updated', 'Updated On', 'd-none d-md-table-cell'); ?><th scope="col">Actions</th></tr></thead>
                 <tbody>
                 <?php if ($records) foreach ($records as $r) {
                     $id = (int) $r['cat_id'];
                     $name = html_entity_decode((string) $r['cat_name'], ENT_QUOTES, 'UTF-8');
                     $esc = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
                     $edit = base_url('manage/blog-categories/control/'.$id);
-                    $viewUrl = base_url('en/'.BLOG_CATEGORY_URI.$r['cat_slug']);
+                    $viewUrl = base_url(BLOG_CATEGORY_URI.$r['cat_slug']);
                 ?>
                     <tr id="<?php echo $this->controller . '-' . $id; ?>" data-record-id="<?php echo $id; ?>">
                         <?php if ($sortingEnabled) { ?><td class="pages-drag-handle" aria-label="Drag to reorder <?php echo $esc; ?>"><i class="bi bi-grip-vertical"></i></td><?php } ?>
                         <td class="pages-select-column"><input name="records[]" class="form-check-input cselect" value="<?php echo $id; ?>" type="checkbox" aria-label="Select <?php echo $esc; ?>"></td>
                         <td class="d-none d-md-table-cell"><span class="pages-record-id"><?php echo $id; ?></span></td>
                         <td><div class="user-card-details"><a class="pages-name-link" href="<?php echo $edit; ?>"><?php echo $esc; ?></a></div></td>
-                        <td><?php $this->load->view('admin/partials/translation_status_badge', array('translation_status' => isset($translation_statuses[(string) $id]) ? $translation_statuses[(string) $id] : 'MISSING', 'translation_entity_id' => $id)); ?></td>
                         <td><button type="button" class="changestatus pages-status-button" data-controller="blog-categories" id="statusID<?php echo $id; ?>" aria-label="Change status for <?php echo $esc; ?>"><?php echo htmlspecialchars($r['cat_status'], ENT_QUOTES, 'UTF-8'); ?></button></td>
                         <td class="d-none d-md-table-cell"><?php if (strtotime($r['cat_added'])) { ?><time datetime="<?php echo date('c', strtotime($r['cat_added'])); ?>"><?php echo date(ADMIN_DATE_FORMAT, strtotime($r['cat_added'])); ?><span class="pages-cell-meta"><?php echo date(ADMIN_TIME_FORMAT, strtotime($r['cat_added'])); ?></span></time><?php } else { ?>&mdash;<?php } ?></td>
                         <td class="d-none d-md-table-cell"><?php if (strtotime($r['cat_updated'])) { ?><time datetime="<?php echo date('c', strtotime($r['cat_updated'])); ?>"><?php echo date(ADMIN_DATE_FORMAT, strtotime($r['cat_updated'])); ?><span class="pages-cell-meta"><?php echo date(ADMIN_TIME_FORMAT, strtotime($r['cat_updated'])); ?></span></time><?php } else { ?>&mdash;<?php } ?></td>

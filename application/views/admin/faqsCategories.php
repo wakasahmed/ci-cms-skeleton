@@ -28,7 +28,7 @@ $sortingEnabled = !$hasActiveFilters && $sortby === $this->colPrefix . 'order' &
     'status_messages' => array('deleteblocked' => array('danger', 'Cannot delete!', 'A selected FAQ category is used by existing FAQs. No records were deleted.')),
 )); ?>
 
-<section class="admin-records-listing" aria-labelledby="faqs-categories-title" data-translation-poll data-module="faqs_categories" data-status-url="<?php echo base_url('manage/translations/statuses'); ?>" data-poll-seconds="4">
+<section class="admin-records-listing" aria-labelledby="faqs-categories-title">
     <?php $this->load->view('admin/partials/module_header', array('title' => $this->moduleName, 'description' => $this->moduleDesc, 'id' => 'faqs-categories-title', 'action_url' => $addUrl, 'action_label' => 'Add '.$this->moduleNameSingular)); ?>
 
     <div class="pages-listing-toolbar">
@@ -61,7 +61,6 @@ $sortingEnabled = !$hasActiveFilters && $sortby === $this->colPrefix . 'order' &
                     <th scope="col"<?php if ($sortAria($this->colPrefix . 'name') !== '') { ?> aria-sort="<?php echo $sortAria($this->colPrefix . 'name'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl($this->colPrefix . 'name'); ?>">Name <i class="bi <?php echo $sortIcon($this->colPrefix . 'name'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                     <th scope="col"<?php if ($sortAria($this->tStatus) !== '') { ?> aria-sort="<?php echo $sortAria($this->tStatus); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl($this->tStatus); ?>">Status <i class="bi <?php echo $sortIcon($this->tStatus); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                     <th scope="col" class="d-none d-md-table-cell">Hidden</th>
-                    <th scope="col">Translation</th>
                     <th scope="col" class="d-none d-md-table-cell"<?php if ($sortAria($this->colPrefix . 'added') !== '') { ?> aria-sort="<?php echo $sortAria($this->colPrefix . 'added'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl($this->colPrefix . 'added'); ?>">Created On <i class="bi <?php echo $sortIcon($this->colPrefix . 'added'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                     <th scope="col" class="d-none d-md-table-cell"<?php if ($sortAria($this->colPrefix . 'updated') !== '') { ?> aria-sort="<?php echo $sortAria($this->colPrefix . 'updated'); ?>"<?php } ?>><a class="pages-sort-link" href="<?php echo $sortUrl($this->colPrefix . 'updated'); ?>">Updated On <i class="bi <?php echo $sortIcon($this->colPrefix . 'updated'); ?> pages-sort-icon" aria-hidden="true"></i></a></th>
                         <th scope="col">Actions</th>
@@ -84,7 +83,6 @@ $sortingEnabled = !$hasActiveFilters && $sortby === $this->colPrefix . 'order' &
                                 <td><a class="pages-name-link" href="<?php echo $editUrl; ?>"><?php echo $escapedName; ?></a></td>
                                 <td><button type="button" class="changestatus pages-status-button" data-controller="<?php echo $this->controller; ?>" id="statusID<?php echo $id; ?>" aria-label="Change status for <?php echo $escapedName; ?>" title="Change status" data-bs-toggle="tooltip"><?php echo htmlspecialchars($record[$this->tStatus], ENT_QUOTES, 'UTF-8'); ?></button></td>
                                 <td class="d-none d-md-table-cell"><?php echo $record[$this->colPrefix . 'hidden'] === 'Yes' ? '<span class="badge text-bg-secondary">Hidden</span>' : '<span class="badge text-bg-light">Visible</span>'; ?></td>
-                                <td><?php $this->load->view('admin/partials/translation_status_badge', array('translation_status' => isset($translation_statuses[(string) $id]) ? $translation_statuses[(string) $id] : 'MISSING', 'translation_entity_id' => $id)); ?></td>
                                 <td class="d-none d-md-table-cell"><time datetime="<?php echo date('c', strtotime($record[$this->colPrefix . 'added'])); ?>"><?php echo date(ADMIN_DATE_FORMAT, strtotime($record[$this->colPrefix . 'added'])); ?><span class="pages-cell-meta"><?php echo date(ADMIN_TIME_FORMAT, strtotime($record[$this->colPrefix . 'added'])); ?></span></time></td>
                                 <td class="d-none d-md-table-cell"><time datetime="<?php echo date('c', strtotime($updatedAt)); ?>"><?php echo date(ADMIN_DATE_FORMAT, strtotime($updatedAt)); ?><span class="pages-cell-meta"><?php echo date(ADMIN_TIME_FORMAT, strtotime($updatedAt)); ?></span></time></td>
                                 <td class="pages-actions-cell">

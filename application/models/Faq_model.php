@@ -3,10 +3,9 @@
 /**
  * Read-only FAQ queries backing the public frontend.
  *
- * Selects only the columns the frontend actually renders and resolves
- * bilingual columns to the requested locale in the query itself.
+ * Selects only the columns the frontend actually renders.
  */
-class Faq_model extends Localized_model
+class Faq_model extends SqlModel
 {
     /** The FAQ category (`faqs_categories`) dedicated to the Home page. */
     const HOME_CATEGORY_ID = 1;
@@ -15,13 +14,11 @@ class Faq_model extends Localized_model
      * Enabled FAQs in the Home page's FAQ category, in the administrator's
      * `faq_order`.
      */
-    public function get_home_faqs($locale = 'en', $catId = self::HOME_CATEGORY_ID)
+    public function get_home_faqs($catId = self::HOME_CATEGORY_ID)
     {
-        $locale = $this->normalizeLocale($locale);
-
         $this->db->select(implode(',', array(
-            $this->localizedColumn('faq_question', $locale),
-            $this->localizedColumn('faq_answer', $locale),
+            'faq_question',
+            'faq_answer',
         )), false);
         $this->db->from('faqs');
         $this->db->where('faq_cat_id', (int) $catId);
@@ -43,14 +40,12 @@ class Faq_model extends Localized_model
      * One category query plus one batched FAQ query — never one FAQ query
      * per category.
      */
-    public function get_faq_groups($locale = 'en')
+    public function get_faq_groups()
     {
-        $locale = $this->normalizeLocale($locale);
-
         $this->db->select(implode(',', array(
             'cat_id',
-            $this->localizedColumn('cat_name', $locale),
-            $this->localizedColumn('cat_short_description', $locale),
+            'cat_name',
+            'cat_short_description',
         )), false);
         $this->db->from('faqs_categories');
         $this->db->where('cat_status', 'Enable');
@@ -67,8 +62,8 @@ class Faq_model extends Localized_model
         $this->db->select(implode(',', array(
             'faq_id',
             'faq_cat_id',
-            $this->localizedColumn('faq_question', $locale),
-            $this->localizedColumn('faq_answer', $locale),
+            'faq_question',
+            'faq_answer',
         )), false);
         $this->db->from('faqs');
         $this->db->where('faq_status', 'Enable');

@@ -327,9 +327,12 @@
           if (event && typeof event.isDefaultPrevented === 'function' && event.isDefaultPrevented()) {
             return false;
           }
-          if (typeof form.manageTranslationSetSaving === 'function') {
-            form.manageTranslationSetSaving();
-          }
+          // Lock the Save button only once every validation step has passed.
+          $(form).find('[data-save-button]').each(function () {
+            this.disabled = true;
+            this.setAttribute('aria-disabled', 'true');
+            $(this).find('[data-save-label]').text('Saving...');
+          });
           syncCkeditorInstances(form);
           if (form.hasAttribute('data-submit-lock')) {
             $(form).find(':submit').prop('disabled', true).attr('aria-disabled', 'true');

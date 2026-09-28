@@ -5,13 +5,9 @@ $escape = function ($value) {
 
 $key = $editor_section['key'];
 $sectionLabel = $editor_section['label'];
-$languageBaseURL = base_url(
-    'manage/miscellaneous-contents/'.rawurlencode($key).'/edit'
-);
 $firstErrorName = '';
 $statusName = $this->content_section_service->status_name($key);
 $statusError = isset($errors[$statusName]) ? $errors[$statusName] : '';
-$localeLabel = isset($locales[$locale]['label']) ? $locales[$locale]['label'] : strtoupper($locale);
 
 if (!empty($errors)) {
     reset($errors);
@@ -29,30 +25,11 @@ if (!empty($errors)) {
 <section
     class="admin-records-listing miscellaneous-content-editor"
     aria-labelledby="miscellaneous-content-title"
-    data-translation-poll
-    data-module="miscellaneous_contents"
-    data-status-url="<?php echo $escape(base_url('manage/translations/statuses')); ?>"
-    data-poll-seconds="4"
-    data-locale="<?php echo $escape($locale); ?>"
 >
     <?php $this->load->view('admin/partials/module_header', array(
         'title' => 'Miscellaneous Contents',
         'description' => 'Manage reusable global content shown across the website.',
         'id' => 'miscellaneous-content-title',
-        'actions_view' => 'admin/content_sections/_language_switch',
-        'actions_data' => array(
-            'language_base_url' => $languageBaseURL,
-            'locales' => $locales,
-            'locale' => $locale,
-            'translation_module' => 'miscellaneous_contents',
-            'translation_entity_id' => $key,
-            'translation_status' => isset($translation_state['status'])
-                ? $translation_state['status']
-                : 'MISSING',
-            'translation_ready' => isset($translation_state['status'])
-                && $translation_state['status'] === 'SUCCEEDED',
-            'can_update' => $can_update,
-        ),
     )); ?>
 
     <?php if ($success_message) { ?>
@@ -75,12 +52,9 @@ if (!empty($errors)) {
         enctype="multipart/form-data"
         novalidate
         data-content-sections-form
-        data-manage-language-form
         data-submit-lock
         data-first-error="<?php echo $escape($firstErrorName); ?>"
     >
-        <input type="hidden" name="locale" value="<?php echo $escape($locale); ?>">
-        <input type="hidden" name="redirect_lang" value="<?php echo $escape($locale); ?>" data-redirect-locale>
         <?php if ($this->config->item('csrf_protection')) { ?>
             <input
                 type="hidden"
@@ -93,12 +67,12 @@ if (!empty($errors)) {
             <fieldset disabled>
         <?php } ?>
 
-        <div class="card admin-card content-locale-panel miscellaneous-content-card" dir="<?php echo $locale === 'ar' ? 'rtl' : 'ltr'; ?>" data-section-card>
+        <div class="card admin-card miscellaneous-content-card" data-section-card>
             <div class="card-body miscellaneous-content-card-body">
                 <div class="miscellaneous-editor-context">
                     <div>
                         <h2><?php echo $escape($sectionLabel); ?></h2>
-                        <p>Edit the <?php echo $escape($localeLabel); ?> content for this global block.</p>
+                        <p>Edit the content for this global block.</p>
                     </div>
                     <span class="miscellaneous-editor-key"><?php echo $escape($key); ?></span>
                 </div>
@@ -147,5 +121,3 @@ if (!empty($errors)) {
         </div>
     </form>
 </section>
-
-<?php $this->load->view('admin/content_sections/_language_modal'); ?>

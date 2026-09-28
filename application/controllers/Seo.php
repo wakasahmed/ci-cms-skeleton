@@ -11,9 +11,6 @@
  */
 class Seo extends CI_Controller
 {
-    /** Locales served under /en and /ar. */
-    private $locales = array('en', 'ar');
-
     /** Sitemap protocol allows 50,000 URLs per file. */
     const SITEMAP_URL_LIMIT = 50000;
 
@@ -84,16 +81,13 @@ class Seo extends CI_Controller
             '',
             '> ' . ($intro !== '' ? $intro : 'Manicure, nail art and beauty treatments in Gorlice, Poland.'),
             '',
-            'This site is published in English (' . $seo->homeUrl('en') . ') and Arabic ('
-                . $seo->homeUrl('ar') . '). Each page below links to its English version.',
-            '',
         );
 
         $posts = array();
         foreach ($this->Seo_model->get_blog_posts() as $row) {
             $posts[] = $this->llmsItem(
                 $row['blog_name'],
-                $seo->blogPostUrl($row['blog_slug'], 'en'),
+                $seo->blogPostUrl($row['blog_slug']),
                 $row['blog_short_description']
             );
         }
@@ -105,7 +99,7 @@ class Seo extends CI_Controller
             }
             $pages[] = $this->llmsItem(
                 $row['page_name'],
-                $seo->pageUrl($row['page_slug'], 'en'),
+                $seo->pageUrl($row['page_slug']),
                 ''
             );
         }
@@ -130,8 +124,7 @@ class Seo extends CI_Controller
     }
 
     /* ---------------------------------------------------------------------
-     * Sitemap entries. Each entry is one URL in one locale and lists every
-     * language version of the same page as an hreflang alternate.
+     * Sitemap entries. Each entry is one public URL.
      * ------------------------------------------------------------------ */
 
     private function homeEntries()
@@ -148,15 +141,12 @@ class Seo extends CI_Controller
             return array();
         }
 
-        $urls = array();
-        foreach ($this->locales as $locale) {
-            $urls[$locale] = $this->frontend_seo->homeUrl($locale);
-        }
-
-        return $this->localizedEntries(
-            $urls,
-            $this->frontend_seo->isoDate($homePage['page_updated']),
-            array()
+        return array(
+            $this->entry(
+                $this->frontend_seo->homeUrl(),
+                $this->frontend_seo->isoDate($homePage['page_updated']),
+                array()
+            ),
         );
     }
 
@@ -165,26 +155,28 @@ class Seo extends CI_Controller
         $entries = array();
 
         foreach ($this->Seo_model->get_pages() as $row) {
-            // The home page is listed by homeEntries() at its locale root.
+            // The home page is listed by homeEntries() at the site root.
             if ((int) $row['page_id'] === 1) {
                 continue;
             }
 
-            $slugEn = trim((string) $row['page_slug']);
-            $slugAr = trim((string) $row['page_slug_ar']);
-            if ($slugEn === '') {
+            $slug = trim((string) $row['page_slug']);
+            if ($slug === '') {
                 continue;
             }
 
-            $urls = array(
-                'en' => $this->frontend_seo->pageUrl($slugEn, 'en'),
-                'ar' => $this->frontend_seo->pageUrl($slugAr !== '' ? $slugAr : $slugEn, 'ar'),
+            $images = $this->imageUrls(
+                array(
+                    array('pages', $row['og_image']),
+                    array('pages', $row['banner_background']),
+                ),
+                1
             );
-            $images = $this->imageUrls(array(array('pages', $row['og_image']), array('pages', $row['banner_background'])), 1);
 
-            $entries = array_merge(
-                $entries,
-                $this->localizedEntries($urls, $this->frontend_seo->isoDate($row['page_updated']), $images)
+            $entries[] = $this->entry(
+                $this->frontend_seo->pageUrl($slug),
+                $this->frontend_seo->isoDate($row['page_updated']),
+                $images
             );
         }
 
@@ -201,19 +193,15 @@ class Seo extends CI_Controller
                 continue;
             }
 
-            // Category pages are looked up by their English slug in both locales.
-            $urls = array(
-                'en' => $this->frontend_seo->blogCategoryUrl($slug, 'en'),
-                'ar' => $this->frontend_seo->blogCategoryUrl($slug, 'ar'),
-            );
             $images = $this->imageUrls(
                 array(array('blog-categories', $row['og_image']), array('blog-categories', $row['cat_cover_image'])),
                 1
             );
 
-            $entries = array_merge(
-                $entries,
-                $this->localizedEntries($urls, $this->frontend_seo->isoDate($row['cat_updated']), $images)
+            $entries[] = $this->entry(
+                $this->frontend_seo->blogCategoryUrl($slug),
+                $this->frontend_seo->isoDate($row['cat_updated']),
+                $images
             );
         }
 
@@ -225,16 +213,11 @@ class Seo extends CI_Controller
         $entries = array();
 
         foreach ($this->Seo_model->get_blog_posts() as $row) {
-            $slugEn = trim((string) $row['blog_slug']);
-            $slugAr = trim((string) $row['blog_slug_ar']);
-            if ($slugEn === '') {
+            $slug = trim((string) $row['blog_slug']);
+            if ($slug === '') {
                 continue;
             }
 
-            $urls = array(
-                'en' => $this->frontend_seo->blogPostUrl($slugEn, 'en'),
-                'ar' => $this->frontend_seo->blogPostUrl($slugAr !== '' ? $slugAr : $slugEn, 'ar'),
-            );
             $images = $this->imageUrls(
                 array(
                     array('blogs', $row['og_image']),
@@ -248,32 +231,23 @@ class Seo extends CI_Controller
                 $lastModified = $this->frontend_seo->isoDate($row['blog_added']);
             }
 
-            $entries = array_merge($entries, $this->localizedEntries($urls, $lastModified, $images));
+            $entries[] = $this->entry(
+                $this->frontend_seo->blogPostUrl($slug),
+                $lastModified,
+                $images
+            );
         }
 
         return $entries;
     }
 
-    /** One entry per locale URL, each carrying the full hreflang set. */
-    private function localizedEntries(array $urls, $lastModified, array $images)
+    private function entry($url, $lastModified, array $images)
     {
-        $alternates = array();
-        foreach ($urls as $locale => $url) {
-            $alternates[$locale === 'ar' ? 'ar-SA' : $locale] = $this->frontend_seo->encodeUrl($url);
-        }
-        $alternates['x-default'] = $this->frontend_seo->encodeUrl($urls[$this->frontend_seo->defaultLocale()]);
-
-        $entries = array();
-        foreach ($urls as $url) {
-            $entries[] = array(
-                'loc' => $this->frontend_seo->encodeUrl($url),
-                'lastmod' => $lastModified,
-                'alternates' => $alternates,
-                'images' => $images,
-            );
-        }
-
-        return $entries;
+        return array(
+            'loc' => $this->frontend_seo->encodeUrl($url),
+            'lastmod' => $lastModified,
+            'images' => $images,
+        );
     }
 
     /** Distinct public URLs of the first $limit candidates that exist on disk. */
@@ -306,7 +280,6 @@ class Seo extends CI_Controller
             // Browsers show the sitemap as a styled table; crawlers ignore the stylesheet.
             '<?xml-stylesheet type="text/xsl" href="' . $this->xml(base_url('assets/frontend/xsl/sitemap.xsl')) . '"?>',
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'
-                . ' xmlns:xhtml="http://www.w3.org/1999/xhtml"'
                 . ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
         );
 
@@ -315,10 +288,6 @@ class Seo extends CI_Controller
             $xml[] = '    <loc>' . $this->xml($entry['loc']) . '</loc>';
             if ($entry['lastmod'] !== '') {
                 $xml[] = '    <lastmod>' . $this->xml($entry['lastmod']) . '</lastmod>';
-            }
-            foreach ($entry['alternates'] as $hreflang => $href) {
-                $xml[] = '    <xhtml:link rel="alternate" hreflang="' . $this->xml($hreflang)
-                    . '" href="' . $this->xml($href) . '"/>';
             }
             foreach ($entry['images'] as $image) {
                 $xml[] = '    <image:image><image:loc>' . $this->xml($image) . '</image:loc></image:image>';

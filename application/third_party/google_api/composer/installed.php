@@ -3,7 +3,7 @@
         'name' => '__root__',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '2eceb3c2f29f67321186f59dfb78be82e0898ce9',
+        'reference' => 'd3db497e8d24b0e3de7903a54d1a72c6133b26f2',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         '__root__' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '2eceb3c2f29f67321186f59dfb78be82e0898ce9',
+            'reference' => 'd3db497e8d24b0e3de7903a54d1a72c6133b26f2',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../../../',
             'aliases' => array(),
@@ -46,30 +46,12 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
-        'google/cloud-core' => array(
-            'pretty_version' => 'v1.73.3',
-            'version' => '1.73.3.0',
-            'reference' => 'e3ac11b02f96b0b60e8a5659af94c3aa52898714',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../google/cloud-core',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
         'google/cloud-recaptcha-enterprise' => array(
             'pretty_version' => 'v1.17.2',
             'version' => '1.17.2.0',
             'reference' => '41749f7e1ce35fcfa1dd50ab67ecdbdbea4c5fe6',
             'type' => 'library',
             'install_path' => __DIR__ . '/../google/cloud-recaptcha-enterprise',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
-        'google/cloud-translate' => array(
-            'pretty_version' => 'v1.21.0',
-            'version' => '1.21.0.0',
-            'reference' => '5ef17ec64c86bc96b2258ddae779de8a38942ee4',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../google/cloud-translate',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
@@ -154,15 +136,6 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
-        'monolog/monolog' => array(
-            'pretty_version' => '3.12.0',
-            'version' => '3.12.0.0',
-            'reference' => '72c534fc0ab181ef52d92a68382318631e301608',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../monolog/monolog',
-            'aliases' => array(),
-            'dev_requirement' => false,
-        ),
         'psr/cache' => array(
             'pretty_version' => '3.0.0',
             'version' => '3.0.0.0',
@@ -226,12 +199,6 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
-        'psr/log-implementation' => array(
-            'dev_requirement' => false,
-            'provided' => array(
-                0 => '3.0.0',
-            ),
-        ),
         'ramsey/collection' => array(
             'pretty_version' => '2.1.1',
             'version' => '2.1.1.0',
@@ -255,15 +222,6 @@
             'replaced' => array(
                 0 => '4.9.4',
             ),
-        ),
-        'rize/uri-template' => array(
-            'pretty_version' => '0.4.2',
-            'version' => '0.4.2.0',
-            'reference' => '7ad22944daede547b4542e1c977ec4a81aa20832',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../rize/uri-template',
-            'aliases' => array(),
-            'dev_requirement' => false,
         ),
         'symfony/polyfill-php80' => array(
             'pretty_version' => 'v1.37.0',

@@ -2,7 +2,7 @@
 
 /**
  * Compares config/content_sections.php with the database and adds any
- * configured section field that has no row yet, for every content locale.
+ * configured section field that has no row yet (English only).
  *
  * Covers both Web Page Sections and Miscellaneous Contents. Existing rows
  * are never changed or removed.
@@ -49,7 +49,6 @@ class Content_section_sync extends CI_Controller
             'inserted' => (int) $this->session->flashdata('inserted'),
             'load_error' => $missing['status'] !== 'ok',
             'items' => $missing['items'],
-            'locales' => $this->content_section_service->locales(),
         );
 
         $this->load->view('admin/header', $data);

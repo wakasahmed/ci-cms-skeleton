@@ -209,13 +209,6 @@ $adminNav = array(
                 'url' => ADMIN_URL.'email-templates',
                 'active' => isset($emailTemplatesActive),
             ),
-            array(
-                'type' => 'link',
-                'title' => 'WhatsApp Templates',
-                'icon' => 'bi-whatsapp',
-                'url' => ADMIN_URL.'whatsapp-templates',
-                'active' => isset($whatsappTemplatesActive),
-            ),
         ),
     ),
     array(
@@ -229,13 +222,6 @@ $adminNav = array(
                 'active' => isset($adminsActive),
             ),
             array(
-                'type' => 'link',
-                'title' => 'Countries',
-                'icon' => 'bi-globe-americas',
-                'url' => ADMIN_URL.'countries',
-                'active' => isset($countriesActive),
-            ),
-             array(
                 'type' => 'link',
                 'title' => 'Form Settings',
                 'icon' => 'bi-ui-checks',

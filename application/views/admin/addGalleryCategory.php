@@ -68,7 +68,7 @@ $currentStatus = isset($tbl_data[$this->tStatus]) ? $tbl_data[$this->tStatus] : 
                             value="<?php echo $value('category_name'); ?>"
                             class="form-control<?php echo $isEdit ? '' : ' auto-slug-source'; ?><?php echo $invalidClass('category_name'); ?>"
                             data-validate="required,maxlength[100]"
-                            <?php if (!$isEdit) { ?>data-slug-target="#category_slug" data-slug-language="en"<?php } ?>
+                            <?php if (!$isEdit) { ?>data-slug-target="#category_slug"<?php } ?>
                             placeholder="Nail Art"
                             required
                         >
@@ -87,7 +87,7 @@ $currentStatus = isset($tbl_data[$this->tStatus]) ? $tbl_data[$this->tStatus] : 
                                 data-validate="required,maxlength[110]"
                                 required
                             >
-                            <button type="button" class="btn btn-outline-secondary generate-slug" data-slug-source="#category_name" data-slug-target="#category_slug" data-slug-language="en">
+                            <button type="button" class="btn btn-outline-secondary generate-slug" data-slug-source="#category_name" data-slug-target="#category_slug">
                                 <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
                                 <span class="d-none d-sm-inline">Generate</span>
                             </button>

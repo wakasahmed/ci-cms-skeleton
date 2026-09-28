@@ -85,7 +85,7 @@ class Content_section_service
         return $section_key.'__section_status';
     }
 
-    public function configure_ckeditor($locale)
+    public function configure_ckeditor()
     {
         $this->CI->load->library('ckeditor');
         $this->CI->load->library('ckfinder');
@@ -98,9 +98,6 @@ class Content_section_service
             'flash',
         ));
         $this->CI->ckeditor->config['height'] = '340px';
-        $this->CI->ckeditor->config['contentsLangDirection'] = $locale === 'ar'
-            ? 'rtl'
-            : 'ltr';
         $this->CI->ckfinder->SetupCKEditor(
             $this->CI->ckeditor,
             '../../../../assets/ckfinder/'
@@ -277,319 +274,6 @@ class Content_section_service
         return $ensured;
     }
 
-    public function web_translation_state($page_id, $include_values = false)
-    {
-        $page_id = (int) $page_id;
-        $english = $this->web_editor($page_id, 'en');
-        $arabic = $this->web_editor($page_id, 'ar');
-
-        if ($english['status'] !== 'ok' || $arabic['status'] !== 'ok') {
-            return null;
-        }
-
-        $arabic_sections = $this->sections_by_key($arabic['editor_sections']);
-        $missing = false;
-        $values = array();
-
-        foreach ($english['editor_sections'] as $section) {
-            $arabic_values = isset($arabic_sections[$section['key']]['values'])
-                ? $arabic_sections[$section['key']]['values']
-                : array();
-
-            foreach ($section['fields'] as $field) {
-                if (!$this->is_translatable_field($field)) {
-                    continue;
-                }
-
-                $source = isset($section['values'][$field['key']])
-                    ? $section['values'][$field['key']]
-                    : '';
-                $source = $this->translation_value($source, $field);
-
-                if ($source === null) {
-                    continue;
-                }
-
-                $control = $this->field_name($section['key'], $field['key']);
-                $target = isset($arabic_values[$field['key']])
-                    ? $arabic_values[$field['key']]
-                    : '';
-
-                if ($this->plain_text($target, $this->is_multiline_field($field)) === null) {
-                    $missing = true;
-                }
-
-                if ($include_values) {
-                    $values[$control] = (string) $target;
-                }
-            }
-        }
-
-        $state = array('status' => $missing ? 'MISSING' : 'SUCCEEDED');
-        if ($include_values) {
-            $state['values'] = $values;
-        }
-
-        return $state;
-    }
-
-    public function web_translation_payload($page_id)
-    {
-        $page_id = (int) $page_id;
-        $english = $this->web_editor($page_id, 'en');
-        $arabic = $this->web_editor($page_id, 'ar');
-
-        if ($english['status'] !== 'ok' || $arabic['status'] !== 'ok') {
-            return null;
-        }
-
-        $arabic_sections = $this->sections_by_key($arabic['editor_sections']);
-        $items = array();
-        $missing = array();
-        $source = array();
-
-        foreach ($english['editor_sections'] as $section) {
-            $arabic_values = isset($arabic_sections[$section['key']]['values'])
-                ? $arabic_sections[$section['key']]['values']
-                : array();
-
-            foreach ($section['fields'] as $field) {
-                if (!$this->is_translatable_field($field)) {
-                    continue;
-                }
-
-                $value = isset($section['values'][$field['key']])
-                    ? $section['values'][$field['key']]
-                    : '';
-                $value = $this->translation_value($value, $field);
-                if ($value === null) {
-                    continue;
-                }
-
-                $control = $this->field_name($section['key'], $field['key']);
-                $target = isset($arabic_values[$field['key']])
-                    ? $arabic_values[$field['key']]
-                    : '';
-                $items[$control] = array(
-                    'control' => $control,
-                    'section_id' => (int) $section['section_id'],
-                    'field_key' => $field['key'],
-                    'value' => $value,
-                    'target' => (string) $target,
-                    'max_length' => $this->is_multiline_field($field) ? 65535 : 255,
-                    'mime_type' => $this->is_rich_text_field($field) ? 'text/html' : 'text/plain',
-                );
-                $source[$control] = $value;
-
-                if ($this->plain_text($target, $this->is_multiline_field($field)) === null) {
-                    $missing[] = $control;
-                }
-            }
-        }
-
-        return array(
-            'page_id' => $page_id,
-            'items' => $items,
-            'missing' => $missing,
-            'source_hash' => hash(
-                'sha256',
-                json_encode($source, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-            ),
-        );
-    }
-
-    public function translate_web_items(array $items)
-    {
-        if (empty($items)) {
-            return array(
-                'success' => false,
-                'status_code' => 422,
-                'message' => 'There is no English content to translate.',
-            );
-        }
-
-        $this->CI->load->library('google_translation_service');
-        $values = array();
-        $batch = array();
-        $batch_length = 0;
-        $batch_mime_type = null;
-
-        foreach ($items as $item) {
-            $length = $this->text_length($item['value']);
-            $mime_type = isset($item['mime_type']) ? $item['mime_type'] : 'text/plain';
-            if ($length > 30000) {
-                return array(
-                    'success' => false,
-                    'status_code' => 422,
-                    'message' => 'A section field exceeds the 30,000 character translation limit.',
-                );
-            }
-
-            if (!empty($batch) && (
-                count($batch) === 100
-                || $batch_length + $length > 30000
-                || $batch_mime_type !== $mime_type
-            )) {
-                $result = $this->translate_web_batch($batch, $values);
-                if (!$result['success']) {
-                    return $result;
-                }
-
-                $batch = array();
-                $batch_length = 0;
-            }
-
-            $batch_mime_type = $mime_type;
-            $batch[] = $item;
-            $batch_length += $length;
-        }
-
-        $result = $this->translate_web_batch($batch, $values);
-        if (!$result['success']) {
-            return $result;
-        }
-
-        return array(
-            'success' => true,
-            'status_code' => 200,
-            'values' => $values,
-        );
-    }
-
-    public function save_web_translation_values($page_id, $source_hash, array $values)
-    {
-        $page_id = (int) $page_id;
-        $this->CI->db->trans_begin();
-        $this->CI->db->query(
-            'SELECT id FROM web_page_sections WHERE page_id = ? FOR UPDATE',
-            array($page_id)
-        );
-
-        $payload = $this->web_translation_payload($page_id);
-        if ($payload === null || !hash_equals($source_hash, $payload['source_hash'])) {
-            $this->CI->db->trans_rollback();
-
-            return array('success' => false, 'source_changed' => true);
-        }
-
-        $now = date('Y-m-d H:i:s');
-        foreach ($values as $control => $value) {
-            if (!isset($payload['items'][$control])) {
-                continue;
-            }
-
-            $item = $payload['items'][$control];
-            if ($this->plain_text($item['target'], false) !== null) {
-                continue;
-            }
-
-            $this->CI->db->query(
-                'INSERT INTO web_page_section_fields (section_id, locale, field_key, field_value, created_at, updated_at) '
-                .'VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE field_value=VALUES(field_value), updated_at=VALUES(updated_at)',
-                array($item['section_id'], 'ar', $item['field_key'], $value, $now, $now)
-            );
-        }
-
-        if ($this->CI->db->trans_status() === false) {
-            $this->CI->db->trans_rollback();
-
-            return array('success' => false, 'source_changed' => false);
-        }
-
-        $this->CI->db->trans_commit();
-        $this->invalidate_web_cache($page_id);
-
-        return array('success' => true, 'source_changed' => false);
-    }
-
-    public function translate_web_from_english($page_id)
-    {
-        $page_id = (int) $page_id;
-        $editor = $this->web_editor($page_id, 'en');
-
-        if ($editor['status'] !== 'ok') {
-            return array(
-                'success' => false,
-                'status_code' => 404,
-                'message' => 'The page sections were not found.',
-            );
-        }
-
-        $items = array();
-        foreach ($editor['editor_sections'] as $section) {
-            foreach ($section['fields'] as $field) {
-                if (!$this->is_translatable_field($field)) {
-                    continue;
-                }
-
-                $value = isset($section['values'][$field['key']])
-                    ? $section['values'][$field['key']]
-                    : '';
-                $value = $this->translation_value($value, $field);
-
-                if ($value === null) {
-                    continue;
-                }
-
-                $items[] = array(
-                    'control' => $this->field_name($section['key'], $field['key']),
-                    'value' => $value,
-                    'max_length' => $this->is_multiline_field($field) ? 65535 : 255,
-                    'mime_type' => $this->is_rich_text_field($field) ? 'text/html' : 'text/plain',
-                );
-            }
-        }
-
-        if (empty($items)) {
-            return array(
-                'success' => false,
-                'status_code' => 422,
-                'message' => 'There is no English content to translate.',
-            );
-        }
-
-        $this->CI->load->library('google_translation_service');
-        $values = array();
-        $batch = array();
-        $batch_length = 0;
-
-        foreach ($items as $item) {
-            $length = $this->text_length($item['value']);
-            if ($length > 30000) {
-                return array(
-                    'success' => false,
-                    'status_code' => 422,
-                    'message' => 'A section field exceeds the 30,000 character translation limit.',
-                );
-            }
-
-            if (count($batch) === 100 || $batch_length + $length > 30000) {
-                $result = $this->translate_web_batch($batch, $values);
-                if (!$result['success']) {
-                    return $result;
-                }
-
-                $batch = array();
-                $batch_length = 0;
-            }
-
-            $batch[] = $item;
-            $batch_length += $length;
-        }
-
-        $result = $this->translate_web_batch($batch, $values);
-        if (!$result['success']) {
-            return $result;
-        }
-
-        return array(
-            'success' => true,
-            'status_code' => 200,
-            'message' => 'Arabic draft created. Save the form to keep it.',
-            'values' => $values,
-        );
-    }
-
     public function miscellaneous_editor($key, $locale)
     {
         $definition = $this->miscellaneous_definition($key);
@@ -613,131 +297,6 @@ class Content_section_service
         return array('status' => 'ok', 'definition' => $definition, 'section' => $row, 'editor_section' => $mapped[0]);
     }
 
-    public function miscellaneous_translation_payload($key)
-    {
-        $english = $this->miscellaneous_editor($key, 'en');
-        $arabic = $this->miscellaneous_editor($key, 'ar');
-
-        if ($english['status'] !== 'ok' || $arabic['status'] !== 'ok') {
-            return null;
-        }
-
-        $items = array();
-        $missing = array();
-        $source = array();
-        foreach ($english['editor_section']['fields'] as $field) {
-            if (!$this->is_translatable_field($field)) {
-                continue;
-            }
-
-            $value = isset($english['editor_section']['values'][$field['key']])
-                ? $english['editor_section']['values'][$field['key']]
-                : '';
-            $value = $this->translation_value($value, $field);
-            if ($value === null) {
-                continue;
-            }
-
-            $control = $this->field_name($key, $field['key']);
-            $target = isset($arabic['editor_section']['values'][$field['key']])
-                ? $arabic['editor_section']['values'][$field['key']]
-                : '';
-            $items[$control] = array(
-                'control' => $control,
-                'section_id' => (int) $english['section']['section_id'],
-                'field_key' => $field['key'],
-                'value' => $value,
-                'target' => (string) $target,
-                'max_length' => $this->is_multiline_field($field) ? 65535 : 255,
-                'mime_type' => $this->is_rich_text_field($field) ? 'text/html' : 'text/plain',
-            );
-            $source[$control] = $value;
-
-            if ($this->plain_text($target, $this->is_multiline_field($field)) === null) {
-                $missing[] = $control;
-            }
-        }
-
-        return array(
-            'key' => $key,
-            'items' => $items,
-            'missing' => $missing,
-            'source_hash' => hash(
-                'sha256',
-                json_encode($source, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-            ),
-        );
-    }
-
-    public function save_miscellaneous_translation_values($key, $source_hash, array $values)
-    {
-        $payload = $this->miscellaneous_translation_payload($key);
-        if ($payload === null || !hash_equals($source_hash, $payload['source_hash'])) {
-            return array('success' => false, 'source_changed' => true);
-        }
-
-        $items = array_values($payload['items']);
-        if (empty($items)) {
-            return array('success' => true, 'source_changed' => false);
-        }
-
-        $this->CI->db->trans_begin();
-        $this->CI->db->query(
-            'SELECT id FROM miscellaneous_content_sections WHERE id = ? FOR UPDATE',
-            array((int) $items[0]['section_id'])
-        );
-        $payload = $this->miscellaneous_translation_payload($key);
-        if ($payload === null || !hash_equals($source_hash, $payload['source_hash'])) {
-            $this->CI->db->trans_rollback();
-
-            return array('success' => false, 'source_changed' => true);
-        }
-
-        $now = date('Y-m-d H:i:s');
-        foreach ($values as $control => $value) {
-            if (!isset($payload['items'][$control])
-                || $this->plain_text($payload['items'][$control]['target'], false) !== null)
-            {
-                continue;
-            }
-
-            $item = $payload['items'][$control];
-            $this->CI->db->query(
-                'INSERT INTO miscellaneous_content_section_fields (section_id, locale, field_key, field_value, created_at, updated_at) '
-                .'VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE field_value=VALUES(field_value), updated_at=VALUES(updated_at)',
-                array($item['section_id'], 'ar', $item['field_key'], $value, $now, $now)
-            );
-        }
-
-        if ($this->CI->db->trans_status() === false) {
-            $this->CI->db->trans_rollback();
-
-            return array('success' => false, 'source_changed' => false);
-        }
-
-        $this->CI->db->trans_commit();
-        $this->invalidate_miscellaneous_cache();
-
-        return array('success' => true, 'source_changed' => false);
-    }
-
-    public function translate_miscellaneous_from_english($key)
-    {
-        $payload = $this->miscellaneous_translation_payload($key);
-        if ($payload === null) {
-            return array('success' => false, 'status_code' => 404, 'message' => 'The content section was not found.');
-        }
-
-        $result = $this->translate_web_items(array_values($payload['items']));
-        if (empty($result['success'])) {
-            return $result;
-        }
-
-        $result['message'] = 'Arabic draft created. Save the form to keep it.';
-
-        return $result;
-    }
-
     public function miscellaneous_listing()
     {
         $ensured = $this->ensure_miscellaneous_content_sections();
@@ -745,8 +304,6 @@ class Content_section_service
             return $ensured;
         }
         $ids = array_column($ensured['sections'], 'section_id');
-        $fields = $this->CI->miscellaneous_contents->get_fields($ids, array('ar'));
-        $values = $this->field_map($fields);
         $defs = array();
         foreach ($ensured['definitions'] as $definition) {
             $defs[$definition['key']] = $definition;
@@ -757,8 +314,6 @@ class Content_section_service
                 continue;
             }
 
-            $section_values = isset($values[$section['section_id']]['ar']) ? $values[$section['section_id']]['ar'] : array();
-            $section['arabic_status'] = $this->arabic_status($defs[$section['section_key']], $section_values);
             $rows[] = $section;
         }
         return array('status' => 'ok', 'sections' => $rows);
@@ -781,30 +336,6 @@ class Content_section_service
         }
         $result = $this->validate($definitions, $locale, $post, $current, true);
         $result['sections'] = $sections;
-        $result['translation_invalidations'] = array();
-
-        if ($locale === 'en') {
-            foreach ($definitions as $definition) {
-                foreach ($definition['fields'] as $field) {
-                    if (!$this->is_translatable_field($field)) {
-                        continue;
-                    }
-
-                    $previous = isset($current[$definition['key']][$field['key']])
-                        ? $current[$definition['key']][$field['key']]
-                        : '';
-                    $submitted = isset($result['values'][$definition['key']][$field['key']])
-                        ? $result['values'][$definition['key']][$field['key']]
-                        : '';
-
-                    if ($this->translation_value($previous, $field)
-                        !== $this->translation_value($submitted, $field))
-                    {
-                        $result['translation_invalidations'][$definition['key']][] = $field['key'];
-                    }
-                }
-            }
-        }
 
         return $result;
     }
@@ -815,28 +346,6 @@ class Content_section_service
         $current = array($definition['key'] => $editor['editor_section']['values']);
         $result = $this->validate(array($definition), $locale, $post, $current, false);
         $result['section'] = $editor['section'];
-        $result['translation_invalidations'] = array();
-
-        if ($locale === 'en') {
-            foreach ($definition['fields'] as $field) {
-                if (!$this->is_translatable_field($field)) {
-                    continue;
-                }
-
-                $previous = isset($current[$definition['key']][$field['key']])
-                    ? $current[$definition['key']][$field['key']]
-                    : '';
-                $submitted = isset($result['values'][$definition['key']][$field['key']])
-                    ? $result['values'][$definition['key']][$field['key']]
-                    : '';
-
-                if ($this->translation_value($previous, $field)
-                    !== $this->translation_value($submitted, $field))
-                {
-                    $result['translation_invalidations'][] = $field['key'];
-                }
-            }
-        }
 
         return $result;
     }
@@ -849,10 +358,7 @@ class Content_section_service
             $locale,
             $validated['values'],
             $validated['statuses'],
-            $validated['order'],
-            isset($validated['translation_invalidations'])
-                ? $validated['translation_invalidations']
-                : array()
+            $validated['order']
         );
         if (!$ok) {
             $this->cleanup_files($validated['new_files']);
@@ -877,10 +383,7 @@ class Content_section_service
             $validated['section'],
             $locale,
             $values,
-            $status,
-            isset($validated['translation_invalidations'])
-                ? $validated['translation_invalidations']
-                : array()
+            $status
         );
         if (!$ok) {
             $this->cleanup_files($validated['new_files']);
@@ -1231,10 +734,9 @@ class Content_section_service
             return array();
         }
         $ids = array_column($sections, 'section_id');
-        $locales = $locale === 'ar' ? array('en', 'ar') : array('en');
         $rows = $type === 'web'
-            ? $this->CI->web_page_sections->get_fields($ids, $locales)
-            : $this->CI->miscellaneous_contents->get_fields($ids, $locales);
+            ? $this->CI->web_page_sections->get_fields($ids, array($locale))
+            : $this->CI->miscellaneous_contents->get_fields($ids, array($locale));
         $map = $this->field_map($rows);
         $result = array();
         foreach ($sections as $section) {
@@ -1242,9 +744,6 @@ class Content_section_service
             $fields = array();
             foreach ($definition['fields'] as $field) {
                 $value = isset($map[$section['section_id']][$locale][$field['key']]) ? $map[$section['section_id']][$locale][$field['key']] : null;
-                if ($locale === 'ar' && ($field['type'] === 'image' || $field['type'] === 'icon-picker' || $this->is_url_field($field)) && $this->plain_text($value, false) === null) {
-                    $value = isset($map[$section['section_id']]['en'][$field['key']]) ? $map[$section['section_id']]['en'][$field['key']] : null;
-                }
                 if ($field['type'] === 'image' && $value !== null) {
                     $value = $this->image_url($value);
                 }
@@ -1301,39 +800,13 @@ class Content_section_service
                         'field_key' => $field['key'],
                         'field_label' => $field['label'],
                         'field_group' => $field['group'],
-                        'field_value' => $this->missing_field_value($field, $locale, $map, $section_id),
+                        'field_value' => null,
                     );
                 }
             }
         }
 
         return $items;
-    }
-
-    /**
-     * A missing field starts empty (NULL), which renders exactly like an
-     * absent row. The exception is an Arabic select such as an icon
-     * position: selects are never auto-translated and have no read-time
-     * fallback, so it starts from the English choice when one is saved.
-     */
-    private function missing_field_value(array $field, $locale, array $map, $section_id)
-    {
-        if ($locale === $this->default_locale() || $field['type'] !== 'select') {
-            return null;
-        }
-
-        $english = isset($map[$section_id][$this->default_locale()][$field['key']])
-            ? (string) $map[$section_id][$this->default_locale()][$field['key']]
-            : '';
-
-        return array_key_exists($english, $field['options']) ? $english : null;
-    }
-
-    private function default_locale()
-    {
-        return isset($this->settings['default_content_locale'])
-            ? (string) $this->settings['default_content_locale']
-            : 'en';
     }
 
     private function rows_by_key(array $rows)
@@ -1343,90 +816,6 @@ class Content_section_service
             $result[$row['section_key']] = $row;
         }
         return $result;
-    }
-
-    private function sections_by_key(array $sections)
-    {
-        $result = array();
-        foreach ($sections as $section) {
-            $result[$section['key']] = $section;
-        }
-
-        return $result;
-    }
-
-    private function is_translatable_field(array $field)
-    {
-        return in_array($field['type'], array('text', 'textarea', 'text-editor'), true)
-            && !$this->is_url_field($field);
-    }
-
-    private function translate_web_batch(array $batch, array &$values)
-    {
-        if (empty($batch)) {
-            return array('success' => true);
-        }
-
-        $contents = array();
-        foreach ($batch as $item) {
-            $contents[] = $item['value'];
-        }
-
-        $result = $this->CI->google_translation_service->translate_batch(
-            $contents,
-            'en',
-            'ar',
-            isset($batch[0]['mime_type']) ? $batch[0]['mime_type'] : 'text/plain'
-        );
-
-        if (empty($result['success'])) {
-            return $result;
-        }
-
-        foreach ($batch as $index => $item) {
-            $values[$item['control']] = $this->truncate_content_value(
-                $result['translated_texts'][$index],
-                $item['max_length']
-            );
-        }
-
-        return array('success' => true);
-    }
-
-    private function truncate_content_value($value, $max_length)
-    {
-        $value = (string) $value;
-        if ($max_length === null || (int) $max_length < 1) {
-            return $value;
-        }
-
-        if (!function_exists('mb_strlen')) {
-            return strlen($value) > (int) $max_length
-                ? substr($value, 0, (int) $max_length)
-                : $value;
-        }
-
-        return mb_strlen($value, 'UTF-8') > (int) $max_length
-            ? mb_substr($value, 0, (int) $max_length, 'UTF-8')
-            : $value;
-    }
-
-    private function arabic_status(array $definition, array $values)
-    {
-        foreach ($definition['fields'] as $field) {
-            if (!$this->is_translatable_field($field)) {
-                continue;
-            }
-            if (isset($values[$field['key']])
-                && $this->plain_text(
-                    $values[$field['key']],
-                    $this->is_multiline_field($field)
-                ) !== null)
-            {
-                return 'AVAILABLE';
-            }
-        }
-        return 'MISSING';
     }
 
     private function plain_text($value, $multiline)
@@ -1448,13 +837,6 @@ class Content_section_service
         $value = str_replace(array("\r\n", "\r"), "\n", (string) $value);
 
         return $this->plain_text($value, true) === null ? null : $value;
-    }
-
-    private function translation_value($value, array $field)
-    {
-        return $this->is_rich_text_field($field)
-            ? $this->rich_text($value)
-            : $this->plain_text($value, $this->is_multiline_field($field));
     }
 
     private function is_multiline_field(array $field)
@@ -1512,14 +894,9 @@ class Content_section_service
         return function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value);
     }
 
-    private function is_url_field(array $field)
-    {
-        return (bool) preg_match('/(^|_)url$/', $field['key']);
-    }
-
     private function invalidate_web_cache($page_id)
     {
-        unset($this->read_cache['web:'.(int) $page_id.':en'], $this->read_cache['web:'.(int) $page_id.':ar']);
+        unset($this->read_cache['web:'.(int) $page_id.':en']);
         $page = $this->CI->web_page_sections->find_page($page_id);
         if ((int) $page_id === 1) {
             $this->CI->output->delete_cache('/');
@@ -1527,22 +904,16 @@ class Content_section_service
         if ($page && !empty($page['page_slug'])) {
             $this->CI->output->delete_cache($page['page_slug'].'.html');
         }
-        if ($page && !empty($page['page_slug_ar'])) {
-            $this->CI->output->delete_cache($page['page_slug_ar'].'.html');
-        }
     }
 
     private function invalidate_miscellaneous_cache()
     {
-        unset($this->read_cache['misc:en'], $this->read_cache['misc:ar']);
+        unset($this->read_cache['misc:en']);
         $this->CI->output->delete_cache('/');
-        $pages = $this->CI->db->select('page_slug,page_slug_ar')->where('page_status', 'Published')->get('pages')->result_array();
+        $pages = $this->CI->db->select('page_slug')->where('page_status', 'Published')->get('pages')->result_array();
         foreach ($pages as $page) {
             if (!empty($page['page_slug'])) {
                 $this->CI->output->delete_cache($page['page_slug'].'.html');
-            }
-            if (!empty($page['page_slug_ar'])) {
-                $this->CI->output->delete_cache($page['page_slug_ar'].'.html');
             }
         }
     }

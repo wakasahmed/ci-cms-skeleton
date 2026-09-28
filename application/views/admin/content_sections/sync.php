@@ -69,7 +69,6 @@ $missingCount = count($items);
                     <th scope="col">Section</th>
                     <th scope="col">Field</th>
                     <th scope="col">Key</th>
-                    <th scope="col">Language</th>
                     <th scope="col">Value to Add</th>
                 </tr>
             </thead>
@@ -80,16 +79,12 @@ $missingCount = count($items);
                         $fieldLabel = $item['field_group'] !== null
                             ? $item['field_group'].' › '.$item['field_label']
                             : $item['field_label'];
-                        $localeLabel = isset($locales[$item['locale']]['label'])
-                            ? $locales[$item['locale']]['label']
-                            : $item['locale'];
                         ?>
                         <tr>
                             <td><?php echo $escape($item['group_label']); ?></td>
                             <td><?php echo $escape($item['section_label']); ?></td>
                             <td><?php echo $escape($fieldLabel); ?></td>
                             <td><code><?php echo $escape($item['field_key']); ?></code></td>
-                            <td><?php echo $escape($localeLabel); ?></td>
                             <td>
                                 <?php if ($item['field_value'] === null) { ?>
                                     <span class="text-muted">Empty</span>
@@ -101,9 +96,9 @@ $missingCount = count($items);
                     <?php } ?>
                 <?php } else { ?>
                     <tr>
-                        <td class="pages-empty-state" colspan="6">
+                        <td class="pages-empty-state" colspan="5">
                             <strong>No missing fields.</strong>
-                            <span>Every configured field exists in the database for every language.</span>
+                            <span>Every configured field exists in the database.</span>
                         </td>
                     </tr>
                 <?php } ?>

@@ -23,6 +23,9 @@ class Frontend_seo
 
     const IMAGE_HEIGHT = 630;
 
+    /** The site is published in English only (BCP 47 tag). */
+    const LANGUAGE = 'en';
+
     /** Site-wide sharing image, used only when a record has no usable image. */
     const DEFAULT_IMAGE = 'assets/frontend/images/alam/og-default.png';
 
@@ -114,45 +117,25 @@ class Frontend_seo
         return mb_strlen($branded, 'UTF-8') <= self::TITLE_LENGTH ? $branded : $name;
     }
 
-    /** The site name in the active locale, from Website Settings. */
+    /** The site name, from Website Settings. */
     public function siteName()
     {
-        return $this->localizedSetting('website_title');
+        return $this->setting('website_title');
     }
 
     /** Site-wide description used when a page has nothing more specific. */
     public function siteDescription()
     {
-        return $this->excerpt($this->localizedSetting('website_intro'));
+        return $this->excerpt($this->setting('website_intro'));
     }
 
-    /** Value of a Website Settings column, preferring the active locale's `_ar` column. */
-    public function localizedSetting($key)
+    /** Value of a Website Settings column as plain text. */
+    public function setting($key)
     {
         $settings = $this->CI->config->item('frontend_site_settings');
         $settings = is_array($settings) ? $settings : array();
 
-        if ($this->locale() === 'ar' && isset($settings[$key . '_ar']) && trim((string) $settings[$key . '_ar']) !== '') {
-            return $this->plainText($settings[$key . '_ar']);
-        }
-
         return isset($settings[$key]) ? $this->plainText($settings[$key]) : '';
-    }
-
-    /**
-     * The locale visitors with no saved preference are sent to (Website Settings
-     * > Default Language). It is what hreflang "x-default" must point at, because
-     * the site root redirects there.
-     */
-    public function defaultLocale()
-    {
-        $settings = $this->CI->config->item('frontend_site_settings');
-
-        return is_array($settings)
-            && isset($settings['default_language'])
-            && strtolower(trim((string) $settings['default_language'])) === 'arabic'
-            ? 'ar'
-            : 'en';
     }
 
     /** Website Settings "Website Under Construction" switch. */
@@ -204,9 +187,6 @@ class Frontend_seo
 
     /**
      * Search and sharing values for one record, merged over the caller's page config.
-     *
-     * $row is the record as loaded for the active locale, so its bilingual columns
-     * are already resolved with the project's Arabic-to-English fallback.
      *
      * Options:
      *   name         Record name; the title falls back to "name | site".
@@ -351,32 +331,28 @@ class Frontend_seo
      * URLs
      * ------------------------------------------------------------------ */
 
-    public function homeUrl($locale)
+    public function homeUrl()
     {
-        return base_url($this->normalizeLocale($locale) . '/');
+        return base_url();
     }
 
     /** A CMS page URL from its managed slug. */
-    public function pageUrl($slug, $locale)
+    public function pageUrl($slug)
     {
-        return base_url($this->normalizeLocale($locale) . '/' . $this->encodePath($slug));
+        return base_url($this->encodePath($slug));
     }
 
-    public function blogPostUrl($slug, $locale)
+    public function blogPostUrl($slug)
     {
-        return base_url(
-            $this->normalizeLocale($locale) . '/' . BLOG_URI . rawurlencode(trim((string) $slug))
-        );
+        return base_url(BLOG_URI . rawurlencode(trim((string) $slug)));
     }
 
-    public function blogCategoryUrl($slug, $locale)
+    public function blogCategoryUrl($slug)
     {
-        return base_url(
-            $this->normalizeLocale($locale) . '/' . BLOG_CATEGORY_URI . rawurlencode(trim((string) $slug))
-        );
+        return base_url(BLOG_CATEGORY_URI . rawurlencode(trim((string) $slug)));
     }
 
-    /** Percent-encodes non-ASCII characters so canonical, hreflang and sitemap URLs agree. */
+    /** Percent-encodes non-ASCII characters so canonical and sitemap URLs agree. */
     public function encodeUrl($url)
     {
         $encoded = preg_replace_callback(
@@ -404,8 +380,7 @@ class Frontend_seo
     /**
      * The JSON-LD @graph printed in every page head.
      *
-     * $page keys: canonical, title, description, locale_tag, locales (BCP 47
-     * tags), page_type, image (url/width/height), crumbs (label/href), nodes
+     * $page keys: canonical, title, description, page_type, image (url/width/height), crumbs (label/href), nodes
      * (record-specific nodes), is_home, organization (see organizationNode()).
      */
     public function graph(array $page)
@@ -421,7 +396,7 @@ class Frontend_seo
                 '@id' => $websiteId,
                 'url' => $this->siteRootUrl(),
                 'name' => $page['organization']['name'],
-                'inLanguage' => $page['locales'],
+                'inLanguage' => self::LANGUAGE,
                 'publisher' => array('@id' => $organizationId),
             ),
         );
@@ -432,7 +407,7 @@ class Frontend_seo
             'url' => $page['canonical'],
             'name' => $page['title'],
             'description' => $page['description'],
-            'inLanguage' => $page['locale_tag'],
+            'inLanguage' => self::LANGUAGE,
             'isPartOf' => array('@id' => $websiteId),
         );
 
@@ -480,7 +455,7 @@ class Frontend_seo
             'areaServed' => $facts['area_served'],
             'address' => $facts['address'],
             'sameAs' => $facts['same_as'],
-            'knowsLanguage' => array('en', 'ar'),
+            'knowsLanguage' => array(self::LANGUAGE),
         );
 
         if ($facts['description'] !== '') {
@@ -550,7 +525,7 @@ class Frontend_seo
             'description' => $article['description'],
             'url' => $article['url'],
             'mainEntityOfPage' => array('@id' => $article['url'] . '#webpage'),
-            'inLanguage' => $article['locale_tag'],
+            'inLanguage' => self::LANGUAGE,
             'datePublished' => $article['published'],
             'dateModified' => $article['modified'] !== '' ? $article['modified'] : $article['published'],
             'publisher' => array('@id' => $this->siteRootId() . '#organization'),
@@ -615,10 +590,10 @@ class Frontend_seo
         return $time !== false ? date('c', $time) : '';
     }
 
-    /** Identifies the organization and website across both locales. */
+    /** Identifies the organization and website. */
     private function siteRootUrl()
     {
-        return $this->homeUrl($this->defaultLocale());
+        return $this->homeUrl();
     }
 
     private function siteRootId()
@@ -632,15 +607,5 @@ class Frontend_seo
         return array_filter($node, static function ($value) {
             return $value !== null && $value !== '' && $value !== array();
         });
-    }
-
-    private function locale()
-    {
-        return defined('FRONTEND_LOCALE') && FRONTEND_LOCALE === 'ar' ? 'ar' : 'en';
-    }
-
-    private function normalizeLocale($locale)
-    {
-        return $locale === 'ar' ? 'ar' : 'en';
     }
 }

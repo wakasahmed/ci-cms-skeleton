@@ -87,7 +87,7 @@ foreach ($services as $service) {
                             value="<?php echo $value('artist_name'); ?>"
                             class="form-control<?php echo $isEdit ? '' : ' auto-slug-source'; ?><?php echo $invalidClass('artist_name'); ?>"
                             data-validate="required,maxlength[120]"
-                            <?php if (!$isEdit) { ?>data-slug-target="#artist_slug" data-slug-language="en"<?php } ?>
+                            <?php if (!$isEdit) { ?>data-slug-target="#artist_slug"<?php } ?>
                             placeholder="Ewa Mazur"
                             required
                         >
@@ -120,7 +120,7 @@ foreach ($services as $service) {
                             data-validate="required,maxlength[130]"
                             required
                         >
-                        <button type="button" class="btn btn-outline-secondary generate-slug" data-slug-source="#artist_name" data-slug-target="#artist_slug" data-slug-language="en">
+                        <button type="button" class="btn btn-outline-secondary generate-slug" data-slug-source="#artist_name" data-slug-target="#artist_slug">
                             <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
                             <span class="d-none d-sm-inline">Generate</span>
                         </button>

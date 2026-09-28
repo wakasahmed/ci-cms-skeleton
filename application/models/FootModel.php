@@ -61,8 +61,8 @@ class FootModel extends SqlModel
         }
 
         $suffix = $this->columnSuffixes[$type];
-        $fields = 'page_id,page_parent_id,page_slug,page_slug_ar,'
-            .'page_name,page_name_ar,menu_name,menu_name_ar,'
+        $fields = 'page_id,page_parent_id,page_slug,'
+            .'page_name,menu_name,'
             .'menu_parent_id_'.$suffix.' AS menu_parent_id,'
             .'menu_order_'.$suffix.' AS menu_order,'
             .'menu_active_'.$suffix.' AS menu_active';

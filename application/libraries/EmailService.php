@@ -16,7 +16,7 @@ class EmailService
     /**
      * Short tags each notification entity supports. The parse*ShortTags() methods
      * replace exactly these, and the manage/admin short tag picker lists them for
-     * email and WhatsApp templates (see Short_tags and config/short_tags.php).
+     * email templates (see Short_tags and config/short_tags.php).
      */
     private static $shortTagFields = array(
         'contact' => array(
@@ -31,12 +31,10 @@ class EmailService
             'user_agent',
             'created_at',
             'updated_at',
-            'country',
-            'website',
         ),
     );
 
-    /** Tags that render HTML, so they only work in emails, never in WhatsApp templates. */
+    /** Tags that render HTML rather than plain text. */
     private static $htmlShortTags = array();
 
     public function __construct()
@@ -145,15 +143,14 @@ class EmailService
     }
 
     /**
-     * Render the shared branded email view for a supported locale.
+     * Render the shared branded email view.
      *
      * Callers may supply body or contents for the main HTML content. The
      * branding and Email footer navigation use Website Settings and the
      * links managed at /manage/foot/index/three unless explicitly supplied.
      */
-    public function renderTemplate(array $params = array(), $locale = 'English')
+    public function renderTemplate(array $params = array())
     {
-        $locale = $this->normalizeLocale($locale);
         $settings = !empty($params['site_settings']) && is_array($params['site_settings'])
             ? $params['site_settings']
             : $this->CI->SqlModel->getSingleRecord('site_settings', array('id' => 1));
@@ -163,38 +160,30 @@ class EmailService
             return FALSE;
         }
 
-        $titleField = $locale === 'Arabic' ? 'website_title_ar' : 'website_title';
-        $brandName = !empty($settings[$titleField])
-            ? trim($settings[$titleField])
-            : trim($settings['website_title']);
+        $brandName = trim((string) $settings['website_title']);
         $body = isset($params['body'])
             ? $params['body']
             : (isset($params['contents']) ? $params['contents'] : '');
         $logoFile = !empty($settings['logo']) ? trim($settings['logo']) : '';
-        $copyrightField = $locale === 'Arabic' ? 'copyright_text_ar' : 'copyright_text';
-        $licenseField = $locale === 'Arabic' ? 'license_number_ar' : 'license_number';
-        $copyrightText = !empty($settings[$copyrightField])
-            ? str_replace('[YEAR]', date('Y'), trim($settings[$copyrightField]))
+        $copyrightText = !empty($settings['copyright_text'])
+            ? str_replace('[YEAR]', date('Y'), trim($settings['copyright_text']))
             : '';
-        $licenseNumber = !empty($settings[$licenseField]) ? trim($settings[$licenseField]) : '';
+        $licenseNumber = !empty($settings['license_number']) ? trim($settings['license_number']) : '';
 
         $data = array_merge($params, array(
             'site_settings' => $settings,
-            'locale' => $locale,
             'brand_name' => $brandName,
             'logo_url' => $logoFile === '' ? '' : $this->logoUrl($logoFile),
             'heading' => isset($params['heading']) ? $params['heading'] : '',
             'body' => $body,
             'footer' => isset($params['footer'])
                 ? $params['footer']
-                : $this->CI->SqlModel->getFoot('three', $locale),
+                : $this->CI->SqlModel->getFoot('three', TRUE),
             'copyright_text' => $copyrightText,
             'license_number' => $licenseNumber,
         ));
 
-        $view = $locale === 'Arabic' ? 'email/arabic' : 'email/english';
-
-        return $this->CI->load->view($view, $data, TRUE);
+        return $this->CI->load->view('email/english', $data, TRUE);
     }
 
     /** Short tag names an entity supports (currently only contact). */
@@ -238,8 +227,6 @@ class EmailService
      * Supported options:
      * - template_id: the email_templates.id to send
      * - to: recipient address
-     * - language: 'English' or 'Arabic'. The Arabic fields are used only when the template
-     *   has an Arabic subject and body, otherwise the English fields are sent.
      * - values: short-tag values keyed by field name
      * - parser: the parse*ShortTags() method that owns the template's tags
      *   (currently parseContactShortTags)
@@ -251,7 +238,6 @@ class EmailService
         $options = array_merge(array(
             'template_id' => 0,
             'to' => '',
-            'language' => 'English',
             'values' => array(),
             'parser' => '',
             'multiline_fields' => array(),
@@ -269,20 +255,12 @@ class EmailService
             return $this->fail($label.' email template '.$templateId.' is missing.');
         }
 
-        $isArabic = $this->normalizeLocale($options['language']) === 'Arabic';
-        $useArabicTemplate = $isArabic
-            && trim((string) $template['subject_ar']) !== ''
-            && trim((string) $template['contents_ar']) !== '';
-        $subjectField = $useArabicTemplate ? 'subject_ar' : 'subject';
-        $headingField = $useArabicTemplate ? 'heading_ar' : 'heading';
-        $contentsField = $useArabicTemplate ? 'contents_ar' : 'contents';
-        $subjectTemplate = trim((string) $template[$subjectField]);
-        $contentsTemplate = trim((string) $template[$contentsField]);
+        $subjectTemplate = trim((string) $template['subject']);
+        $contentsTemplate = trim((string) $template['contents']);
 
         if ($subjectTemplate === '' || $contentsTemplate === '') {
             return $this->fail(
-                $label.' was not sent because email template '.$templateId.' has incomplete '.
-                ($useArabicTemplate ? 'Arabic' : 'English').' fields.'
+                $label.' was not sent because email template '.$templateId.' has incomplete fields.'
             );
         }
 
@@ -301,14 +279,14 @@ class EmailService
         $parser = $options['parser'];
         $subject = $this->$parser($subjectTemplate, $headerValues);
         $heading = $this->$parser(
-            isset($template[$headingField]) ? $template[$headingField] : '',
+            isset($template['heading']) ? $template['heading'] : '',
             $htmlValues
         );
         $contents = $this->$parser($contentsTemplate, $htmlValues);
         $message = $this->renderTemplate(array(
             'heading' => $heading,
             'body' => $contents,
-        ), $useArabicTemplate ? 'Arabic' : 'English');
+        ));
 
         if ($message === FALSE) {
             return $this->fail($label.' template could not be rendered.');
@@ -328,105 +306,36 @@ class EmailService
         return $sent;
     }
 
-    /**
-     * Currency label from Website Settings in the recipient's language. Falls back to
-     * $fallback (for example a currency stored on a record) when the setting is empty.
-     */
-    public function currencyUnit($locale, $fallback = '')
-    {
-        $settings = $this->CI->SqlModel->getSingleRecord('site_settings', array('id' => 1));
-        $field = $this->normalizeLocale($locale) === 'Arabic' ? 'currency_unit_ar' : 'currency_unit';
-        $unit = is_array($settings) && isset($settings[$field])
-            ? trim((string) $settings[$field])
-            : '';
-
-        if ($unit === '') {
-            $unit = trim((string) $fallback);
-        }
-
-        return $unit !== '' ? $unit : 'SAR';
-    }
-    /**
-     * Format a date for an email in the recipient's language. Arabic uses the frontend
-     * Arabic month names ("21 سبتمبر 2026"); English uses EMAIL_DATE_FORMAT. Digits stay
-     * Western, as on the Arabic frontend. Values that cannot be parsed are returned as-is.
-     */
-    public function formatDate($value, $locale = 'English')
+    /** Format a date for an email. Values that cannot be parsed are returned as-is. */
+    public function formatDate($value)
     {
         $timestamp = strtotime((string) $value);
-        if ($timestamp === FALSE) {
-            return (string) $value;
-        }
 
-        if ($this->normalizeLocale($locale) !== 'Arabic') {
-            return date(EMAIL_DATE_FORMAT, $timestamp);
-        }
-
-        $catalog = $this->arabicFrontendCatalog();
-        $monthKey = 'month.'.(int) date('n', $timestamp);
-        $month = isset($catalog[$monthKey]) && is_string($catalog[$monthKey])
-            ? $catalog[$monthKey]
-            : date('F', $timestamp);
-        $template = isset($catalog['format.date']) && is_string($catalog['format.date'])
-            ? $catalog['format.date']
-            : '{day} {month} {year}';
-
-        return strtr($template, array(
-            '{day}' => date('j', $timestamp),
-            '{month}' => $month,
-            '{year}' => date('Y', $timestamp),
-        ));
+        return $timestamp === FALSE
+            ? (string) $value
+            : date(EMAIL_DATE_FORMAT, $timestamp);
     }
 
-    /**
-     * Format a time for an email in the recipient's language. Arabic keeps EMAIL_TIME_FORMAT
-     * but shows the am/pm marker as ص / م. Values that cannot be parsed are returned as-is.
-     */
-    public function formatTime($value, $locale = 'English')
+    /** Format a time for an email. Values that cannot be parsed are returned as-is. */
+    public function formatTime($value)
     {
         $timestamp = strtotime((string) $value);
-        if ($timestamp === FALSE) {
-            return (string) $value;
-        }
 
-        if ($this->normalizeLocale($locale) !== 'Arabic') {
-            return date(EMAIL_TIME_FORMAT, $timestamp);
-        }
-
-        $output = '';
-        $escaped = FALSE;
-        for ($index = 0, $length = strlen(EMAIL_TIME_FORMAT); $index < $length; $index++) {
-            $token = EMAIL_TIME_FORMAT[$index];
-
-            if ($escaped) {
-                $output .= $token;
-                $escaped = FALSE;
-            } elseif ($token === '\\') {
-                $escaped = TRUE;
-            } elseif ($token === 'a' || $token === 'A') {
-                $output .= date('a', $timestamp) === 'am' ? 'ص' : 'م';
-            } else {
-                $output .= date($token, $timestamp);
-            }
-        }
-
-        return $output;
+        return $timestamp === FALSE
+            ? (string) $value
+            : date(EMAIL_TIME_FORMAT, $timestamp);
     }
 
-    /** Format a date and time for an email in the recipient's language. */
-    public function formatDateTime($value, $locale = 'English')
+    /** Format a date and time for an email. Values that cannot be parsed are returned as-is. */
+    public function formatDateTime($value)
     {
         $timestamp = strtotime((string) $value);
-        if ($timestamp === FALSE) {
-            return (string) $value;
-        }
 
-        if ($this->normalizeLocale($locale) !== 'Arabic') {
-            return date(EMAIL_DATETIME_FORMAT, $timestamp);
-        }
-
-        return $this->formatDate($value, $locale).' '.$this->formatTime($value, $locale);
+        return $timestamp === FALSE
+            ? (string) $value
+            : date(EMAIL_DATETIME_FORMAT, $timestamp);
     }
+
     public function getLastError()
     {
         return $this->lastError;
@@ -465,26 +374,6 @@ class EmailService
         }
 
         return $this->CI->imagethumb->image($path, 0, 140);
-    }
-
-    /** Arabic frontend language file, which holds the Arabic month names and date format. */
-    private function arabicFrontendCatalog()
-    {
-        static $catalog = NULL;
-
-        if ($catalog === NULL) {
-            $loaded = $this->CI->lang->load('frontend', 'arabic', TRUE);
-            $catalog = is_array($loaded) ? $loaded : array();
-        }
-
-        return $catalog;
-    }
-
-    private function normalizeLocale($locale)
-    {
-        $locale = strtolower(trim((string) $locale));
-
-        return in_array($locale, array('ar', 'arabic'), TRUE) ? 'Arabic' : 'English';
     }
 
     private function attach($attachment)

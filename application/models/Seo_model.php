@@ -13,7 +13,7 @@ class Seo_model extends SqlModel
     public function get_pages($indexableOnly = true)
     {
         $this->db->select(
-            'page_id, page_slug, page_slug_ar, page_name, page_name_ar, page_updated, og_image, banner_background',
+            'page_id, page_slug, page_name, page_updated, og_image, banner_background',
             false
         );
         $this->db->from('pages');
@@ -30,7 +30,7 @@ class Seo_model extends SqlModel
     public function get_blog_posts($indexableOnly = true)
     {
         $this->db->select(
-            'blog_id, blog_slug, blog_slug_ar, blog_name, blog_short_description, blog_added, blog_pdate, '
+            'blog_id, blog_slug, blog_name, blog_short_description, blog_added, blog_pdate, '
             . 'blog_updated, blog_image, blog_cover_image, og_image',
             false
         );

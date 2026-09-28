@@ -7,14 +7,13 @@ class Blog_categories extends CI_Controller {
 	public $pKey = 'cat_id';
 	public $moduleName = 'Blog Categories';
 	public $moduleNameSingular = 'Blog Category';
-	public $moduleDesc = 'Organize blogs into localized categories and manage their search and banner presentation.';
+	public $moduleDesc = 'Organize blogs into categories and manage their search and banner presentation.';
 	public $controller = 'blog-categories';
 	public $per_page = 10;
 	public $tStatus = 'cat_status';
 	public $listView = 'blogCategories';
 	public $addEditView = 'addBlogCategory';
 	public $user_data = array();
-	private $translationModule = 'blog_categories';
 	private $imageDirectory = 'assets/frontend/images/blog-categories';
 	private $protectedID = 1;
 
@@ -23,7 +22,7 @@ class Blog_categories extends CI_Controller {
 		parent::__construct();
 		$this->user_data = $this->SqlModel->authAdmin($this->session->userdata('admin_auth'), $this->session->userdata('admin_id'));
 		if (empty($this->user_data)) redirect(base_url('manage/login'));
-		$this->load->library('manage_translation_service');
+		$this->load->helper('admin_input');
 	}
 
 	public function index($sortby = 'cat_order', $order = 'ASC', $status = '-', $keywords = '-', $pgNo = '')
@@ -41,7 +40,7 @@ class Blog_categories extends CI_Controller {
 		$keywords = urldecode((string) $keywords);
 		$where = array('cat_id >' => $this->protectedID);
 		if ($status !== '-') $where[$this->tStatus] = $status;
-		$search = $keywords !== '-' ? array('cols' => 'cat_name,cat_name_ar,cat_slug,cat_slug_ar', 'value' => $keywords) : array();
+		$search = $keywords !== '-' ? array('cols' => 'cat_name,cat_slug', 'value' => $keywords) : array();
 		$base = base_url('manage/'.$this->controller.'/index/'.$sortby.'/'.$order.'/'.$status.'/'.urlencode($keywords));
 		$total = $this->SqlModel->countRecords($this->tblName, $where, $search);
 		$offset = max(0, (int) ($pgNo !== '' ? $pgNo : $this->uri->segment(8, 0)));
@@ -75,8 +74,6 @@ class Blog_categories extends CI_Controller {
 			'page_numb' => $offset,
 			'status' => $status,
 			'keywords' => $keywords,
-			'translation_statuses' => empty($ids) ? array() : $this->manage_translation_service->statuses($this->translationModule, $ids),
-			'useManageTranslations' => TRUE,
 		));
 	}
 
@@ -91,41 +88,35 @@ class Blog_categories extends CI_Controller {
 		}
 
 		$posted = $this->session->flashdata($this->controller.'_data');
-		$requested = is_array($posted) && isset($posted['active_locale']) ? $posted['active_locale'] : $this->input->get('lang', TRUE);
-		$locale = $editID > 0 ? $this->manage_translation_service->locale($requested) : 'en';
-		$localized = $this->manage_translation_service->localized_values($this->translationModule, $record, $locale);
-		if (is_array($posted)) foreach (array_keys($localized) as $key) if (array_key_exists($key, $posted)) $localized[$key] = $posted[$key];
-		$this->configureEditor($locale);
+		$textValues = array();
+		foreach ($this->textFields() as $column => $maxLength) $textValues[$column] = isset($record[$column]) ? $record[$column] : '';
+		if (is_array($posted)) foreach (array_keys($textValues) as $key) if (array_key_exists($key, $posted)) $textValues[$key] = $posted[$key];
+		$this->configureEditor();
 
 		$this->render($this->addEditView, array(
 			'blogCategoriesActive' => 1,
 			'page_title' => PROJECT_TITLE.' | '.($editID ? 'Edit' : 'Add').' '.$this->moduleNameSingular,
 			'userdata' => $this->user_data,
 			'tbl_data' => $record,
-			'form_values' => $this->formValues($record, $locale, $posted),
-			'localized_values' => $localized,
-			'active_locale' => $locale,
-			'manage_locales' => $this->manage_translation_service->locales(),
-			'translation_state' => $editID ? $this->manage_translation_service->state($this->translationModule, $editID) : NULL,
+			'form_values' => $this->formValues($record, $posted),
+			'text_values' => $textValues,
 			'form_error' => $this->session->flashdata('form_error'),
 			'next_order' => $this->nextOrder(),
 			'useColorPicker' => TRUE,
-			'useManageTranslations' => TRUE,
 			'useSweetAlert' => TRUE,
 		));
 	}
 
 	public function addRecord()
 	{
-		if (!$this->validPost('en')) return $this->formFailure('Enter a category name and valid URL slug, then check the publishing and banner settings.');
-		if ($this->categoryExists('en', $this->clean($this->input->post('localized_name'), 255), $this->normalizeSlug($this->input->post('page_slug')))) return $this->formFailure('A blog category with this name or URL slug already exists.');
+		if (!$this->validPost()) return $this->formFailure('Enter a category name and valid URL slug, then check the publishing and banner settings.');
+		if ($this->categoryExists($this->clean($this->input->post('cat_name'), 255), $this->normalizeSlug($this->input->post('page_slug')))) return $this->formFailure('A blog category with this name or URL slug already exists.');
 
-		$uploads = $this->saveUploads('en');
+		$uploads = $this->saveUploads();
 		if ($uploads['error']) return $this->formFailure($uploads['error']);
 
-		$data = $this->postedData('en');
+		$data = $this->postedData();
 		$data['cat_slug'] = $this->uniqueSlug('cat_slug', $this->normalizeSlug($this->input->post('page_slug')));
-		$data['cat_name_ar'] = $data['cat_slug_ar'] = $data['cat_desc_ar'] = '';
 		$data['cat_order'] = $this->nextOrder();
 		$data['cat_added'] = $data['cat_updated'] = date('Y-m-d H:i:s');
 		foreach ($uploads['files'] as $column => $file) if ($file !== '') $data[$column] = $file;
@@ -140,7 +131,6 @@ class Blog_categories extends CI_Controller {
 		}
 		$this->db->trans_commit();
 
-		$this->queue($id);
 		$this->session->set_flashdata('alert', 'success');
 		redirect(base_url('manage/'.$this->controller));
 	}
@@ -155,16 +145,14 @@ class Blog_categories extends CI_Controller {
 			return redirect(base_url('manage/'.$this->controller));
 		}
 
-		$locale = $this->manage_translation_service->locale($this->input->post('active_locale', TRUE));
-		if (!$this->validPost($locale)) return $this->formFailure('Enter a category name and valid URL slug, then check the publishing and banner settings.', $editID, $locale);
-		if ($this->categoryExists($locale, $this->clean($this->input->post('localized_name'), 255), $this->normalizeSlug($this->input->post('page_slug')), $editID)) return $this->formFailure('A blog category with this name or URL slug already exists.', $editID, $locale);
+		if (!$this->validPost()) return $this->formFailure('Enter a category name and valid URL slug, then check the publishing and banner settings.', $editID);
+		if ($this->categoryExists($this->clean($this->input->post('cat_name'), 255), $this->normalizeSlug($this->input->post('page_slug')), $editID)) return $this->formFailure('A blog category with this name or URL slug already exists.', $editID);
 
-		$uploads = $this->saveUploads($locale);
-		if ($uploads['error']) return $this->formFailure($uploads['error'], $editID, $locale);
+		$uploads = $this->saveUploads();
+		if ($uploads['error']) return $this->formFailure($uploads['error'], $editID);
 
-		$data = $this->postedData($locale);
-		$slugColumn = $locale === 'ar' ? 'cat_slug_ar' : 'cat_slug';
-		$data[$slugColumn] = $this->uniqueSlug($slugColumn, $this->normalizeSlug($this->input->post('page_slug')), $editID);
+		$data = $this->postedData();
+		$data['cat_slug'] = $this->uniqueSlug('cat_slug', $this->normalizeSlug($this->input->post('page_slug')), $editID);
 		$data['cat_updated'] = date('Y-m-d H:i:s');
 		foreach ($uploads['files'] as $column => $file) if ($file !== '') $data[$column] = $file;
 
@@ -174,16 +162,12 @@ class Blog_categories extends CI_Controller {
 		{
 			$this->db->trans_rollback();
 			$this->cleanup($uploads['files']);
-			return $this->formFailure('The blog category could not be updated. Please try again.', $editID, $locale);
+			return $this->formFailure('The blog category could not be updated. Please try again.', $editID);
 		}
 		$this->db->trans_commit();
 
 		foreach ($uploads['files'] as $column => $file) if ($file !== '') $this->deleteImage(isset($current[$column]) ? $current[$column] : '');
-		if ($locale === 'en') $this->queue($editID);
 		$this->session->set_flashdata('alert', 'editsuccess');
-
-		$redirect = $this->input->post('redirect_lang', TRUE);
-		if (is_string($redirect) && $redirect !== '' && $this->manage_translation_service->locale($redirect) === $redirect) return redirect(base_url('manage/'.$this->controller.'/control/'.$editID.'?lang='.$redirect));
 		redirect(base_url('manage/'.$this->controller));
 	}
 
@@ -222,14 +206,12 @@ class Blog_categories extends CI_Controller {
 		unset($data[$this->pKey]);
 		$data['cat_name'] = $this->truncate($this->display($data['cat_name']).' Duplicate', 255);
 		$data['cat_slug'] = $this->uniqueSlug('cat_slug', $this->normalizeSlug($data['cat_slug'].'-copy'));
-		if (trim($data['cat_slug_ar']) !== '') $data['cat_slug_ar'] = $this->uniqueSlug('cat_slug_ar', $this->normalizeSlug($data['cat_slug_ar'].'-copy'));
 		$data['cat_order'] = $this->nextOrder();
 		$data['cat_added'] = $data['cat_updated'] = date('Y-m-d H:i:s');
 
 		$new = $this->SqlModel->insertRecord($this->tblName, $data);
 		if ($new)
 		{
-			$this->queue($new);
 			return redirect(base_url('manage/'.$this->controller.'/control/'.$new));
 		}
 		$this->session->set_flashdata('alert', 'error');
@@ -267,18 +249,14 @@ class Blog_categories extends CI_Controller {
 		$name = $this->clean($this->input->post('cat_name'), 255);
 		$slug = $this->normalizeSlug($this->input->post('cat_slug'));
 		if ($name === '' || $slug === '' || $this->length($name) > 255 || $this->length($slug) > 255) return $this->output->set_status_header(422)->set_output(json_encode(array('status' => 'false', 'message' => 'Enter a category name and valid URL slug.')));
-		if ($this->categoryExists('en', $name, $slug)) return $this->output->set_status_header(409)->set_output(json_encode(array('status' => 'false', 'message' => 'A blog category with this name or URL slug already exists.')));
+		if ($this->categoryExists($name, $slug)) return $this->output->set_status_header(409)->set_output(json_encode(array('status' => 'false', 'message' => 'A blog category with this name or URL slug already exists.')));
 
 		$now = date('Y-m-d H:i:s');
 		$data = array(
 			'cat_name' => $name,
-			'cat_name_ar' => '',
 			'cat_slug' => $slug,
-			'cat_slug_ar' => '',
 			'cat_desc' => '',
-			'cat_desc_ar' => '',
 			'cat_contents' => '',
-			'cat_contents_ar' => '',
 			'cat_status' => 'Enable',
 			'cat_order' => $this->nextOrder(),
 			'cat_added' => $now,
@@ -294,7 +272,6 @@ class Blog_categories extends CI_Controller {
 		}
 		$this->db->trans_commit();
 
-		$this->queue($id);
 		return $this->output->set_output(json_encode(array(
 			'status' => 'true',
 			'cat_id' => (int) $id,
@@ -322,13 +299,15 @@ class Blog_categories extends CI_Controller {
 		return $this->output->set_output(json_encode(array('success' => TRUE, 'id' => $id, 'key' => $key)));
 	}
 
-	private function postedData($locale)
+	private function postedData()
 	{
-		$post = $this->input->post(NULL, FALSE);
-		$data = $this->manage_translation_service->localized_post_data($this->translationModule, $locale, is_array($post) ? $post : array());
-		foreach (array_keys($data) as $column)
+		$data = array();
+		foreach ($this->textFields() as $column => $maxLength)
 		{
-			if (!in_array($column, array('cat_contents', 'cat_contents_ar'), TRUE)) $data[$column] = $this->clean($data[$column], in_array($column, array('cat_name', 'cat_name_ar', 'page_title', 'page_title_ar', 'og_title', 'og_title_ar', 'banner_title', 'banner_title_ar', 'banner_heading', 'banner_heading_ar'), TRUE) ? 255 : NULL);
+			// Rich text from CKEditor is kept as HTML; everything else is plain text.
+			$data[$column] = $column === 'cat_contents'
+				? trim((string) $this->input->post($column, FALSE))
+				: $this->clean($this->input->post($column), $maxLength);
 		}
 		foreach ($this->colorFields() as $field)
 		{
@@ -344,10 +323,9 @@ class Blog_categories extends CI_Controller {
 		return $data;
 	}
 
-	private function validPost($locale)
+	private function validPost()
 	{
-		$post = $this->input->post(NULL, FALSE);
-		if (!$this->manage_translation_service->required_localized_input_valid($this->translationModule, $locale, is_array($post) ? $post : array())) return FALSE;
+		if ($this->clean($this->input->post('cat_name')) === '') return FALSE;
 
 		$slug = $this->normalizeSlug($this->input->post('page_slug'));
 		if ($slug === '' || $this->length($slug) > 255) return FALSE;
@@ -362,7 +340,7 @@ class Blog_categories extends CI_Controller {
 		return TRUE;
 	}
 
-	private function formValues($record, $locale, $posted)
+	private function formValues($record, $posted)
 	{
 		$v = array(
 			'page_slug' => '',
@@ -378,44 +356,43 @@ class Blog_categories extends CI_Controller {
 		foreach ($this->colorFields() as $f) $v[$f] = isset($record[$f]) ? $record[$f] : '';
 		foreach (array('cat_status', 'robots_index', 'robots_follow', 'show_top_banner', 'banner_overlay') as $f) if (isset($record[$f])) $v[$f] = $record[$f];
 
-		$suffix = $locale === 'ar' ? '_ar' : '';
-		if (isset($record['cat_slug'.$suffix])) $v['page_slug'] = $record['cat_slug'.$suffix];
+		if (isset($record['cat_slug'])) $v['page_slug'] = $record['cat_slug'];
 		$v['current_cat_cover_image'] = isset($record['cat_cover_image']) ? basename($record['cat_cover_image']) : '';
-		$v['current_og_image'] = isset($record['og_image'.$suffix]) ? basename($record['og_image'.$suffix]) : '';
-		$v['current_banner_background'] = isset($record['banner_background'.$suffix]) ? basename($record['banner_background'.$suffix]) : '';
+		$v['current_og_image'] = isset($record['og_image']) ? basename($record['og_image']) : '';
+		$v['current_banner_background'] = isset($record['banner_background']) ? basename($record['banner_background']) : '';
 
 		if (is_array($posted)) foreach (array_keys($v) as $f) if (strpos($f, 'current_') !== 0 && array_key_exists($f, $posted)) $v[$f] = $posted[$f];
 
 		return $v;
 	}
 
-	private function formFailure($message, $id = 0, $locale = 'en')
+	private function formFailure($message, $id = 0)
 	{
 		$posted = $this->input->post(NULL, FALSE);
 		$posted = is_array($posted) ? $posted : array();
-		$posted['active_locale'] = $this->manage_translation_service->locale($locale);
 		$this->session->set_flashdata($this->controller.'_data', $posted);
 		$this->session->set_flashdata('form_error', $message);
-		redirect(base_url('manage/'.$this->controller.'/control'.($id ? '/'.(int) $id.'?lang='.$this->manage_translation_service->locale($locale) : '')));
+		redirect(base_url('manage/'.$this->controller.'/control'.($id ? '/'.(int) $id.'' : '')));
 	}
 
-	private function configureEditor($locale)
+	private function configureEditor()
 	{
 		$this->load->library('ckeditor');
 		$this->load->library('ckfinder');
 		$this->ckeditor->basePath = base_url().'assets/ckeditor/';
 		$this->ckeditor->config['removePlugins'] = 'save, preview, newpage, forms, flash';
 		$this->ckeditor->config['height'] = '340px';
-		$this->ckeditor->config['contentsLangDirection'] = $locale === 'ar' ? 'rtl' : 'ltr';
-		$this->ckeditor->textareaAttributes = array('id' => 'localized_contents', 'data-translation-field' => 'localized_contents', 'dir' => $locale === 'ar' ? 'rtl' : 'ltr');
+		$this->ckeditor->textareaAttributes = array('id' => 'cat_contents');
 		$this->ckfinder->SetupCKEditor($this->ckeditor, '../../../../assets/ckfinder/');
 	}
 
-	private function saveUploads($locale)
+	private function saveUploads()
 	{
-		$suffix = $locale === 'ar' ? '_ar' : '';
-		$fields = array('og_image_upload' => 'og_image'.$suffix, 'banner_background_upload' => 'banner_background'.$suffix);
-		if ($locale === 'en') $fields = array('cat_cover_image_upload' => 'cat_cover_image') + $fields;
+		$fields = array(
+			'cat_cover_image_upload' => 'cat_cover_image',
+			'og_image_upload' => 'og_image',
+			'banner_background_upload' => 'banner_background',
+		);
 
 		$result = array('files' => array(), 'error' => '');
 		foreach ($fields as $field => $column)
@@ -485,7 +462,6 @@ class Blog_categories extends CI_Controller {
 		if (count($records) !== count($ids)) return FALSE;
 
 		$this->db->trans_begin();
-		foreach ($ids as $id) $this->manage_translation_service->delete_jobs($this->translationModule, $id);
 		$this->db->where_in('bc_cat_id', $ids)->delete('blog_assigned_cat');
 		$this->db->where_in($this->pKey, $ids)->delete($this->tblName);
 		if ($this->db->trans_status() === FALSE)
@@ -517,11 +493,9 @@ class Blog_categories extends CI_Controller {
 		delete_uploaded_file(FCPATH.$this->imageDirectory, $file);
 	}
 
-	private function categoryExists($locale, $name, $slug, $exclude = 0)
+	private function categoryExists($name, $slug, $exclude = 0)
 	{
-		$nameColumn = $locale === 'ar' ? 'cat_name_ar' : 'cat_name';
-		$slugColumn = $locale === 'ar' ? 'cat_slug_ar' : 'cat_slug';
-		$this->db->from($this->tblName)->group_start()->where($nameColumn, $name)->or_where($slugColumn, $slug)->group_end();
+		$this->db->from($this->tblName)->group_start()->where('cat_name', $name)->or_where('cat_slug', $slug)->group_end();
 		if ((int) $exclude > 0) $this->db->where($this->pKey.' !=', (int) $exclude);
 
 		return $this->db->count_all_results() > 0;
@@ -578,7 +552,27 @@ class Blog_categories extends CI_Controller {
 
 	private function imageColumns()
 	{
-		return array('cat_cover_image', 'og_image', 'og_image_ar', 'banner_background', 'banner_background_ar');
+		return array('cat_cover_image', 'og_image', 'banner_background');
+	}
+
+	/**
+	 * Text columns edited on the form, with their maximum length (NULL for none).
+	 */
+	private function textFields()
+	{
+		return array(
+			'cat_name' => 255,
+			'cat_desc' => NULL,
+			'cat_contents' => NULL,
+			'page_title' => 255,
+			'meta_description' => NULL,
+			'meta_keywords' => NULL,
+			'og_title' => 255,
+			'og_description' => NULL,
+			'banner_title' => 255,
+			'banner_heading' => 255,
+			'banner_text' => NULL,
+		);
 	}
 
 	private function normalizeRgba($v)
@@ -617,18 +611,6 @@ class Blog_categories extends CI_Controller {
 	private function length($v)
 	{
 		return function_exists('mb_strlen') ? mb_strlen((string) $v, 'UTF-8') : strlen((string) $v);
-	}
-
-	private function queue($id)
-	{
-		try
-		{
-			$this->manage_translation_service->queue($this->translationModule, (int) $id);
-		}
-		catch (Throwable $e)
-		{
-			log_message('error', 'Blog category translation could not be queued for record '.(int) $id.'.');
-		}
 	}
 
 	private function render($view, $data)

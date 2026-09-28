@@ -8,6 +8,12 @@ class Web_page_sections extends CI_Controller
 
     private $editView = 'admin/content_sections/web_page_edit';
 
+    /**
+     * Section fields are stored with a locale column; the site is English
+     * only, so every read and write uses this one locale.
+     */
+    private $locale = 'en';
+
     public function __construct()
     {
         parent::__construct();
@@ -23,7 +29,6 @@ class Web_page_sections extends CI_Controller
         }
 
         $this->load->library('content_section_service');
-        $this->load->library('manage_translation_service');
     }
 
     public function edit($pageID = 0)
@@ -31,7 +36,7 @@ class Web_page_sections extends CI_Controller
         $this->requirePermission('web_pages.view');
 
         $pageID = (int) $pageID;
-        $locale = $this->requestedLocale($this->input->get('lang', TRUE));
+        $locale = $this->locale;
         $editor = $this->loadEditor($pageID, $locale);
 
         $this->renderEditor($editor, $locale);
@@ -47,7 +52,7 @@ class Web_page_sections extends CI_Controller
         }
 
         $pageID = (int) $pageID;
-        $locale = $this->requestedLocale($this->input->post('locale', TRUE));
+        $locale = $this->locale;
         $editor = $this->loadEditor($pageID, $locale);
         $post = $this->input->post(NULL, FALSE);
         $validated = $this->content_section_service->validate_web(
@@ -96,15 +101,6 @@ class Web_page_sections extends CI_Controller
             return;
         }
 
-        if ($locale === 'en') {
-            $this->queueTranslationSafely($pageID);
-        }
-
-        $targetLocale = $this->safeRedirectLocale(
-            $this->input->post('redirect_lang', TRUE),
-            $locale
-        );
-
         $this->session->set_flashdata(
             'content_sections_message',
             'Page sections saved successfully.'
@@ -112,7 +108,7 @@ class Web_page_sections extends CI_Controller
 
         redirect(
             base_url(
-                'manage/web-pages/'.(int) $pageID.'/sections?lang='.$targetLocale
+                'manage/web-pages/'.(int) $pageID.'/sections'
             )
         );
     }
@@ -143,7 +139,7 @@ class Web_page_sections extends CI_Controller
         array $errors = array(),
         $errorMessage = ''
     ) {
-        $this->content_section_service->configure_ckeditor($locale);
+        $this->content_section_service->configure_ckeditor();
 
         $pageName = isset($editor['page']['page_name'])
             ? html_entity_decode(
@@ -152,10 +148,6 @@ class Web_page_sections extends CI_Controller
                 'UTF-8'
             )
             : 'Web Page';
-        $translationState = $this->manage_translation_service->state(
-            'web_page_sections',
-            (int) $editor['page']['page_id']
-        );
 
         $data = array(
             'page_title' => PROJECT_TITLE.' | Edit '.$pageName.' Sections',
@@ -163,15 +155,12 @@ class Web_page_sections extends CI_Controller
             'pagesActive' => 1,
             'useIconPicker' => TRUE,
             'useContentSections' => TRUE,
-            'useManageTranslations' => TRUE,
             'page' => $editor['page'],
             'editor_sections' => $editor['editor_sections'],
             'locale' => $locale,
-            'locales' => $this->content_section_service->locales(),
             'errors' => $errors,
             'error_message' => $errorMessage,
             'success_message' => $this->session->flashdata('content_sections_message'),
-            'translation_state' => $translationState,
             'can_update' => $this->content_section_service->can(
                 'web_pages.update',
                 $this->user_data
@@ -188,45 +177,6 @@ class Web_page_sections extends CI_Controller
     {
         if (!$this->content_section_service->can($capability, $this->user_data)) {
             show_error('Access denied.', 403);
-        }
-    }
-
-    private function requestedLocale($locale)
-    {
-        if ($locale === NULL || $locale === '') {
-            $locale = 'en';
-        }
-
-        $locale = $this->content_section_service->locale($locale);
-
-        if ($locale === FALSE) {
-            show_404();
-            return 'en';
-        }
-
-        return $locale;
-    }
-
-    private function safeRedirectLocale($locale, $fallback)
-    {
-        $locale = $this->content_section_service->locale($locale);
-
-        return $locale === FALSE ? $fallback : $locale;
-    }
-
-    private function queueTranslationSafely($pageID)
-    {
-        try {
-            $this->manage_translation_service->queue(
-                'web_page_sections',
-                (int) $pageID
-            );
-        } catch (Throwable $exception) {
-            log_message(
-                'error',
-                'Page sections translation could not be queued for page ID '
-                .(int) $pageID.'.'
-            );
         }
     }
 }

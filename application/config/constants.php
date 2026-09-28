@@ -117,36 +117,6 @@ defined('EMAIL_DATETIME_FORMAT') OR define('EMAIL_DATETIME_FORMAT', EMAIL_DATE_F
 
 /*
 |--------------------------------------------------------------------------
-| WhatsApp Cloud API
-|--------------------------------------------------------------------------
-|
-| Values come from the Meta app dashboard (WhatsApp > API Setup and
-| App settings > Basic). Use a permanent System User access token; the
-| temporary dashboard token expires after 24 hours. The verify token must
-| match the one entered beside the webhook callback URL in the dashboard.
-| All values must remain server-side.
-|
-*/
-define('WHATSAPP_GRAPH_API_URL', 'https://graph.facebook.com');
-define('WHATSAPP_GRAPH_API_VERSION', 'v26.0');
-// WhatsApp is removed in Phase 3 of PROJECT_PLAN.md. The values stay empty so
-// WHATSAPP_ENABLED is false until then.
-defined('WHATSAPP_PHONE_NUMBER_ID') OR define('WHATSAPP_PHONE_NUMBER_ID', '');
-defined('WHATSAPP_BUSINESS_ACCOUNT_ID') OR define('WHATSAPP_BUSINESS_ACCOUNT_ID', '');
-defined('WHATSAPP_ACCESS_TOKEN') OR define('WHATSAPP_ACCESS_TOKEN', '');
-defined('WHATSAPP_APP_SECRET') OR define('WHATSAPP_APP_SECRET', '');
-defined('WHATSAPP_WEBHOOK_VERIFY_TOKEN') OR define('WHATSAPP_WEBHOOK_VERIFY_TOKEN', '');
-define('WHATSAPP_TIMEOUT_SECONDS', 20);
-// Writes a one-line summary of each webhook event to application/logs/whatsapp_webhook.log.
-define('WHATSAPP_WEBHOOK_LOG', true);
-define(
-    'WHATSAPP_ENABLED',
-    WHATSAPP_PHONE_NUMBER_ID !== ''
-        && WHATSAPP_ACCESS_TOKEN !== ''
-);
-
-/*
-|--------------------------------------------------------------------------
 | Frontend Date and Time Display Format
 |--------------------------------------------------------------------------
 |
@@ -177,39 +147,7 @@ defined('RECAPTCHA_ENTERPRISE_PROJECT_ID') OR define('RECAPTCHA_ENTERPRISE_PROJE
 defined('RECAPTCHA_ENTERPRISE_SITE_KEY') OR define('RECAPTCHA_ENTERPRISE_SITE_KEY', '');
 defined('RECAPTCHA_ENTERPRISE_SECRET_KEY') OR define('RECAPTCHA_ENTERPRISE_SECRET_KEY', '');
 defined('RECAPTCHA_ENTERPRISE_CREDENTIALS_FILE') OR define('RECAPTCHA_ENTERPRISE_CREDENTIALS_FILE', '');
-// Google Maps and Places are removed in Phase 3 of PROJECT_PLAN.md.
-defined('GOOGLE_MAPS_API_KEY') OR define('GOOGLE_MAPS_API_KEY', '');
 
-// Google Cloud Translation configuration (used by the admin's Manage Translations feature).
-define('GOOGLE_TRANSLATION_PROJECT_ID', RECAPTCHA_ENTERPRISE_PROJECT_ID);
-define('GOOGLE_TRANSLATION_CREDENTIALS_FILE', RECAPTCHA_ENTERPRISE_CREDENTIALS_FILE);
-define('GOOGLE_TRANSLATION_LOCATION', 'global');
-define('GOOGLE_TRANSLATION_SOURCE_LANGUAGE', 'en');
-define('GOOGLE_TRANSLATION_TARGET_LANGUAGE', 'ar');
-define('GOOGLE_API_CA_BUNDLE', APPPATH.'third_party/google_api/cacert.pem');
-
-// Google Places API (New) configuration (frontend booking form pickup-location autocomplete).
-// The server authenticates with the service account above. GOOGLE_MAPS_API_KEY is a
-// browser key restricted by HTTP referrer, so server-side requests cannot use it.
-define('GOOGLE_PLACES_AUTOCOMPLETE_URL', 'https://places.googleapis.com/v1/places:autocomplete');
-define('GOOGLE_PLACES_DETAILS_URL', 'https://places.googleapis.com/v1/places/');
-define('GOOGLE_PLACES_OAUTH_SCOPE', 'https://www.googleapis.com/auth/cloud-platform');
-define('GOOGLE_PLACES_REGION_CODE', 'sa');
-define('GOOGLE_PLACES_MIN_INPUT_LENGTH', 2);
-define('GOOGLE_PLACES_MAX_INPUT_LENGTH', 120);
-define('GOOGLE_PLACES_TIMEOUT_SECONDS', 6);
-// A cached OAuth token is refreshed this long before Google says it expires.
-define('GOOGLE_PLACES_TOKEN_EXPIRY_MARGIN_SECONDS', 300);
-// Suggestions and selected places are restricted to this rectangle around Madinah.
-define('GOOGLE_PLACES_MADINAH_BOUNDS', array(
-    'south' => 24.30,
-    'west' => 39.40,
-    'north' => 24.70,
-    'east' => 39.90,
-));
-// Per visitor session: at most this many suggestion requests inside the window.
-define('GOOGLE_PLACES_RATE_LIMIT_REQUESTS', 120);
-define('GOOGLE_PLACES_RATE_LIMIT_WINDOW_SECONDS', 600);
 
 //Defining the assests dir
 $baseURL = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ? "https" : "http");
