@@ -81,7 +81,7 @@ Each item has a recommendation; the plan below assumes the recommendation unless
 
 | # | Decision | Recommendation |
 |---|----------|----------------|
-| D1 | Booking: real online booking engine, a **booking request** form, or phone-only? | Phase 6 ships a **booking request** (the wizard saves an appointment request; staff confirm by phone/email). A real availability engine is Phase 8, optional. |
+| D1 | Booking: real online booking engine, a **booking request** form, or phone-only? | Phase 6 shipped a **booking request** (staff confirm by phone/email). **Changed in Phase 8 (owner's decision, 2026-09-28): real-time booking** against the artists' diaries, confirmed straight away; placeholder artists are bookable; services that need different artists are booked back to back. |
 | D2 | Customer accounts (login/register/account/appointments) | **Defer.** Remove these routes from launch; revisit only if D1 becomes a real booking engine. |
 | D3 | Online payments | **None.** Remove Moyasar. Salons are paid in the studio. |
 | D4 | reCAPTCHA | **Keep reCAPTCHA Enterprise** (already integrated) for the contact and booking-request forms, with a new Google project/keys for Blossom. Remove only `google/cloud-translate` from Composer. |
@@ -667,6 +667,46 @@ request is marked Confirmed or Cancelled; the salon's own notifications stay bui
   remember tokens) in a separate `customers` table.
 - Account area: upcoming/past appointments, cancel/reschedule within policy.
 - Appointment reports (reuse the shared report partials if kept).
+
+**Status: real-time booking done (2026-09-28), branch `phase-8-realtime-booking`.** The owner
+chose real-time booking only (D1 changed); artist working hours and exceptions, customer
+accounts (D2 stays deferred) and appointment reports were not built.
+
+- **Availability** (`libraries/Booking_availability.php`). A visit is a run of back-to-back
+  segments, one per chosen service in the order chosen. Each needs an artist who offers
+  the service, works that weekday (the existing Manage > Artists working days, within the
+  salon's opening hours) and has no overlapping booking; every appointment except a
+  Cancelled one holds its artists' time. With "any artist" a segment keeps the previous
+  segment's artist when possible, otherwise the first free artist in team order.
+  `Booking_schedule` now holds only the salon rules (hours, window, slot grid, lead time).
+- **Owner's decisions:** placeholder artists are bookable (replace or disable them before
+  launch — on the Phase 7 launch checklist); services that no single artist offers are
+  booked back to back with different artists (for example the "Nails + hair" offer: Ewa,
+  then the beauty therapist).
+- **Wizard.** The date step loads free days and times from `/book/availability`; artists
+  who do not offer every chosen service are shown but cannot be chosen, and a preselected
+  one falls back to "any". "Send request" became "Confirm booking".
+- **Booking.** The chosen time is checked again under a MySQL named lock
+  (`blossom_booking`) and saved as Confirmed, with each service's artist and start time
+  (`docs/sql/phase-8-booking.sql` adds `service_artist_id`, `service_artist_name` and
+  `service_start_time` to `appointment_services`). A time taken meanwhile returns the
+  visitor to the date step with a message.
+- **Emails.** The client gets email template 3 (confirmed) at once, now listing each
+  service with its time and artist (`{{schedule}}`); the "request received" template 2
+  was removed. The salon notification reads "New booking". Cancelling in Manage >
+  Appointments still emails template 4 and frees the time.
+- **Wording.** The Book page notes and confirmation, the home page's booking step, the
+  artist page labels and the cancellation email no longer speak of requests
+  (`docs/sql/phase-8-booking-content.sql`). Manage > Appointments shows each service's
+  start time and artist.
+- Also fixed: the wizard's date step overflowed its column on phones (the scrolling day
+  row stretched the grid column).
+
+Tested over HTTP: slots disappear as each artist fills (including overlapping starts),
+mixed services split across artists, an artist is refused for a service they do not
+offer, two simultaneous bookings of the same slot leave exactly one, and cancelling frees
+the time; the wizard was run end to end in a headless browser at desktop and phone
+widths.
 
 ---
 

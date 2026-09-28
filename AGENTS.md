@@ -29,12 +29,12 @@ Review the existing implementation before making changes. Prefer extending exist
   hidden. It stays "Yes" locally until launch.
 - **Removed integrations.** Do not reintroduce Google Cloud Translation, Google Places, the
   WhatsApp Cloud API, or Moyasar payments.
-- **Kept integrations.** reCAPTCHA Enterprise (contact and booking-request forms) and SMTP
+- **Kept integrations.** reCAPTCHA Enterprise (contact and booking forms) and SMTP
   email through `EmailService`, unless `PROJECT_PLAN.md` decision D4 changes.
 - **Locale data.** Currency is Polish złoty, displayed as `zł` after the amount
   (for example `80 zł`). Timezone is `Europe/Warsaw`.
 - **Salon domain.** The core entities are services and service categories, artists (team),
-  gallery images and categories, offers, appointment requests, testimonials, journal articles
+  gallery images and categories, offers, appointments (booked online or entered by the salon), testimonials, journal articles
   (blogs), FAQs and pages.
 
 
@@ -300,7 +300,7 @@ leaving dead references.
 
 Do not casually modify:
 
-- appointment request logic
+- appointment booking and availability logic
 - service pricing and durations
 - offer pricing and validity
 - artist/service assignments
@@ -1252,9 +1252,9 @@ Every public page renders through `Frontend_layout::render($view, $data, $page)`
 
 ## Public forms
 
-The contact form (`libraries/Contact_form.php`) and the booking request wizard
-(`libraries/Booking_request.php`, `libraries/Booking_schedule.php`, `js/booking.js`) share
-one pattern. Follow it for any new public form:
+The contact form (`libraries/Contact_form.php`) and the booking wizard
+(`libraries/Booking_request.php`, `js/booking.js`) share one pattern. Follow it for any new
+public form:
 
 - A one-use session token in the form (global CSRF protection is off); rotate it on every
   submission.
@@ -1268,17 +1268,35 @@ one pattern. Follow it for any new public form:
 - Email the salon at Website Settings > notification emails and the client through a
   managed Email Template sent with `EmailService::sendManagedTemplate()`. Short tags are
   registered per entity in `EmailService::$shortTagFields` (`contact`, `appointment`) with
-  examples in `config/short_tags.php`; templates 1 (contact), 2 (appointment request
-  received), 3 (appointment confirmed) and 4 (appointment cancelled) are mapped there.
-  Changing a request to Confirmed or Cancelled in Manage > Appointments sends template 3
-  or 4 (`Booking_request::sendStatusEmail()`); the salon's own notifications are built in
-  code by `Contact_form` and `Booking_request`.
+  examples in `config/short_tags.php`; templates 1 (contact), 3 (appointment confirmed,
+  also sent when a booking is made) and 4 (appointment cancelled) are mapped there.
+  Changing an appointment to Confirmed or Cancelled in Manage > Appointments sends
+  template 3 or 4 (`Booking_request::sendStatusEmail()`); the salon's own notifications
+  are built in code by `Contact_form` and `Booking_request`.
 - Emails need a sender address (Website Settings > sender or site email). Locally
   `EMAIL_HOST` is `log`, so messages are written to `email_logs/` instead of being sent.
 
-Booking requests are requests, not bookings (`PROJECT_PLAN.md` decision D1): the salon
-confirms each one in Manage > Appointments. Do not present a request as a confirmed
-appointment.
+## Online booking
+
+Online bookings are real-time (`PROJECT_PLAN.md` decision D1, changed in Phase 8) and are
+saved as Confirmed:
+
+- `libraries/Booking_schedule.php` holds the salon rules: the opening hours from Website
+  Settings, the 21-day window, the 30-minute slot grid, the one-hour lead time and the time
+  left before closing.
+- `libraries/Booking_availability.php` decides who is free. A visit is a run of
+  back-to-back segments, one per chosen service in the order chosen; each segment needs an
+  artist who offers that service (Manage > Artists > services; a service nobody is
+  assigned to can be done by anyone), works that weekday and has no overlapping booking.
+  Every appointment except a Cancelled one holds its artists' time, read from
+  `appointment_services` (`service_artist_id`, `service_start_time`,
+  `service_duration_minutes`).
+- The wizard asks `/book/availability` for the free times; the same engine checks the
+  chosen time again when the booking is saved, under the `blossom_booking` MySQL named
+  lock, so two visitors cannot take the same artist's time. Keep every write of booked
+  time inside that lock.
+- Placeholder artists are bookable, so replace or disable them before launch. Cancelling
+  an appointment in Manage > Appointments frees its time.
 
 The admin area (`assets/admin/css/admin.css`) is plain CSS/Bootstrap and is not part of this
 Tailwind build.

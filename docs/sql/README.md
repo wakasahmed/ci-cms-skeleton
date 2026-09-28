@@ -40,9 +40,11 @@ Back up first: `phase-4-cleanup.sql` drops columns and tables.
 | 13 | `phase-6-faq-content.sql` | FAQ page, FAQ categories and questions. | Yes |
 | 14 | `phase-6-contact-content.sql` | Contact page and email template 1. | |
 | 15 | `phase-6-legal-content.sql` | Privacy, cancellation and terms pages. | Page text |
-| 16 | `phase-6-booking-content.sql` | Book page (Web Pages 42) and email template 2. | |
+| 16 | `phase-6-booking-content.sql` | Book page (Web Pages 42) and email template 2 (removed again by script 20). | |
 | 17 | `phase-7-cleanup.sql` | Removes the unused Alam content sections and the sample page. | |
 | 18 | `phase-7-status-emails.sql` | Email templates 3 (confirmed) and 4 (cancelled). | |
+| 19 | `phase-8-booking.sql` | Schema: each appointment service's artist and start time (`appointment_services`). | |
+| 20 | `phase-8-booking-content.sql` | Real-time booking wording (Book page, confirmation, home booking step, artist pages), email templates 3 and 4, removes template 2. | Those texts |
 
 Page section definitions (`application/config/content_sections.php`) are keyed by the page
 IDs these scripts create (1, 2, 6, 7, 8, 9, 10, 37–42), so keep them when seeding.
