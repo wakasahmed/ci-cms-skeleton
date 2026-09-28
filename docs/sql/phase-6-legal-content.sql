@@ -1,0 +1,58 @@
+-- ---------------------------------------------------------------------------
+-- Phase 6 — Legal pages content (PROJECT_PLAN.md)
+--
+-- Privacy Policy (Web Pages 9), Cancellation Policy (10) and Terms &
+-- Conditions (41): hero, page text (one <h2> per numbered section), the
+-- notice and "Questions about this?" sections, and meta, from /ci3/.
+-- ---------------------------------------------------------------------------
+
+SET NAMES utf8mb4;
+
+UPDATE `pages` SET
+    `banner_title` = 'Legal',
+    `banner_heading` = 'Privacy Policy',
+    `banner_text` = 'What we collect when you book with us, why we need it, and what we do with it.',
+    `banner_background` = '',
+    `page_text` = '<h2>Who we are</h2>\n<p>Blossom Ewa Mazur is a beauty salon at 2 Piekarska Street, 38-300 Gorlice, Poland. When you book an appointment or contact us through this website, we are the ones handling your information.</p>\n<h2>What we collect</h2>\n<p>Only what we need to run an appointment and get back to you:</p>\n<ul>\n<li>Your name, phone number and email address</li>\n<li>The services you book and when</li>\n<li>Any notes you add to a booking, such as a design you have in mind</li>\n<li>Messages you send us through the contact form</li>\n</ul>\n<h2>Why we use it</h2>\n<p>Placeholder wording. In broad terms: to confirm and manage your appointment, to contact you if something changes, and to keep a record of visits so we can pick up where we left off.</p>\n<p>The specific legal bases under GDPR still need to be set out properly here.</p>\n<h2>How long we keep it</h2>\n<p>Placeholder wording — retention periods have not been decided yet and must be confirmed before this page goes live.</p>\n<h2>Who else sees it</h2>\n<p>Placeholder wording. Any booking system, hosting provider or messaging service the salon ends up using will need naming here, along with what they receive.</p>\n<h2>Your rights</h2>\n<p>Placeholder wording. Under GDPR you have rights over your data, including access, correction, deletion and objection, and the right to complain to the Polish supervisory authority.</p>\n<p>The exact wording, plus how to make a request, still needs to be written.</p>\n<h2>Cookies</h2>\n<p>Placeholder wording. This site does not currently set analytics or advertising cookies. If any are added, they must be described here and consented to.</p>\n<h2>Changes to this policy</h2>\n<p>Placeholder wording. This section will explain how updates are published and dated.</p>',
+    `meta_description` = 'How Blossom Ewa Mazur handles the information you give us when you book an appointment or get in touch.'
+WHERE `page_id` = 9;
+
+DELETE FROM `web_page_sections` WHERE `page_id` = 9 AND `section_key` NOT IN ('notice', 'help');
+INSERT INTO `web_page_sections` (`page_id`, `section_key`, `section_label`, `sort_order`, `status`) SELECT 9, 'notice', 'Notice', 10, 'Enable' WHERE NOT EXISTS (SELECT 1 FROM `web_page_sections` WHERE `page_id` = 9 AND `section_key` = 'notice');
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'contents', 'This page is a placeholder structure, not a finished privacy policy. Blossom operates in Poland and is subject to GDPR — the final wording needs to be written or reviewed by a qualified person before the site goes live. Nothing here is legal advice.' FROM `web_page_sections` WHERE `page_id` = 9 AND `section_key` = 'notice' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+INSERT INTO `web_page_sections` (`page_id`, `section_key`, `section_label`, `sort_order`, `status`) SELECT 9, 'help', 'Questions Box', 20, 'Enable' WHERE NOT EXISTS (SELECT 1 FROM `web_page_sections` WHERE `page_id` = 9 AND `section_key` = 'help');
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'heading', 'Questions about this?' FROM `web_page_sections` WHERE `page_id` = 9 AND `section_key` = 'help' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'contents', 'Ask us at the salon or give us a call — we would rather explain it properly than have you guess.' FROM `web_page_sections` WHERE `page_id` = 9 AND `section_key` = 'help' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+
+UPDATE `pages` SET
+    `banner_title` = 'Legal',
+    `banner_heading` = 'Cancellation Policy',
+    `banner_text` = 'How to change or cancel a visit. Call the salon and we''ll sort it out.',
+    `banner_background` = '',
+    `page_text` = '<h2>Changing your appointment</h2>\n<p>The quickest way to move an appointment is to call the salon on +48 512 129 654 during opening hours — we can usually find you another slot while you are on the phone.</p>\n<h2>How much notice we ask for</h2>\n<p>Placeholder. Blossom has not set a notice period for changes or cancellations. Please call as early as you can, and we will confirm what applies.</p>\n<p>A specific number of hours or days will be published here once the salon decides.</p>\n<h2>Deposits</h2>\n<p>Placeholder. No deposit is currently taken when booking through this website, and no deposit policy has been set.</p>\n<h2>Late cancellations and missed appointments</h2>\n<p>Placeholder. No fee, charge or penalty has been set for late cancellations or missed appointments. Nothing will be charged on the basis of this page.</p>\n<h2>Refunds</h2>\n<p>Placeholder. Refund arrangements have not been confirmed. Payment is currently taken at the salon rather than online.</p>\n<h2>If we have to cancel</h2>\n<p>Placeholder. Occasionally something at our end means an appointment has to move — illness, for instance. We will contact you as soon as we know and offer you the next suitable slot.</p>\n<h2>Running late</h2>\n<p>Placeholder. If you are running behind, call us. Appointments are spaced so there is often a little flexibility, but a policy for how late is too late has not been set.</p>',
+    `meta_description` = 'How to change or cancel an appointment at Blossom Ewa Mazur in Gorlice.'
+WHERE `page_id` = 10;
+
+DELETE FROM `web_page_sections` WHERE `page_id` = 10 AND `section_key` NOT IN ('notice', 'help');
+INSERT INTO `web_page_sections` (`page_id`, `section_key`, `section_label`, `sort_order`, `status`) SELECT 10, 'notice', 'Notice', 10, 'Enable' WHERE NOT EXISTS (SELECT 1 FROM `web_page_sections` WHERE `page_id` = 10 AND `section_key` = 'notice');
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'contents', 'Blossom has not yet supplied a cancellation policy, so this page deliberately states no notice periods, deposits, fees or refund rules. Nothing here is enforceable, and no charge will be made on the basis of it. Please call the salon to confirm what applies.' FROM `web_page_sections` WHERE `page_id` = 10 AND `section_key` = 'notice' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+INSERT INTO `web_page_sections` (`page_id`, `section_key`, `section_label`, `sort_order`, `status`) SELECT 10, 'help', 'Questions Box', 20, 'Enable' WHERE NOT EXISTS (SELECT 1 FROM `web_page_sections` WHERE `page_id` = 10 AND `section_key` = 'help');
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'heading', 'Questions about this?' FROM `web_page_sections` WHERE `page_id` = 10 AND `section_key` = 'help' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'contents', 'Ask us at the salon or give us a call — we would rather explain it properly than have you guess.' FROM `web_page_sections` WHERE `page_id` = 10 AND `section_key` = 'help' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+
+UPDATE `pages` SET
+    `banner_title` = 'Legal',
+    `banner_heading` = 'Terms & Conditions',
+    `banner_text` = 'The terms that apply when you book with us. This page is still being prepared.',
+    `banner_background` = '',
+    `page_text` = '<h2>About these terms</h2>\n<p>Placeholder wording. This page will set out the terms that apply when you book an appointment with Blossom Ewa Mazur, 2 Piekarska Street, 38-300 Gorlice, Poland.</p>\n<p>Nothing on this page has been agreed or reviewed yet.</p>\n<h2>Booking an appointment</h2>\n<p>Placeholder wording. This section will explain when a booking is confirmed, what we do if a requested slot is unavailable, and how we contact you about changes.</p>\n<h2>Prices and payment</h2>\n<p>Placeholder wording. Prices shown on this site are indicative starting prices; the final amount depends on the length, shape and design agreed at the appointment.</p>\n<p>Accepted payment methods and whether deposits apply have not been confirmed.</p>\n<h2>Changing or cancelling</h2>\n<p>Placeholder wording. See the cancellation policy page. No notice period, deposit or penalty has been set by the salon.</p>\n<h2>Arriving late</h2>\n<p>Placeholder wording. The salon has not set a policy for late arrivals or how they affect the time available for your appointment.</p>\n<h2>Services and results</h2>\n<p>Placeholder wording. This section will cover what we agree with you before starting, and what to do if you are unhappy with a finished set.</p>\n<p>No guarantees, medical claims or clinical outcomes are made anywhere on this site.</p>\n<h2>Website content</h2>\n<p>Photography, text and designs on this site belong to Blossom Ewa Mazur unless stated otherwise. Some images are currently placeholder stock photography and will be replaced with the salon''s own work.</p>\n<h2>Governing law</h2>\n<p>Placeholder wording. Polish law would ordinarily apply, but the exact clause needs proper drafting.</p>',
+    `meta_description` = 'The terms that apply when you book an appointment with Blossom Ewa Mazur in Gorlice.'
+WHERE `page_id` = 41;
+
+DELETE FROM `web_page_sections` WHERE `page_id` = 41 AND `section_key` NOT IN ('notice', 'help');
+INSERT INTO `web_page_sections` (`page_id`, `section_key`, `section_label`, `sort_order`, `status`) SELECT 41, 'notice', 'Notice', 10, 'Enable' WHERE NOT EXISTS (SELECT 1 FROM `web_page_sections` WHERE `page_id` = 41 AND `section_key` = 'notice');
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'contents', 'This page is a structure only — no terms have been agreed or legally reviewed. Every section is placeholder wording and none of it is binding or reliable. Proper terms must be drafted before the site goes live.' FROM `web_page_sections` WHERE `page_id` = 41 AND `section_key` = 'notice' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+INSERT INTO `web_page_sections` (`page_id`, `section_key`, `section_label`, `sort_order`, `status`) SELECT 41, 'help', 'Questions Box', 20, 'Enable' WHERE NOT EXISTS (SELECT 1 FROM `web_page_sections` WHERE `page_id` = 41 AND `section_key` = 'help');
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'heading', 'Questions about this?' FROM `web_page_sections` WHERE `page_id` = 41 AND `section_key` = 'help' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+INSERT INTO `web_page_section_fields` (`section_id`, `locale`, `field_key`, `field_value`) SELECT `id`, 'en', 'contents', 'Ask us at the salon or give us a call — we would rather explain it properly than have you guess.' FROM `web_page_sections` WHERE `page_id` = 41 AND `section_key` = 'help' ON DUPLICATE KEY UPDATE `field_value` = VALUES(`field_value`);
+

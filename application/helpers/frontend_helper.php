@@ -191,3 +191,71 @@ if (!function_exists('frontend_lines')) {
         return array_values(array_filter($lines, 'strlen'));
     }
 }
+
+if (!function_exists('frontend_html_sections')) {
+    /**
+     * Rich text from the CMS editor split at its <h2> headings, for pages with
+     * a numbered table of contents (the legal pages). Returns
+     * array('intro' => HTML before the first heading, 'sections' => list of
+     * array('title', 'id', 'html')). Each id is unique within the page.
+     */
+    function frontend_html_sections($html)
+    {
+        $result = array('intro' => '', 'sections' => array());
+        $html = trim((string) $html);
+        if ($html === '') {
+            return $result;
+        }
+
+        $document = new DOMDocument();
+        $previous = libxml_use_internal_errors(TRUE);
+        $document->loadHTML(
+            '<?xml encoding="utf-8"?><div id="root">'.$html.'</div>',
+            LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+        );
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        $root = $document->getElementById('root');
+        if ($root === NULL) {
+            $result['intro'] = $html;
+            return $result;
+        }
+
+        $ids = array();
+        $current = NULL;
+        foreach ($root->childNodes as $node) {
+            if ($node->nodeType === XML_ELEMENT_NODE && strtolower($node->nodeName) === 'h2') {
+                if ($current !== NULL) {
+                    $result['sections'][] = $current;
+                }
+
+                $title = trim(preg_replace('/\s+/u', ' ', $node->textContent));
+                $id = url_title($title, '-', TRUE);
+                $id = $id !== '' ? $id : 'section';
+                $base = $id;
+                for ($suffix = 2; isset($ids[$id]); $suffix++) {
+                    $id = $base.'-'.$suffix;
+                }
+                $ids[$id] = TRUE;
+
+                $current = array('title' => $title, 'id' => $id, 'html' => '');
+                continue;
+            }
+
+            $markup = $document->saveHTML($node);
+            if ($current === NULL) {
+                $result['intro'] .= $markup;
+            } else {
+                $current['html'] .= $markup;
+            }
+        }
+
+        if ($current !== NULL) {
+            $result['sections'][] = $current;
+        }
+        $result['intro'] = trim($result['intro']);
+
+        return $result;
+    }
+}

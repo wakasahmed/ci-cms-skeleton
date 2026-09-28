@@ -12,7 +12,30 @@ $config['content_section_image_types'] = 'gif|jpg|jpeg|png|webp';
 $config['content_section_image_max_kb'] = 10240;
 $config['content_section_audit_path'] = APPPATH . 'logs/content_sections_audit.log';
 
+// Legal pages (/privacy-policy, /cancellation-policy, /terms). The body is the
+// page's Page Text: each <h2> starts a numbered section in the contents list.
+$legalPageSections = array(
+    array(
+        'key' => 'notice',
+        'label' => 'Notice',
+        'fields' => array(
+            array('key' => 'contents', 'type' => 'textarea', 'label' => 'Notice above the text (optional)', 'group' => null, 'required' => false, 'layout' => 'full'),
+        ),
+    ),
+    array(
+        'key' => 'help',
+        'label' => 'Questions Box',
+        'fields' => array(
+            array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+            array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+        ),
+    ),
+);
+
 $config['web_page_sections'] = array(
+    9 => $legalPageSections,
+    10 => $legalPageSections,
+    41 => $legalPageSections,
     // Home (/). The hero slides come from Manage > Sliders (the page's slider).
     1 => array(
         array(

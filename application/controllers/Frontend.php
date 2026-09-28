@@ -430,6 +430,29 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /**
+     * Legal pages (/privacy-policy, /cancellation-policy, /terms): the Web
+     * Pages record's text, split into numbered sections at its headings.
+     */
+    public function legal($slug = '')
+    {
+        if (!in_array($slug, array('privacy-policy', 'cancellation-policy', 'terms'), TRUE)) {
+            return $this->error_404();
+        }
+
+        $page = $this->listingPage($slug, TRUE);
+        $this->load->library('content_section_service');
+
+        $this->frontend_layout->render('frontend/legal', array(
+            'hero' => $this->listingHero($page),
+            'title' => html_entity_decode((string) $page['page_name'], ENT_QUOTES, 'UTF-8'),
+            'body' => frontend_html_sections($page['page_text']),
+            'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url($slug)),
+        ));
+    }
+
     /** FAQ (/faq): the visible FAQ categories with their questions. */
     public function faq()
     {
@@ -589,10 +612,10 @@ class Frontend extends CI_Controller
      * The published Web Pages record behind a module listing (its URL is the
      * slug), or the 404 page when it is missing or unpublished.
      */
-    private function listingPage($slug)
+    private function listingPage($slug, $includeContent = FALSE)
     {
         $this->load->model('Webpage_model');
-        $page = $this->Webpage_model->get_page('slug', $slug, false, true);
+        $page = $this->Webpage_model->get_page('slug', $slug, $includeContent, true);
 
         if (empty($page)) {
             $this->error_404();

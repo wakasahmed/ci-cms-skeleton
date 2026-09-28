@@ -301,6 +301,39 @@
         background-size: 20px 20px;
     }
 
+    /* Legal page sections: the editor HTML under each numbered heading. */
+    .legal-body > p,
+    .legal-body > ul,
+    .legal-body > ol {
+        @apply mt-4 leading-relaxed text-foreground-soft;
+    }
+
+    .legal-body > ul,
+    .legal-body > ol {
+        @apply space-y-2.5;
+    }
+
+    .legal-body > ul > li {
+        @apply relative pl-4.5;
+    }
+
+    .legal-body > ul > li::before {
+        @apply absolute top-2.5 left-0 size-1.5 rounded-full bg-primary;
+        content: "";
+    }
+
+    .legal-body > ol {
+        @apply list-decimal pl-6 marker:text-primary-ink;
+    }
+
+    .legal-body a {
+        @apply text-primary-ink underline underline-offset-3 hover:text-primary;
+    }
+
+    .legal-body strong {
+        @apply font-semibold text-foreground;
+    }
+
     /* Journal article body: the HTML saved by the CMS editor, styled like the
        reference article pages. */
     .article-body > p,
