@@ -362,6 +362,46 @@ $config['web_page_sections'] = array(
             ),
         ),
     ),
+    // FAQ (/faq). The hero comes from the page's banner fields; the questions
+    // come from Manage > FAQs, grouped by their (visible) FAQ categories.
+    6 => array(
+        array(
+            'key' => 'sidebar',
+            'label' => 'Sidebar',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'help_heading', 'type' => 'text', 'label' => 'Heading', 'group' => 'Phone Box', 'required' => false, 'layout' => 'half'),
+                array('key' => 'help_text', 'type' => 'textarea', 'label' => 'Text', 'group' => 'Phone Box', 'required' => false, 'layout' => 'half'),
+            ),
+        ),
+        array(
+            'key' => 'questions',
+            'label' => 'Questions',
+            'fields' => array(
+                array('key' => 'note', 'type' => 'textarea', 'label' => 'Note under the questions (optional)', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+        array(
+            'key' => 'links',
+            'label' => 'Prices and Policies',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+                array('key' => 'button_1_text', 'type' => 'text', 'label' => 'Text', 'group' => 'Button 1', 'required' => false, 'layout' => 'half'),
+                array('key' => 'button_1_url', 'type' => 'text', 'label' => 'URL', 'group' => 'Button 1', 'required' => false, 'layout' => 'half'),
+                array('key' => 'button_2_text', 'type' => 'text', 'label' => 'Text', 'group' => 'Button 2', 'required' => false, 'layout' => 'half'),
+                array('key' => 'button_2_url', 'type' => 'text', 'label' => 'URL', 'group' => 'Button 2', 'required' => false, 'layout' => 'half'),
+            ),
+        ),
+        array(
+            'key' => 'cta',
+            'label' => 'Call to Action',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+    ),
     // Journal (/blog). The hero comes from the page's banner fields; the
     // latest published post is shown as the lead article.
     8 => array(

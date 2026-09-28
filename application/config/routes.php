@@ -56,6 +56,7 @@ $route['services/(:any)'] = 'frontend/service/$1';
 $route['gallery'] = 'frontend/gallery';
 $route['offers'] = 'frontend/offers';
 $route['about'] = 'frontend/about';
+$route['faq'] = 'frontend/faq';
 $route['blog'] = 'frontend/blog';
 $route['blog/category/(:any)'] = 'frontend/blog_category/$1';
 $route['blog/(:any)'] = 'frontend/article/$1';

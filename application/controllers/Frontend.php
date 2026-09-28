@@ -370,6 +370,41 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /** FAQ (/faq): the visible FAQ categories with their questions. */
+    public function faq()
+    {
+        $page = $this->listingPage('faq');
+        $this->load->model('Faq_model');
+        $this->load->library('content_section_service');
+
+        $groups = $this->Faq_model->get_faq_groups();
+        $questions = array();
+        foreach ($groups as $group) {
+            foreach ($group['items'] as $item) {
+                $questions[] = array(
+                    '@type' => 'Question',
+                    'name' => $item['question'],
+                    'acceptedAnswer' => array('@type' => 'Answer', 'text' => $item['answer']),
+                );
+            }
+        }
+
+        $this->frontend_layout->render('frontend/faq', array(
+            'hero' => $this->listingHero($page),
+            'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
+            'groups' => $groups,
+            'schema' => !empty($questions)
+                ? array(
+                    '@context' => 'https://schema.org',
+                    '@type' => 'FAQPage',
+                    'mainEntity' => $questions,
+                )
+                : NULL,
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url('faq')),
+        ));
+    }
+
     /** Artists listing (/artists): the first artist leads, the rest follow. */
     public function artists()
     {
