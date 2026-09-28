@@ -35,6 +35,26 @@ $config['short_tag_entities'] = array(
             'website' => 'https://example.com',
         ),
     ),
+    'appointment' => array(
+        'label' => 'Appointment request',
+        'examples' => array(
+            'reference' => 'BLM-4102',
+            'first_name' => 'Anna',
+            'customer_name' => 'Anna Kowalska',
+            'customer_email' => 'anna@example.com',
+            'customer_phone' => '+48 500 000 000',
+            'contact_preference' => 'Phone',
+            'services' => 'Gel Manicure, Nail Art',
+            'artist' => 'Ewa Mazur',
+            'offer' => 'Manicure + nail art',
+            'date' => 'Oct 12, 2026',
+            'time' => '10:30 am',
+            'duration' => '1 hr 45 min',
+            'estimated_total' => '140 zł',
+            'notes' => 'I have gel on from last month.',
+            'created_at' => 'Oct 10, 2026 09:30 am',
+        ),
+    ),
 );
 
 /*
@@ -47,4 +67,5 @@ $config['short_tag_entities'] = array(
 */
 $config['short_tag_template_entities'] = array(
     1 => 'contact',
+    2 => 'appointment',
 );

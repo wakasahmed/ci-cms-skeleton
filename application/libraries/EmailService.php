@@ -32,6 +32,23 @@ class EmailService
             'created_at',
             'updated_at',
         ),
+        'appointment' => array(
+            'reference',
+            'first_name',
+            'customer_name',
+            'customer_email',
+            'customer_phone',
+            'contact_preference',
+            'services',
+            'artist',
+            'offer',
+            'date',
+            'time',
+            'duration',
+            'estimated_total',
+            'notes',
+            'created_at',
+        ),
     );
 
     /** Tags that render HTML rather than plain text. */
@@ -184,7 +201,7 @@ class EmailService
         return $this->CI->load->view('email/english', $data, TRUE);
     }
 
-    /** Short tag names an entity supports (currently only contact). */
+    /** Short tag names an entity supports (contact, appointment). */
     public function shortTagFields($entity)
     {
         return isset(self::$shortTagFields[$entity])
@@ -203,14 +220,25 @@ class EmailService
     /** Replace the supported contact-request short tags with scalar values. */
     public function parseContactShortTags($template, array $values = array())
     {
-        $fields = $this->shortTagFields('contact');
+        return $this->parseShortTags('contact', $template, $values, array('message'));
+    }
+
+    /** Replace the supported appointment-request short tags with scalar values. */
+    public function parseAppointmentShortTags($template, array $values = array())
+    {
+        return $this->parseShortTags('appointment', $template, $values, array('notes'));
+    }
+
+    /** Replace an entity's short tags; $multiline values keep their line breaks as <br>. */
+    private function parseShortTags($entity, $template, array $values, array $multiline)
+    {
         $replacements = array();
 
-        foreach ($fields as $field) {
+        foreach ($this->shortTagFields($entity) as $field) {
             $value = isset($values[$field]) && is_scalar($values[$field])
                 ? (string) $values[$field]
                 : '';
-            if ($field === 'message') {
+            if (in_array($field, $multiline, TRUE)) {
                 $value = nl2br($value);
             }
             $replacements['{{'.$field.'}}'] = $value;
@@ -227,7 +255,7 @@ class EmailService
      * - to: recipient address
      * - values: short-tag values keyed by field name
      * - parser: the parse*ShortTags() method that owns the template's tags
-     *   (currently parseContactShortTags)
+     *   (parseContactShortTags or parseAppointmentShortTags)
      * - multiline_fields: value keys whose line breaks become <br> in the HTML body
      * - label: prefix for log messages
      */
@@ -244,7 +272,7 @@ class EmailService
         $label = (string) $options['label'];
         $templateId = (int) $options['template_id'];
 
-        if (!in_array($options['parser'], array('parseContactShortTags'), TRUE)) {
+        if (!in_array($options['parser'], array('parseContactShortTags', 'parseAppointmentShortTags'), TRUE)) {
             return $this->fail($label.' has no valid short tag parser.');
         }
 

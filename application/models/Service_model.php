@@ -11,7 +11,7 @@ class Service_model extends SqlModel
     /** Columns a service card or list row needs. */
     private $cardColumns = 's.service_id, s.service_name, s.service_slug, s.service_summary,'
         .' s.service_price_from, s.service_price_suffix, s.service_duration_label,'
-        .' s.service_card_image, s.service_hero_image';
+        .' s.service_duration_minutes, s.service_card_image, s.service_hero_image';
 
     /**
      * Featured services for the footer's first column.

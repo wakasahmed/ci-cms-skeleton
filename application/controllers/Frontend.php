@@ -453,6 +453,109 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /**
+     * Book (/book): the appointment request wizard (js/booking.js). The
+     * wizard posts its request here with AJAX and gets JSON back; on success
+     * it opens /book/confirmed. ?service=, ?artist= and ?offer= preselect.
+     */
+    public function book()
+    {
+        $this->load->library('booking_request');
+
+        if ($this->input->method() === 'post') {
+            $result = $this->booking_request->submit();
+            $messages = array(
+                'success' => '',
+                'invalid' => 'Please check the highlighted details.',
+                'expired' => 'The booking form expired. Please try again.',
+                'recaptcha' => 'We couldn’t confirm the request was sent by a person. Please try again, or call us.',
+                'error' => 'Your request could not be sent. Please try again, or call us.',
+            );
+            $httpStatus = array(
+                'success' => 200,
+                'invalid' => 422,
+                'expired' => 403,
+                'recaptcha' => 403,
+                'error' => 500,
+            );
+
+            $this->output
+                ->set_status_header($httpStatus[$result['status']])
+                ->set_content_type('application/json')
+                ->set_header('Cache-Control: no-store')
+                ->set_output(json_encode(array(
+                    'success' => $result['status'] === 'success',
+                    'status' => $result['status'],
+                    'message' => $messages[$result['status']],
+                    'errors' => $result['errors'],
+                    'step' => $result['step'],
+                    'redirect' => $result['status'] === 'success' ? base_url('book/confirmed') : '',
+                    'formToken' => $this->booking_request->token(),
+                ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT));
+            return;
+        }
+
+        $page = $this->listingPage('book');
+        $this->load->library('content_section_service');
+        $sections = $this->content_section_service->get_web_page_sections((int) $page['page_id']);
+        $wizard = isset($sections['wizard']) ? $sections['wizard'] : array();
+
+        $this->frontend_layout->render('frontend/book', array(
+            'page' => $page,
+            'crumbs' => array(
+                array('label' => 'Home', 'url' => base_url()),
+                array('label' => html_entity_decode((string) $page['page_name'], ENT_QUOTES, 'UTF-8')),
+            ),
+            'hasHours' => $this->booking_schedule->hasHours(),
+            'config' => array(
+                'catalogue' => $this->booking_request->catalogue(),
+                'schedule' => $this->booking_schedule->config(),
+                'notes' => array(
+                    'service' => isset($wizard['service_note']) ? $wizard['service_note'] : '',
+                    'schedule' => isset($wizard['schedule_note']) ? $wizard['schedule_note'] : '',
+                    'pricing' => isset($wizard['pricing_note']) ? $wizard['pricing_note'] : '',
+                    'review' => isset($wizard['review_note']) ? $wizard['review_note'] : '',
+                ),
+                'submitUrl' => base_url('book'),
+                'servicesUrl' => base_url('services'),
+                'formToken' => $this->booking_request->token(),
+                'recaptcha' => array(
+                    'siteKey' => RECAPTCHA_ENTERPRISE_SITE_KEY,
+                    'action' => Booking_request::RECAPTCHA_ACTION,
+                ),
+            ),
+            'helpText' => isset($wizard['help_text']) ? $wizard['help_text'] : '',
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url('book')),
+            'scripts' => array('js/booking.js'),
+        ));
+    }
+
+    /** The request just sent from /book (kept in the session), or back to /book. */
+    public function book_confirmed()
+    {
+        $this->load->library('booking_request');
+        $appointment = $this->booking_request->confirmed();
+        if ($appointment === NULL) {
+            redirect(base_url('book'));
+        }
+
+        $page = $this->listingPage('book');
+        $this->load->library('content_section_service');
+        $sections = $this->content_section_service->get_web_page_sections((int) $page['page_id']);
+
+        $meta = $this->frontend_layout->pageMeta($page, base_url('book'));
+        $meta['robots'] = 'noindex, nofollow';
+
+        $this->output->set_header('Cache-Control: no-store');
+        $this->frontend_layout->render('frontend/book_confirmed', array(
+            'appointment' => $appointment,
+            'confirmation' => isset($sections['confirmation']) ? $sections['confirmation'] : array(),
+        ), array(
+            'meta' => $meta,
+        ));
+    }
+
     /** FAQ (/faq): the visible FAQ categories with their questions. */
     public function faq()
     {

@@ -385,6 +385,31 @@ $config['web_page_sections'] = array(
             ),
         ),
     ),
+    // Book (/book). The heading comes from the page's banner fields; the
+    // services, artists and offers from their modules; the day and time
+    // choices from Website Settings > Opening Hours.
+    42 => array(
+        array(
+            'key' => 'wizard',
+            'label' => 'Booking Steps',
+            'fields' => array(
+                array('key' => 'service_note', 'type' => 'textarea', 'label' => 'Note under the services', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'schedule_note', 'type' => 'textarea', 'label' => 'Note above the days and times', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'pricing_note', 'type' => 'textarea', 'label' => 'Note under the estimated total', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'review_note', 'type' => 'textarea', 'label' => 'Note on the review step', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'help_text', 'type' => 'textarea', 'label' => 'Phone prompt beside the steps', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+        array(
+            'key' => 'confirmation',
+            'label' => 'Confirmation',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'note', 'type' => 'textarea', 'label' => 'Note under the details', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+    ),
     // FAQ (/faq). The hero comes from the page's banner fields; the questions
     // come from Manage > FAQs, grouped by their (visible) FAQ categories.
     6 => array(

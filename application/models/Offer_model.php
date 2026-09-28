@@ -37,4 +37,33 @@ class Offer_model extends SqlModel
 
         return $this->db->get()->result_array();
     }
+
+    /** offer_id => slugs of the public services each offer includes, in menu order. */
+    public function get_service_slugs(array $offerIds)
+    {
+        $offerIds = array_values(array_filter(array_map('intval', $offerIds)));
+        if (empty($offerIds)) {
+            return array();
+        }
+
+        $rows = $this->db
+            ->select('x.offer_id, s.service_slug')
+            ->from('offer_services x')
+            ->join('services s', 's.service_id = x.service_id')
+            ->join('service_categories c', 'c.category_id = s.service_category_id')
+            ->where('s.service_status', 'Enable')
+            ->where('c.category_status', 'Enable')
+            ->where_in('x.offer_id', $offerIds)
+            ->order_by('c.category_order', 'ASC')
+            ->order_by('s.service_order', 'ASC')
+            ->get()
+            ->result_array();
+
+        $slugs = array();
+        foreach ($rows as $row) {
+            $slugs[(int) $row['offer_id']][] = $row['service_slug'];
+        }
+
+        return $slugs;
+    }
 }
