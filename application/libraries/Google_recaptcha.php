@@ -23,6 +23,56 @@ class Google_recaptcha
         }
     }
 
+    /** TRUE when the site key, project and credentials are all configured. */
+    public function is_configured()
+    {
+        return RECAPTCHA_ENTERPRISE_SITE_KEY !== ''
+            && RECAPTCHA_ENTERPRISE_PROJECT_ID !== ''
+            && RECAPTCHA_ENTERPRISE_CREDENTIALS_FILE !== '';
+    }
+
+    /**
+     * Verify a one-use token from a public form: valid, for the expected
+     * action, and scored at least $min_score.
+     *
+     * Without reCAPTCHA configured, development accepts the form (so it can
+     * be tested locally) and every other environment rejects it.
+     */
+    public function verify($token, $action, $min_score = 0.5, $ip_address = '', $user_agent = '')
+    {
+        if (!$this->is_configured()) {
+            if (ENVIRONMENT === 'development') {
+                log_message('debug', 'reCAPTCHA Enterprise is not configured; '.$action.' accepted in development.');
+                return true;
+            }
+
+            log_message('error', 'reCAPTCHA Enterprise is not configured; '.$action.' rejected.');
+            return false;
+        }
+
+        $token = trim((string) $token);
+        if ($token === '') {
+            return false;
+        }
+
+        $result = $this->create_assessment($token, $action, $ip_address, $user_agent);
+        if (empty($result['success'])) {
+            log_message(
+                'error',
+                $action.' reCAPTCHA Enterprise verification failed: '.$result['message']
+            );
+            return false;
+        }
+
+        $score = isset($result['score']) ? (float) $result['score'] : 0.0;
+        if ($score < $min_score) {
+            log_message('info', $action.' reCAPTCHA Enterprise rejected a score of '.$score.'.');
+            return false;
+        }
+
+        return true;
+    }
+
     public function create_assessment($token, $action, $ip_address = '', $user_agent = '')
     {
         if (!$this->autoload_available) {

@@ -293,6 +293,14 @@
         transition: opacity 0.9s var(--ease-out-soft), transform 1.2s var(--ease-out-soft);
     }
 
+    /* Chevron for native selects styled with appearance-none. */
+    .select-chevron {
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f5f6d' stroke-width='2' stroke-linecap='round'><path d='m6 9 6 6 6-6'/></svg>");
+        background-position: right 0.85rem center;
+        background-repeat: no-repeat;
+        background-size: 20px 20px;
+    }
+
     /* Journal article body: the HTML saved by the CMS editor, styled like the
        reference article pages. */
     .article-body > p,

@@ -370,6 +370,66 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /**
+     * Contact (/contact): salon details, map link and the contact form. A POST
+     * is handled by the Contact_form library and redirected back (PRG).
+     */
+    public function contact()
+    {
+        $page = $this->listingPage('contact');
+        $this->load->library('contact_form');
+
+        if ($this->input->method() === 'post') {
+            $result = $this->contact_form->submit();
+            $this->session->set_flashdata('contact_status', $result['status']);
+            $this->session->set_flashdata('contact_errors', $result['errors']);
+            $this->session->set_flashdata('contact_values', $result['values']);
+
+            redirect(base_url('contact').'#contact-form', 'location', 303);
+        }
+
+        $this->load->library('content_section_service');
+        $address = implode(', ', frontend_lines($this->frontend_layout->setting('address')));
+        $mapUrl = $this->frontend_layout->setting('map_url') !== ''
+            ? $this->frontend_layout->setting('map_url')
+            : 'https://maps.google.com/?q='.rawurlencode($address);
+        $status = $this->session->flashdata('contact_status');
+        $errors = $this->session->flashdata('contact_errors');
+        $values = $this->session->flashdata('contact_values');
+        $phoneHref = frontend_phone_href($this->frontend_layout->setting('phone'));
+
+        $actions = array();
+        if ($phoneHref !== '') {
+            $actions[] = array('label' => 'Call us', 'url' => $phoneHref, 'icon' => 'fa-solid fa-phone');
+        }
+        $actions[] = array(
+            'label' => 'Get directions',
+            'url' => $mapUrl,
+            'variant' => 'outline',
+            'icon' => 'fa-solid fa-location-arrow',
+            'external' => TRUE,
+        );
+        $actions[] = array('label' => 'Book appointment', 'url' => base_url('book'), 'variant' => 'soft');
+
+        $this->frontend_layout->render('frontend/contact', array(
+            'hero' => $this->listingHero($page, $actions),
+            'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
+            'mapUrl' => $mapUrl,
+            'form' => $this->contact_form->settings(),
+            'formToken' => $this->contact_form->token(),
+            'status' => is_string($status) ? $status : '',
+            'errors' => is_array($errors) ? $errors : array(),
+            'values' => is_array($values) ? $values : array(),
+            'recaptcha' => array(
+                'siteKey' => RECAPTCHA_ENTERPRISE_SITE_KEY,
+                'action' => Contact_form::RECAPTCHA_ACTION,
+            ),
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url('contact')),
+            'scripts' => array('js/contact.js'),
+        ));
+    }
+
     /** FAQ (/faq): the visible FAQ categories with their questions. */
     public function faq()
     {

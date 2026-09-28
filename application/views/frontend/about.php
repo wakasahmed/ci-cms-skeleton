@@ -181,7 +181,7 @@ for ($item = 1; $item <= 3; $item++) {
                         <p class="section-label"><?php echo html_escape($location['pre_heading']); ?></p>
                     <?php } ?>
                     <h2 id="about-location-heading" class="mt-4 text-[clamp(1.75rem,4vw,2.5rem)]"><?php echo html_escape($value($location, 'heading', 'Visit us')); ?></h2>
-                    <?php $this->load->view('frontend/partials/visit_details'); ?>
+                    <?php $this->load->view('frontend/partials/visit_details', array('spacing' => 'mt-8')); ?>
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
                         <a class="<?php echo html_escape(frontend_button_class('primary', 'h-13 px-8')); ?>" href="<?php echo html_escape($site['book_url']); ?>">Book appointment</a>
                         <a class="<?php echo html_escape(frontend_button_class('outline', 'h-13 px-8')); ?>" href="<?php echo html_escape(base_url('contact')); ?>">Contact us</a>

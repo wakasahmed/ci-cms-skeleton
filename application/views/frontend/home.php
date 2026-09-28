@@ -661,7 +661,7 @@ $finalCta = $section('final_cta');
                         <p class="section-label"><?php echo html_escape($location['pre_heading']); ?></p>
                     <?php } ?>
                     <h2 id="location-heading" class="mt-5 text-[clamp(2rem,5vw,3rem)]"><?php echo html_escape($value($location, 'heading', 'Visit us')); ?></h2>
-                    <?php $this->load->view('frontend/partials/visit_details'); ?>
+                    <?php $this->load->view('frontend/partials/visit_details', array('spacing' => 'mt-8')); ?>
                     <div class="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                         <a class="<?php echo html_escape(frontend_button_class('primary', 'h-13 px-8')); ?>" href="<?php echo html_escape($site['book_url']); ?>">Book appointment</a>
                         <?php if ($site['phone_href'] !== '') { ?>

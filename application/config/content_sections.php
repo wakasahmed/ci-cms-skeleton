@@ -402,6 +402,29 @@ $config['web_page_sections'] = array(
             ),
         ),
     ),
+    // Contact (/contact). The hero comes from the page's banner fields; the
+    // address, phone, opening hours and map link from Website Settings; the
+    // form subjects and success message from Manage > Form Settings.
+    7 => array(
+        array(
+            'key' => 'details',
+            'label' => 'Where to Find Us',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'map_button_text', 'type' => 'text', 'label' => 'Map Button Text', 'group' => null, 'required' => false, 'layout' => 'half'),
+            ),
+        ),
+        array(
+            'key' => 'form',
+            'label' => 'Contact Form',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'button_text', 'type' => 'text', 'label' => 'Button Text', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents (a blank line starts a new paragraph; [text in square brackets] links to the booking page)', 'group' => null, 'required' => false, 'layout' => 'full'),
+                array('key' => 'note', 'type' => 'textarea', 'label' => 'Note under the button', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+    ),
     // Journal (/blog). The hero comes from the page's banner fields; the
     // latest published post is shown as the lead article.
     8 => array(

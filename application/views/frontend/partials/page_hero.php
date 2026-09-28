@@ -10,7 +10,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  *   label     section label above the heading (optional)
  *   heading   the page <h1>
  *   lead      lead paragraph (optional)
- *   actions   array of array('label', 'url', 'variant' => 'primary'|'outline')
+ *   actions   array of array('label', 'url', 'variant' => a frontend_button_class()
+ *             variant, 'icon' => Font Awesome class (optional), 'external' => TRUE
+ *             to open in a new tab (optional))
  *   facts     array of array('label', 'value', 'icon' => Font Awesome class or '')
  *   chips     short tags shown under the actions (optional)
  *   image     array('url', 'alt') (optional)
@@ -52,7 +54,13 @@ $hasImage = !empty($hero['image']['url']);
                             <a
                                 class="<?php echo html_escape(frontend_button_class(isset($action['variant']) ? $action['variant'] : 'primary', 'h-13 px-8')); ?>"
                                 href="<?php echo html_escape($action['url']); ?>"
-                            ><?php echo html_escape($action['label']); ?></a>
+                                <?php echo !empty($action['external']) ? 'target="_blank" rel="noopener noreferrer"' : ''; ?>
+                            >
+                                <?php if (!empty($action['icon'])) { ?>
+                                    <i class="<?php echo html_escape($action['icon']); ?> size-4" aria-hidden="true"></i>
+                                <?php } ?>
+                                <?php echo html_escape($action['label']); ?>
+                            </a>
                         <?php } ?>
                     </div>
                 <?php } ?>

@@ -4,9 +4,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /*
  * Salon address, landmark note, phone and opening hours, as used in the
  * "Visit us" sections. Everything comes from Website Settings ($site).
+ *
+ * $spacing  top margin class of the address (optional, default mt-8)
  */
 ?>
-<address class="mt-8 not-italic">
+<address class="<?php echo isset($spacing) && $spacing === 'mt-6' ? 'mt-6' : 'mt-8'; ?> not-italic">
     <?php if (!empty($site['address_lines'])) { ?>
         <p class="flex items-start gap-3 text-lg leading-relaxed text-foreground">
             <i class="fa-solid fa-location-dot mt-1.5 size-5 shrink-0 text-primary" aria-hidden="true"></i>
