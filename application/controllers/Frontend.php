@@ -33,13 +33,43 @@ class Frontend extends CI_Controller
         }
     }
 
+    /** Home page (/). */
     public function index()
     {
-        $this->load->model('Webpage_model');
-        $page = $this->Webpage_model->get_page('id', 1, false, true);
+        $this->load->model(array(
+            'Webpage_model',
+            'Service_model',
+            'Gallery_model',
+            'Artist_model',
+            'Offer_model',
+            'Review_model',
+        ));
+        $this->load->library('content_section_service');
 
-        $this->frontend_layout->render('frontend/home', array(), array(
-            'meta' => $this->frontend_layout->pageMeta(is_array($page) ? $page : array(), base_url()),
+        $page = $this->Webpage_model->get_page('id', 1, false, true);
+        $page = is_array($page) ? $page : array();
+        $misc = $this->content_section_service->get_miscellaneous_contents();
+        $finishes = isset($misc['nail_shapes_finishes']['finishes'])
+            ? frontend_split_lines($misc['nail_shapes_finishes']['finishes'])
+            : array();
+
+        $artists = $this->Artist_model->get_all();
+        $lead = !empty($artists) ? array_shift($artists) : NULL;
+
+        $this->frontend_layout->render('frontend/home', array(
+            'slides' => $this->heroSlides(isset($page['page_slider']) ? (int) $page['page_slider'] : 0),
+            'sections' => $this->content_section_service->get_web_page_sections(1),
+            'services' => $this->Service_model->get_featured(4),
+            'finishes' => $finishes,
+            'gallery' => $this->Gallery_model->get_featured(6),
+            'lead' => $lead,
+            'team' => $artists,
+            'offers' => $this->Offer_model->get_public(TRUE, 3),
+            'reviews' => $this->Review_model->get_reviews(3),
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url()),
+            'vendors' => array('swiper'),
+            'scripts' => array('js/home.js'),
         ));
     }
 
@@ -59,7 +89,8 @@ class Frontend extends CI_Controller
                 array('label' => 'Book an appointment', 'url' => base_url('book')),
             )),
             'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
-            'featured' => $this->Service_model->get_featured(4),
+            // "Nail services": the first four services of the first category.
+            'featured' => !empty($menu) ? array_slice($menu[0]['services'], 0, 4) : array(),
             'menu' => $menu,
             'category' => $category,
         ), array(
@@ -397,6 +428,45 @@ class Frontend extends CI_Controller
                 )
                 : array(),
         );
+    }
+
+    /**
+     * Enabled slides of a slider group as display data. A heading written as
+     * "Beautiful nails.|A little time for yourself." shows the part after "|"
+     * as the highlighted second line.
+     */
+    private function heroSlides($sliderId)
+    {
+        $slides = array();
+
+        foreach ($this->Webpage_model->get_hero_slides($sliderId) as $row) {
+            $heading = explode('|', (string) $row['heading'], 2);
+            $slide = array(
+                'label' => trim((string) $row['pre_heading']),
+                'title' => trim($heading[0]),
+                'highlight' => isset($heading[1]) ? trim($heading[1]) : '',
+                'text' => trim(strip_tags((string) $row['text'])),
+                'image' => upload_thumb('slider', $row['image'], 1400, 0, 'images/no_image.jpg'),
+                'primary' => array(),
+                'secondary' => array(),
+            );
+
+            foreach (array('primary' => 'button_1', 'secondary' => 'button_2') as $key => $prefix) {
+                $label = trim((string) $row[$prefix.'_text']);
+                if ($label !== '' && trim((string) $row[$prefix.'_url']) !== '') {
+                    $slide[$key] = array(
+                        'text' => $label,
+                        'url' => frontend_url($row[$prefix.'_url']),
+                        'target' => $row[$prefix.'_target'] === '_blank' ? '_blank' : '_self',
+                        'icon' => frontend_icon_class($row[$prefix.'_icon']),
+                    );
+                }
+            }
+
+            $slides[] = $slide;
+        }
+
+        return $slides;
     }
 
     /** schema.org Service description for a service page. */

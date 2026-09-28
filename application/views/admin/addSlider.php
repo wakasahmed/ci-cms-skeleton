@@ -25,7 +25,11 @@ $targetOptions = array('_self' => 'Open in the same tab', '_blank' => 'Open in a
                 <div class="admin-form-subsection-heading"><div><h4>Slide Content</h4><p>Add the message visitors see on this slide.</p></div></div>
                 <div class="row">
                     <div class="admin-field mb-3 col-md-6"><label class="form-label" for="pre_heading">Pre-heading</label><input type="text" name="pre_heading" id="pre_heading" maxlength="255" value="<?php echo $fieldValue('pre_heading'); ?>" class="form-control"></div>
-                    <div class="admin-field mb-3 col-md-6"><label class="form-label" for="heading">Heading</label><input type="text" name="heading" id="heading" maxlength="255" value="<?php echo $fieldValue('heading'); ?>" class="form-control"></div>
+                    <div class="admin-field mb-3 col-md-6">
+                        <label class="form-label" for="heading">Heading</label>
+                        <input type="text" name="heading" id="heading" maxlength="255" value="<?php echo $fieldValue('heading'); ?>" class="form-control" aria-describedby="heading_help">
+                        <div class="form-text" id="heading_help">On the home page, text after a <code>|</code> is shown as the highlighted second line, for example <code>Beautiful nails.|A little time for yourself.</code></div>
+                    </div>
                 </div>
                 <div class="admin-field mb-4"><label class="form-label" for="text">Text</label><textarea name="text" id="text" rows="4" class="form-control"><?php echo $fieldValue('text'); ?></textarea></div>
                 </div>

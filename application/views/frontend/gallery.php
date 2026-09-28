@@ -78,7 +78,7 @@ foreach ($images as $image) {
                 <?php if (!empty($heroLink['button_text']) && !empty($heroLink['button_url'])) { ?>
                     <a
                         class="<?php echo html_escape(frontend_button_class('outline-light', 'h-13 px-8')); ?>"
-                        href="<?php echo html_escape(preg_match('#^(https?:)?//#i', $heroLink['button_url']) ? $heroLink['button_url'] : base_url(ltrim($heroLink['button_url'], '/'))); ?>"
+                        href="<?php echo html_escape(frontend_url($heroLink['button_url'])); ?>"
                     ><?php echo html_escape($heroLink['button_text']); ?></a>
                 <?php } ?>
             </div>

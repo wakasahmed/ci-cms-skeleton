@@ -7,17 +7,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  *
  * $artist    a row with artist_name, artist_slug, artist_role, artist_bio,
  *            artist_specialties and artist_image (plus service_count for 'team')
- * $variant   'compact' (service pages: specialties as one line) or 'team'
- *            (Artists page: specialty chips, service count, booking buttons)
+ * $variant   'compact' (service pages: specialties as one line), 'lead'
+ *            (home page: larger, with a booking button) or 'team' (Artists
+ *            page: specialty chips, service count, booking buttons)
  */
-$variant = isset($variant) && $variant === 'team' ? 'team' : 'compact';
+$variant = isset($variant) && in_array($variant, array('team', 'lead'), TRUE) ? $variant : 'compact';
 $url = base_url('artists/'.rawurlencode($artist['artist_slug']));
 $specialties = frontend_lines($artist['artist_specialties']);
 $intro = frontend_intro($artist['artist_bio']);
 $portrait = upload_thumb('artists', $artist['artist_image'], 640, 0, 'images/no_image.jpg');
 ?>
 <article class="group flex h-full flex-col">
-    <a class="relative block aspect-4/5 overflow-hidden rounded-xl bg-muted" href="<?php echo html_escape($url); ?>" tabindex="-1" aria-hidden="true">
+    <a class="relative block <?php echo $variant === 'lead' ? 'aspect-3/4' : 'aspect-4/5'; ?> overflow-hidden rounded-xl bg-muted" href="<?php echo html_escape($url); ?>" tabindex="-1" aria-hidden="true">
         <img
             alt=""
             loading="lazy"
@@ -27,7 +28,7 @@ $portrait = upload_thumb('artists', $artist['artist_image'], 640, 0, 'images/no_
         >
     </a>
     <div class="mt-5 flex flex-1 flex-col">
-        <h3 class="text-2xl text-foreground">
+        <h3 class="<?php echo $variant === 'lead' ? 'text-3xl' : 'text-2xl'; ?> text-foreground">
             <a class="link-underline" href="<?php echo html_escape($url); ?>"><?php echo html_escape($artist['artist_name']); ?></a>
         </h3>
         <?php if (trim((string) $artist['artist_role']) !== '') { ?>
@@ -66,6 +67,13 @@ $portrait = upload_thumb('artists', $artist['artist_image'], 640, 0, 'images/no_
                     class="<?php echo html_escape(frontend_button_class('ghost', 'h-11 px-5')); ?>"
                     href="<?php echo html_escape($url); ?>"
                 >View profile<span class="sr-only"> of <?php echo html_escape($artist['artist_name']); ?></span></a>
+            </div>
+        <?php } elseif ($variant === 'lead') { ?>
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+                <a
+                    class="<?php echo html_escape(frontend_button_class('primary', 'h-11 px-5')); ?>"
+                    href="<?php echo html_escape(base_url('book').'?artist='.rawurlencode($artist['artist_slug'])); ?>"
+                >Book with <?php echo html_escape(strtok($artist['artist_name'], ' ')); ?></a>
             </div>
         <?php } else { ?>
             <div class="mt-6 flex flex-wrap items-center gap-3">

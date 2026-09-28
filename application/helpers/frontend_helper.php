@@ -82,6 +82,34 @@ if (!function_exists('frontend_opening_hours')) {
     }
 }
 
+if (!function_exists('frontend_url')) {
+    /**
+     * A link typed in the CMS: absolute (http, https, //, tel:, mailto:) links
+     * are kept, anything else is treated as a path on this site.
+     */
+    function frontend_url($value)
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('#^(https?:)?//#i', $value) === 1 || preg_match('#^(tel|mailto):#i', $value) === 1) {
+            return $value;
+        }
+
+        return base_url(ltrim($value, '/'));
+    }
+}
+
+if (!function_exists('frontend_icon_class')) {
+    /** A Font Awesome class list from the CMS icon picker, limited to safe characters. */
+    function frontend_icon_class($value)
+    {
+        return trim(preg_replace('/[^a-z0-9 -]/', '', strtolower((string) $value)));
+    }
+}
+
 if (!function_exists('frontend_price')) {
     /** A złoty amount for display: "80 zł", "80.50 zł". Returns '' for an empty amount. */
     function frontend_price($amount)

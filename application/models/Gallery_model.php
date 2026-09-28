@@ -16,6 +16,16 @@ class Gallery_model extends SqlModel
         return $this->db->get()->result_array();
     }
 
+    /** Featured public images, in gallery order (home page). */
+    public function get_featured($limit = 6)
+    {
+        $this->publicImages();
+        $this->db->where('i.image_featured', 1);
+        $this->db->limit((int) $limit);
+
+        return $this->db->get()->result_array();
+    }
+
     /** Every public image, in gallery order. */
     public function get_all()
     {
