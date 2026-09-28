@@ -254,6 +254,24 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /** About (/about): studio story, team and location. */
+    public function about()
+    {
+        $page = $this->listingPage('about');
+        $this->load->model('Artist_model');
+        $this->load->library('content_section_service');
+
+        $this->frontend_layout->render('frontend/about', array(
+            'hero' => $this->listingHero($page),
+            'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
+            'artists' => $this->Artist_model->get_all(),
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url('about'), array(
+                'images' => array(array('pages', $page['banner_background'])),
+            )),
+        ));
+    }
+
     /** Artists listing (/artists): the first artist leads, the rest follow. */
     public function artists()
     {
