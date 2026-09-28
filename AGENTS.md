@@ -1203,14 +1203,67 @@ Every public page renders through `Frontend_layout::render($view, $data, $page)`
   the same SEO columns) through `Frontend_seo`. Pass `$page['meta']`, not ad-hoc meta tags.
 - Page scripts go in `$page['scripts']` (loaded after jQuery and `site.js`); vendor bundles
   in `$page['vendors']` (`swiper`, `photoswipe`).
-- Shared markup lives in `views/frontend/partials/` (`breadcrumb`, `cta_band` with the
-  `card` and `inline` variants). Add card partials there when a page first needs them.
+- Shared markup lives in `views/frontend/partials/`. Reuse these before writing page
+  markup:
+  - `page_hero` (breadcrumb, label, heading, lead, actions with optional icon/external,
+    facts, chips, optional image), `breadcrumb`, `cta_band` (`card` and `inline`
+    variants), `visit_details` (address, note, phone, opening hours).
+  - Cards: `service_card`, `service_menu_item`, `service_related_item`, `artist_card`,
+    `offer_card`, `post_card`, `post_meta`, `testimonial`.
+  - `category_chips` with `js/category-filter.js`: chips that filter the
+    `[data-filter-item]` elements of a `[data-category-filter]` container and keep
+    `?category=` in the address (the server honours it without JavaScript).
+- CI caches view variables across `load->view()` calls in one request, so pass every
+  optional partial variable explicitly (`variant`, `light`, `spacing`, …) instead of
+  relying on its default.
 - `helpers/frontend_helper.php` holds the reference button classes
-  (`frontend_button_class()`), `frontend_phone_href()`, `frontend_opening_hours()` and
-  `frontend_lines()`. Escape output with `html_escape()`.
-- Each module listing (`/services`, `/artists`, `/gallery`, `/offers`, `/blog`, `/about`,
-  `/faq`, `/contact`, legal pages) has a Web Pages record whose slug is its URL. The record
-  supplies the page's SEO fields and its place in the header and footer menus.
+  (`frontend_button_class()`), `frontend_phone_href()`, `frontend_opening_hours()`,
+  `frontend_lines()`, `frontend_price()` / `frontend_service_price()` (`from 80 zł`),
+  `frontend_url()` (CMS link values), `frontend_icon_class()` and
+  `frontend_html_sections()` (editor HTML split at its `<h2>` headings). Resize images with
+  `upload_thumb()`. Escape output with `html_escape()`.
+- CMS rich text (blog text, legal page text) is output unescaped inside `.article-body` or
+  `.legal-body`, which style the editor's HTML; everything else is escaped.
+- Every public page has a Web Pages record whose slug is its URL (`/services`, `/artists`,
+  `/gallery`, `/offers`, `/blog`, `/about`, `/faq`, `/contact`, `/book`, the legal pages).
+  The record supplies the page's SEO fields, its hero text (banner title = label, banner
+  heading = `<h1>`, banner text = lead, banner background = image) and its place in the
+  header and footer menus. `Frontend::listingPage()` loads it and 404s when it is missing
+  or unpublished.
+- Page sections are defined in `config/content_sections.php` under the page's fixed ID
+  (1 home, 2 about, 6 FAQ, 7 contact, 8 journal, 9/10/41 legal, 37 services, 38 artists,
+  39 gallery, 40 offers, 42 book). Keep those IDs when seeding another environment.
+  Texts shared by every service or artist page are Miscellaneous Contents
+  (`service_page`, `artist_page`, `nail_shapes_finishes`).
+- Content changes that Phase 6 made are recorded as re-runnable SQL in
+  `docs/sql/phase-6-*.sql`; follow that pattern for further content seeding.
+
+## Public forms
+
+The contact form (`libraries/Contact_form.php`) and the booking request wizard
+(`libraries/Booking_request.php`, `libraries/Booking_schedule.php`, `js/booking.js`) share
+one pattern. Follow it for any new public form:
+
+- A one-use session token in the form (global CSRF protection is off); rotate it on every
+  submission.
+- Server-side validation is the authority; the page's script mirrors it for usability.
+- `Google_recaptcha::verify($token, $action, $minScore)` with a form-specific action.
+  Without reCAPTCHA keys it accepts forms only in `development` and rejects them in every
+  other environment.
+- Post/Redirect/Get for plain forms; predictable JSON (`success`, `status`, `message`,
+  `errors`, `step`, new `formToken`) for AJAX.
+- Save related rows in one transaction.
+- Email the salon at Website Settings > notification emails and the client through a
+  managed Email Template sent with `EmailService::sendManagedTemplate()`. Short tags are
+  registered per entity in `EmailService::$shortTagFields` (`contact`, `appointment`) with
+  examples in `config/short_tags.php`; templates 1 (contact) and 2 (appointment request)
+  are mapped there.
+- Emails need a sender address (Website Settings > sender or site email). Locally
+  `EMAIL_HOST` is `log`, so messages are written to `email_logs/` instead of being sent.
+
+Booking requests are requests, not bookings (`PROJECT_PLAN.md` decision D1): the salon
+confirms each one in Manage > Appointments. Do not present a request as a confirmed
+appointment.
 
 The admin area (`assets/admin/css/admin.css`) is plain CSS/Bootstrap and is not part of this
 Tailwind build.

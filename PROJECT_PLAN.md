@@ -506,6 +506,86 @@ it uses Web Page Sections) its Blossom section definitions in
 
 Remove the account/login/register/appointment mock-up pages from the build (D2).
 
+**Status: done (2026-09-28), branch `phase-6-frontend-pages`.** Every page of §1.2 except the
+account mock-ups is built on CMS data and was compared with `/ci3/` at 1440px and 390px
+(headless Chrome); the admin forms each page reads from were saved back unchanged. The
+account, login, registration and appointment-lookup pages were never routed (D2), so they
+return the 404 page. One commit per page:
+
+| Route | Built from | Notes |
+|-------|-----------|-------|
+| `/` | Slider, Web Page Sections (page 1), Services, Gallery, Artists, Offers, Customer Reviews | Hero heading `First line\|Highlighted line`; Swiper `rewind` (the reference's loop breaks with 3 slides); Instagram band = Web Page Section + the Instagram link (D6) |
+| `/services`, `/services/{slug}` | Services, Service Categories, Miscellaneous Contents (`service_page`, `nail_shapes_finishes`) | New: "Often booked with this" (`service_related`) and "Show shapes and finishes"; the service gallery shows the images linked to that service |
+| `/artists`, `/artists/{slug}` | Artists, Customer Reviews, Miscellaneous Contents (`artist_page`) | First artist is the lead card |
+| `/gallery` | Gallery | Chips + `?category=`, PhotoSwipe, overlay header |
+| `/offers` | Offers | Featured first; validity from the offer dates or note |
+| `/about` | Web Page Sections (page 2), Artists | |
+| `/blog`, `/blog/{slug}` | Blogs, Blog Categories | Latest post leads; chips + `?category=`; `/blog/category/{slug}` redirects there (301); new optional "Related service" per post (`blogs.blog_service_id`); `Blog_model` rewritten |
+| `/faq` | FAQs, FAQ Categories | `<details>` accordions, FAQPage JSON-LD |
+| `/contact` | Website Settings, Form Settings, Contact Requests, email template 1 | `Contact_form` library (see below) |
+| `/privacy-policy`, `/cancellation-policy`, `/terms` | Pages (page text), Web Page Sections | Numbered contents built from the `<h2>` headings |
+| `/book`, `/book/confirmed` | Services, Artists, Offers, Website Settings opening hours, Appointments, email template 2 | Booking request (D1), see below |
+| `/search` | Services, Offers, Artists, Blogs, FAQs | Server-side; every word must match; `noindex` |
+| 404 | Menu | No reference design: hero + the reference's dashed "not found" card with search and menu links |
+
+Public forms (contact and booking) share one pattern: a one-use session token (global CSRF
+is off), server-side validation as the authority, `Google_recaptcha::verify()` (accepts
+forms in `development` while reCAPTCHA is not configured, rejects them in every other
+environment), then the salon notification (Website Settings > notification emails, built in
+code) and the client email from a managed Email Template. The contact form uses
+Post/Redirect/Get; the booking wizard posts with AJAX and gets JSON.
+
+The booking wizard (`libraries/Booking_request.php`, `Booking_schedule.php`,
+`js/booking.js`) sends an appointment **request**: days and start times come from Website
+Settings > Opening Hours (21 days ahead, 30-minute steps, at least an hour's notice, the
+last start leaves room for the whole visit) and a chosen artist's working days. The
+reference's made-up "unavailable" slots, "Manage appointment", "Add to calendar" and design
+notes were left out. The server re-checks every choice and saves the appointment with a
+snapshot of its services in one transaction; `/book/confirmed` shows the request from the
+session, never from a reference in the URL.
+
+Content and schema, all already run locally (`docs/sql/`, run in this order on another
+environment; the content files refer to uploads, so on another environment upload the
+images through the admin instead):
+
+- Schema, additive and safe to re-run: `phase-6-services.sql` (`services.service_show_shapes`,
+  `service_related`), `phase-6-journal.sql` (`blogs.blog_service_id`).
+- Content: `phase-6-services-content.sql`, `-artists-`, `-gallery-`, `-offers-`, `-home-`,
+  `-about-`, `-journal-`, `-faq-`, `-contact-`, `-legal-`, `-booking-content.sql`. They
+  replace the Alam blog posts, blog and FAQ categories and FAQs, add the Book page (Web
+  Pages 42, not in a menu) and email template 2, and give email template 1 Blossom wording.
+
+Changes to the plan made during this phase:
+
+- **No FAQs on service pages.** Item 2 listed them, but the reference service pages have
+  none; the questions live on `/faq` only.
+- **Shared frontend pieces** were added instead of per-page copies: `page_hero` (with
+  optional icon/external actions), `visit_details`, `category_chips` +
+  `js/category-filter.js` (gallery and journal), `post_card`/`post_meta`, and the
+  `.article-body`, `.legal-body` and `.select-chevron` components in `tailwind.css`.
+- **Search** also covers artists and FAQs (the reference searched services, the team and
+  the journal).
+- **Contact form:** one "Name" field (as in the reference); the first word is stored as
+  `first_name` and the rest as `last_name`, so Contact Requests did not change. The
+  subject list and success message come from Form Settings.
+- **Placeholder notes:** notes the salon should see ("sample articles", "Placeholder
+  wording") were kept as editable page-section text where they are content; design-only
+  notes ("Map embed to be added", "this is a design preview") were dropped.
+
+Carried over to Phase 7:
+
+- The 15 unused Alam Miscellaneous Contents sections (`get_in_touch`, `where_we_are`,
+  `call_or_message`, `email_us`, `still_need_help`, `browse_tours`, `talk_to_us`,
+  `plan_with_us`, `featured_posts`, `privacy_policy_card`, `cancellation_policy_card`,
+  `need_help_choosing`, `prefer_to_talk`, `tour_navigation`, `tour_price_details`): remove
+  their definitions and rows. The Alam "Sample Page" (Web Pages 34) is also still there.
+- Launch settings: a sender email (Website Settings is empty, so no email is sent until it
+  is set), reCAPTCHA Enterprise keys for Blossom (D4), the Blossom favicon (still the Alam
+  one), and the Instagram/Facebook links (empty, so the social icons are hidden).
+- JSON-LD beyond what the pages already output (Service, FAQPage, Article): the home
+  LocalBusiness and BreadcrumbList; the sitemap entries for the new routes.
+- Status-change emails for appointments (Manage > Appointments sends none yet).
+
 ---
 
 ## Phase 7 — SEO, email and content
@@ -516,10 +596,15 @@ Remove the account/login/register/appointment mock-up pages from the build (D2).
 - `sitemap.xml` from Pages, Services, Artists, Offers, Blogs; `robots.txt`; `llms.txt`.
 - Email Templates for: contact notification, contact auto-reply, appointment request
   (salon), appointment request received (client), appointment confirmed/cancelled (if
-  status emails are wanted). Use `EMAIL_*_FORMAT` constants.
+  status emails are wanted). Use `EMAIL_*_FORMAT` constants. *(Phase 6 added the contact
+  auto-reply (template 1) and "request received" (template 2); both salon notifications
+  are built in code by `Contact_form` and `Booking_request`. Still open: status-change
+  emails, and whether the salon notifications should become managed templates.)*
 - Seed content from the `/ci3/` views: 14 services with prices/durations, 3 artists, gallery
   images, 6 offers, 6 journal articles, FAQs, testimonials, legal pages, settings. A one-off
-  seed SQL in `docs/sql/seed.sql` is acceptable.
+  seed SQL in `docs/sql/seed.sql` is acceptable. *(Done page by page in Phase 6: the
+  `docs/sql/phase-6-*-content.sql` files. Still open: one combined seed for a fresh
+  environment, including the uploaded images.)*
 - Replace placeholder artists/offer validity once the salon supplies real data.
 
 ---
