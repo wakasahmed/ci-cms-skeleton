@@ -2,14 +2,14 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
- * Book (/book): the appointment request wizard. The heading is rendered
- * here; js/booking.js renders the steps from the JSON configuration below
- * and posts the request (libraries/Booking_request.php).
+ * Book (/book): the booking wizard. The heading is rendered here;
+ * js/booking.js renders the steps from the JSON configuration below, loads
+ * the free times and posts the booking (libraries/Booking_request.php).
  *
  * $page      the Book Web Pages record (banner fields)
  * $crumbs    breadcrumb (see partials/breadcrumb.php)
  * $hasHours  FALSE when Website Settings has no readable opening hours
- * $config    catalogue, schedule, notes, URLs, form token and reCAPTCHA
+ * $config    catalogue, notes, URLs, form token and reCAPTCHA
  * $helpText  the phone prompt beside the steps
  */
 $heading = trim((string) $page['banner_heading']) !== ''
@@ -38,7 +38,7 @@ $config['help'] = array(
 
             <?php if (!$hasHours) { ?>
                 <p class="mt-10 max-w-2xl rounded-lg bg-lilac px-5 py-4 text-foreground-soft">
-                    Online requests are not available right now.
+                    Online booking is not available right now.
                     <?php if ($site['phone_href'] !== '') { ?>
                         Please call the salon on
                         <a class="font-semibold text-primary-ink" href="<?php echo html_escape($site['phone_href']); ?>"><?php echo html_escape($site['phone']); ?></a>.

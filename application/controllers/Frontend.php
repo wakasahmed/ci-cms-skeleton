@@ -473,9 +473,10 @@ class Frontend extends CI_Controller
     }
 
     /**
-     * Book (/book): the appointment request wizard (js/booking.js). The
-     * wizard posts its request here with AJAX and gets JSON back; on success
-     * it opens /book/confirmed. ?service=, ?artist= and ?offer= preselect.
+     * Book (/book): the booking wizard (js/booking.js). It reads free times
+     * from /book/availability, posts the booking here with AJAX and gets
+     * JSON back; on success it opens /book/confirmed. ?service=, ?artist=
+     * and ?offer= preselect.
      */
     public function book()
     {
@@ -487,8 +488,8 @@ class Frontend extends CI_Controller
                 'success' => '',
                 'invalid' => 'Please check the highlighted details.',
                 'expired' => 'The booking form expired. Please try again.',
-                'recaptcha' => 'We couldn’t confirm the request was sent by a person. Please try again, or call us.',
-                'error' => 'Your request could not be sent. Please try again, or call us.',
+                'recaptcha' => 'We couldn’t confirm the booking was made by a person. Please try again, or call us.',
+                'error' => 'Your booking could not be saved. Please try again, or call us.',
             );
             $httpStatus = array(
                 'success' => 200,
@@ -528,7 +529,7 @@ class Frontend extends CI_Controller
             'hasHours' => $this->booking_schedule->hasHours(),
             'config' => array(
                 'catalogue' => $this->booking_request->catalogue(),
-                'schedule' => $this->booking_schedule->config(),
+                'availabilityUrl' => base_url('book/availability'),
                 'notes' => array(
                     'service' => isset($wizard['service_note']) ? $wizard['service_note'] : '',
                     'schedule' => isset($wizard['schedule_note']) ? $wizard['schedule_note'] : '',
@@ -550,7 +551,23 @@ class Frontend extends CI_Controller
         ));
     }
 
-    /** The request just sent from /book (kept in the session), or back to /book. */
+    /**
+     * Free times for the wizard (/book/availability?services[]=…&artist=…):
+     * JSON {"days": {"Y-m-d": ["HH:MM", …]}}, or 422 for an invalid choice.
+     */
+    public function book_availability()
+    {
+        $this->load->library('booking_request');
+        $days = $this->booking_request->availability();
+
+        $this->output
+            ->set_status_header($days === NULL ? 422 : 200)
+            ->set_content_type('application/json')
+            ->set_header('Cache-Control: no-store')
+            ->set_output(json_encode(array('days' => $days === NULL ? new stdClass() : $days)));
+    }
+
+    /** The booking just made on /book (kept in the session), or back to /book. */
     public function book_confirmed()
     {
         $this->load->library('booking_request');

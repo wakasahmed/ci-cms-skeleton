@@ -1,13 +1,15 @@
 /*
- * Book (/book): the appointment request wizard, rebuilt from the reference
- * design's booking.js on CMS data.
+ * Book (/book): the booking wizard, rebuilt from the reference design's
+ * booking.js on CMS data.
  *
  * The page embeds its configuration as JSON (#booking-config): the
- * catalogue (service groups, artists, offers), the opening-hours schedule,
- * editable notes, the one-use form token and reCAPTCHA settings. The five
- * steps are rendered here; the request is posted with AJAX and checked
- * again on the server (libraries/Booking_request.php), which answers with
- * JSON. On success the browser opens /book/confirmed.
+ * catalogue (service groups, artists with the services they offer, offers),
+ * editable notes, the availability URL, the one-use form token and
+ * reCAPTCHA settings. The five steps are rendered here. The free days and
+ * times come from the server (/book/availability) for the chosen services
+ * and artist; the booking is posted with AJAX and checked again under a
+ * lock (libraries/Booking_request.php), which answers with JSON. On success
+ * the browser opens /book/confirmed.
  *
  * ?service={slug}, ?artist={slug} and ?offer={slug} preselect choices.
  */
@@ -21,7 +23,6 @@
         { id: 'details', label: 'Your details', short: 'Details' },
         { id: 'review', label: 'Review your appointment', short: 'Review' }
     ];
-    var DAY_CODES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     var PHONE = /^\+?[0-9 ()\-]+$/;
 
@@ -48,7 +49,9 @@
         details: { name: '', phone: '', email: '', contact: 'phone', notes: '' },
         errors: {},
         alert: '',
-        sending: false
+        sending: false,
+        // Free times from /book/availability: key (services + artist) and Y-m-d => ["HH:MM", …].
+        availability: { key: '', days: null, loading: false, failed: false }
     };
 
     /* Helpers ------------------------------------------------------------ */
@@ -144,7 +147,31 @@
     function artistName() {
         var artist = selectedArtist();
 
-        return artist ? artist.name : 'Next available artist';
+        if (artist) {
+            return artist.name;
+        }
+
+        return needsSeveralArtists() ? 'Matched to each service' : 'Next available artist';
+    }
+
+    /** TRUE when the artist offers every chosen service. */
+    function offersAll(artist) {
+        return state.serviceSlugs.every(function (slug) {
+            return artist.services.indexOf(slug) !== -1;
+        });
+    }
+
+    /** TRUE when no single artist offers every chosen service. */
+    function needsSeveralArtists() {
+        return state.serviceSlugs.length > 1 && !config.catalogue.artists.some(offersAll);
+    }
+
+    /** A chosen artist who no longer offers every chosen service is dropped. */
+    function syncArtist() {
+        var artist = selectedArtist();
+        if (artist && !offersAll(artist)) {
+            state.artistSlug = 'any';
+        }
     }
 
     /** An offer stays attached while all of its services are chosen. */
@@ -157,67 +184,81 @@
         }
     }
 
-    /* Schedule (mirrors libraries/Booking_schedule.php) ------------------ */
+    /* Availability (from /book/availability) ---------------------------- */
 
-    function openingHours(iso) {
-        var code = DAY_CODES[fromISO(iso).getDay()];
-        var artist = selectedArtist();
-
-        if (!config.schedule.hours[code]) {
-            return null;
-        }
-        if (artist && artist.workingDays.length && artist.workingDays.indexOf(code) === -1) {
-            return null;
-        }
-
-        return config.schedule.hours[code];
+    function availabilityKey() {
+        return state.serviceSlugs.join(',') + '|' + state.artistSlug;
     }
 
-    function slots(iso) {
-        var hours = openingHours(iso);
-        var schedule = config.schedule;
-        var list = [];
-        var start;
-        var last;
+    /** Load the free times for the current services and artist, once per choice. */
+    function loadAvailability(force) {
+        var key = availabilityKey();
+        var params = new URLSearchParams();
 
-        if (!hours) {
-            return list;
+        if (!force && state.availability.key === key && (state.availability.days || state.availability.loading)) {
+            return;
         }
 
-        last = hours[1] - Math.max(totalMinutes(), schedule.minVisitMinutes);
-        for (start = hours[0]; start <= last; start += schedule.slotStep) {
-            if (iso === schedule.today && start < schedule.nowMinutes + schedule.leadMinutes) {
-                continue;
-            }
-            list.push(String(Math.floor(start / 60)).padStart(2, '0') + ':' + String(start % 60).padStart(2, '0'));
-        }
+        state.availability = { key: key, days: null, loading: true, failed: false };
+        state.serviceSlugs.forEach(function (slug) {
+            params.append('services[]', slug);
+        });
+        params.append('artist', state.artistSlug);
 
-        return list;
+        fetch(config.availabilityUrl + '?' + params.toString(), {
+            credentials: 'same-origin',
+            headers: { Accept: 'application/json' }
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Availability request failed.');
+                }
+                return response.json();
+            })
+            .then(function (result) {
+                if (state.availability.key !== key) {
+                    return;
+                }
+                state.availability = { key: key, days: result.days || {}, loading: false, failed: false };
+                syncSlot();
+                if (state.step === 2) {
+                    render();
+                }
+            })
+            .catch(function () {
+                if (state.availability.key !== key) {
+                    return;
+                }
+                state.availability = { key: key, days: null, loading: false, failed: true };
+                if (state.step === 2) {
+                    render();
+                }
+            });
+    }
+
+    function freeTimes(iso) {
+        var days = state.availability.days;
+
+        return days && days[iso] ? days[iso] : [];
     }
 
     function days() {
-        var first = fromISO(config.schedule.today);
-        var list = [];
-        var index;
-        var date;
-        var iso;
+        var dates = state.availability.days ? Object.keys(state.availability.days) : [];
 
-        for (index = 0; index < config.schedule.daysAhead; index++) {
-            date = new Date(first);
-            date.setDate(first.getDate() + index);
-            iso = toISO(date);
-            list.push({ date: date, iso: iso, today: index === 0, open: slots(iso).length > 0 });
-        }
-
-        return list;
+        return dates.map(function (iso, index) {
+            return { date: fromISO(iso), iso: iso, today: index === 0, open: freeTimes(iso).length > 0 };
+        });
     }
 
-    /** Drop a chosen day or time that no longer fits (artist or services changed). */
+    /** Drop a chosen day or time that is no longer free (services or artist changed). */
     function syncSlot() {
-        if (state.date && slots(state.date).indexOf(state.time) === -1) {
+        if (!state.availability.days || state.availability.key !== availabilityKey()) {
+            return;
+        }
+        if (state.date && freeTimes(state.date).indexOf(state.time) === -1) {
             state.time = '';
         }
-        if (state.date && !slots(state.date).length) {
+        if (state.date && !freeTimes(state.date).length) {
             state.date = '';
         }
     }
@@ -312,25 +353,38 @@
             name: 'Any available artist',
             role: '',
             specialty: 'We’ll match you with whoever is free at the time you choose — usually the quickest way to get the slot you want.',
+            services: [],
             image: '',
             placeholder: false
         }].concat(config.catalogue.artists);
 
-        return '<ul class="grid gap-3 sm:grid-cols-2">' + options.map(function (artist, index) {
+        var several = needsSeveralArtists();
+        var intro = several
+            ? '<p class="mb-6 rounded-lg bg-lilac px-4 py-3 text-sm text-foreground-soft">Your services are done by different people,'
+                + ' so we’ll book them back to back with the right artist for each.</p>'
+            : '';
+
+        return intro + '<ul class="grid gap-3 sm:grid-cols-2">' + options.map(function (artist, index) {
             var picked = artist.slug === state.artistSlug;
+            var unavailable = artist.slug !== 'any' && !offersAll(artist);
             var portrait = artist.image
                 ? '<span class="relative size-16 shrink-0 overflow-hidden rounded-full bg-muted"><img src="' + esc(artist.image) + '" alt="" loading="lazy" class="h-full w-full object-cover object-top"></span>'
                 : '<span aria-hidden="true" class="grid size-16 shrink-0 place-items-center rounded-full bg-rose-100 text-2xl text-primary"><i class="fa-solid fa-wand-magic-sparkles"></i></span>';
 
             return '<li class="' + (index === 0 ? 'sm:col-span-2' : '') + '">'
                 + '<button type="button" data-artist="' + esc(artist.slug) + '" aria-pressed="' + picked + '"'
-                + ' class="flex h-full w-full items-center gap-4 rounded-lg border p-4 text-left ' + (picked ? PICKED_CARD : OPEN_CARD) + '">'
+                + (unavailable ? ' disabled aria-describedby="artist-' + esc(artist.slug) + '-note"' : '')
+                + ' class="flex h-full w-full items-center gap-4 rounded-lg border p-4 text-left disabled:cursor-not-allowed disabled:opacity-55 '
+                + (picked ? PICKED_CARD : OPEN_CARD) + '">'
                 + portrait
                 + '<span class="min-w-0 flex-1">'
                 + '<span class="font-display text-lg text-foreground">' + esc(artist.name) + '</span>'
                 + (artist.role ? '<span class="mt-0.5 block text-sm text-foreground-soft">' + esc(artist.role) + '</span>' : '')
                 + (artist.specialty ? '<span class="mt-1 block text-sm text-muted-foreground">' + esc(artist.specialty) + '</span>' : '')
                 + (artist.placeholder ? '<span class="mt-1 block text-xs text-primary-ink">Placeholder profile</span>' : '')
+                + (unavailable
+                    ? '<span class="mt-1 block text-xs text-muted-foreground" id="artist-' + esc(artist.slug) + '-note">Doesn’t offer every service you chose</span>'
+                    : '')
                 + '</span>'
                 + '<span aria-hidden="true" class="grid size-6 shrink-0 place-items-center rounded-full border '
                 + (picked ? 'border-primary bg-primary text-primary-foreground' : 'border-border-strong') + '">'
@@ -355,11 +409,25 @@
                 + '<span class="text-xs">' + (day.today ? 'Today' : day.date.toLocaleDateString('en-GB', { month: 'short' })) + '</span>'
                 + '</button>';
         }).join('');
-        var times = state.date ? slots(state.date) : [];
+        var times = state.date ? freeTimes(state.date) : [];
         var timeArea;
 
+        if (state.availability.loading || (!state.availability.days && !state.availability.failed)) {
+            return '<p class="text-muted-foreground" role="status">Checking the diary…</p>';
+        }
+        if (state.availability.failed) {
+            return '<p role="alert" class="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">We couldn’t load the free times.'
+                + ' <button type="button" data-reload-times class="font-semibold underline">Try again</button></p>';
+        }
+        if (!days().some(function (day) {
+            return day.open;
+        })) {
+            return '<p class="rounded-lg bg-lilac px-4 py-3 text-foreground-soft">There are no free times for this choice in the next three weeks.'
+                + ' Try another artist, fewer services, or call the salon.</p>';
+        }
+
         if (!state.date) {
-            timeArea = '<p class="mt-3 text-muted-foreground">Pick a day above and we’ll show the times you can request.</p>';
+            timeArea = '<p class="mt-3 text-muted-foreground">Pick a day above and we’ll show the free times.</p>';
         } else {
             timeArea = '<div role="radiogroup" aria-label="Choose a time" class="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">'
                 + times.map(function (time) {
@@ -375,7 +443,7 @@
 
         return '<div>'
             + (config.notes.schedule ? '<p class="rounded-lg bg-lilac px-4 py-3 text-sm text-foreground-soft">' + esc(config.notes.schedule) + '</p>' : '')
-            + (selectedArtist() ? '<p class="mt-4 text-sm text-muted-foreground">Showing the days ' + esc(selectedArtist().name) + ' works.</p>' : '')
+            + (selectedArtist() ? '<p class="mt-4 text-sm text-muted-foreground">Showing ' + esc(selectedArtist().name) + '’s free times.</p>' : '')
             + '<h3 class="mt-8 font-display text-lg">Choose a day</h3>'
             + '<div role="radiogroup" aria-label="Choose a day" class="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-2 sm:mx-0 sm:px-0">' + dayButtons + '</div>'
             + '<h3 class="mt-10 font-display text-lg">' + (state.date ? 'Times on ' + esc(longDate(state.date)) : 'Choose a time') + '</h3>'
@@ -458,7 +526,7 @@
         return '<dl class="divide-y divide-border border-y border-border">'
             + reviewRow('Services', serviceList, 0)
             + (offer ? reviewRow('Offer', esc(offer.title + (offer.price !== null ? ' — ' + price(offer.price) : '')), 0) : '')
-            + reviewRow('Artist', esc(artist ? artist.name + (artist.role ? ' — ' + artist.role : '') : 'Next available artist'), 1)
+            + reviewRow('Artist', esc(artist ? artist.name + (artist.role ? ' — ' + artist.role : '') : artistName()), 1)
             + reviewRow('Date & time', esc(longDate(state.date) + ' at ' + timeLabel(state.time)), 2)
             + reviewRow('Time needed', duration(totalMinutes()), 2)
             + reviewRow('Your details', details, 3)
@@ -538,7 +606,7 @@
     function render() {
         var last = state.step === STEPS.length - 1;
         var continueLabel = last
-            ? (state.sending ? 'Sending…' : 'Send request')
+            ? (state.sending ? 'Booking…' : 'Confirm booking')
             : 'Continue <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>';
         var blocked = !canContinue()
             ? '<p class="mt-4 text-sm text-muted-foreground">'
@@ -547,7 +615,7 @@
 
         root.innerHTML = progress()
             + '<div class="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-14">'
-            + '<div class="lg:col-span-7 xl:col-span-8">'
+            + '<div class="min-w-0 lg:col-span-7 xl:col-span-8">'
             + summaryBar()
             + (state.alert ? '<p role="alert" class="mb-6 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">' + esc(state.alert) + '</p>' : '')
             + '<h2 tabindex="-1" class="text-[clamp(1.6rem,3.4vw,2.25rem)]">' + STEPS[state.step].label + '</h2>'
@@ -566,6 +634,9 @@
 
     function goToStep(next) {
         state.step = next;
+        if (next === 2) {
+            loadAvailability(false);
+        }
         render();
         window.requestAnimationFrame(function () {
             var heading = root.querySelector('h2[tabindex="-1"]');
@@ -664,10 +735,14 @@
                     return;
                 }
                 state.errors = result.errors || {};
-                fail(result.message || 'Your request could not be sent. Please try again, or call us.', result.step);
+                if (state.errors.datetime) {
+                    state.time = '';
+                    state.availability.key = '';
+                }
+                fail(result.message || 'Your booking could not be saved. Please try again, or call us.', result.step);
             })
             .catch(function () {
-                fail('Your request could not be sent. Please check your connection and try again, or call us.');
+                fail('Your booking could not be saved. Please check your connection and try again, or call us.');
             });
     }
 
@@ -694,11 +769,13 @@
                 state.serviceSlugs.splice(index, 1);
             }
             syncOffer();
-            syncSlot();
+            syncArtist();
             render();
         } else if (target.dataset.artist) {
             state.artistSlug = target.dataset.artist;
-            syncSlot();
+            render();
+        } else if (target.hasAttribute('data-reload-times')) {
+            loadAvailability(true);
             render();
         } else if (target.dataset.date) {
             state.date = target.dataset.date;
@@ -767,6 +844,7 @@
         }
         if (artist) {
             state.artistSlug = artist.slug;
+            syncArtist();
         }
 
         // Open the group of the first chosen service.

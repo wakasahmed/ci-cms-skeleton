@@ -40,6 +40,7 @@ class EmailService
             'customer_phone',
             'contact_preference',
             'services',
+            'schedule',
             'artist',
             'offer',
             'date',
@@ -226,7 +227,7 @@ class EmailService
     /** Replace the supported appointment-request short tags with scalar values. */
     public function parseAppointmentShortTags($template, array $values = array())
     {
-        return $this->parseShortTags('appointment', $template, $values, array('notes'));
+        return $this->parseShortTags('appointment', $template, $values, array('schedule', 'notes'));
     }
 
     /** Replace an entity's short tags; $multiline values keep their line breaks as <br>. */

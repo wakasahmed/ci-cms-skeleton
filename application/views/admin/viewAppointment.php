@@ -92,13 +92,15 @@ $client = array(
                         <?php } ?>
                     </div>
 
-                    <h3 class="h6 mb-2">Requested services</h3>
+                    <h3 class="h6 mb-2">Services</h3>
                     <?php if (!empty($services)) { ?>
                         <div class="table-responsive">
                             <table class="table table-sm align-middle mb-0">
                                 <thead>
                                     <tr>
+                                        <th scope="col">Start</th>
                                         <th scope="col">Service</th>
+                                        <th scope="col">Artist</th>
                                         <th scope="col">Duration</th>
                                         <th scope="col" class="text-end">Price</th>
                                     </tr>
@@ -106,12 +108,14 @@ $client = array(
                                 <tbody>
                                     <?php foreach ($services as $service) { ?>
                                         <tr>
+                                            <td class="text-nowrap"><?php echo $service['service_start_time'] !== NULL ? $escape(date('g:i A', strtotime($service['service_start_time']))) : '&mdash;'; ?></td>
                                             <td>
                                                 <?php echo $escape($service['service_name']); ?>
                                                 <?php if ($service['service_id'] === NULL) { ?>
                                                     <span class="text-muted small">(no longer on the menu)</span>
                                                 <?php } ?>
                                             </td>
+                                            <td><?php echo $service['service_artist_name'] !== NULL ? $escape($service['service_artist_name']) : '&mdash;'; ?></td>
                                             <td><?php echo $service['service_duration_minutes'] !== NULL ? (int) $service['service_duration_minutes'].' min' : '&mdash;'; ?></td>
                                             <td class="text-end"><?php echo $service['service_price'] !== NULL ? $escape('from '.admin_format_price($service['service_price'])) : '&mdash;'; ?></td>
                                         </tr>
@@ -120,7 +124,7 @@ $client = array(
                             </table>
                         </div>
                     <?php } else { ?>
-                        <p class="text-muted mb-0">No services were recorded with this request.</p>
+                        <p class="text-muted mb-0">No services were recorded with this appointment.</p>
                     <?php } ?>
                 </div>
             </div>
@@ -179,7 +183,7 @@ $client = array(
                                     <option value="<?php echo $statusOption; ?>" <?php echo $currentStatus === $statusOption ? 'selected' : ''; ?>><?php echo $statusOption; ?></option>
                                 <?php } ?>
                             </select>
-                            <div class="form-text">Confirm the time with the client before marking a request Confirmed. Changing the status to Confirmed or Cancelled emails the client.</div>
+                            <div class="form-text">Online bookings arrive Confirmed. Changing the status to Confirmed or Cancelled emails the client, and Cancelled frees the artists' time for online booking.</div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Update Status</button>
                     </form>

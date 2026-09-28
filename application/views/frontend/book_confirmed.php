@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
- * Book > confirmation (/book/confirmed): the request just sent from /book,
+ * Book > confirmation (/book/confirmed): the booking just made on /book,
  * read from the session (never from a reference in the URL).
  *
  * $appointment   the appointments row with its 'services' rows
@@ -10,18 +10,32 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 $heading = isset($confirmation['heading']) && trim($confirmation['heading']) !== ''
     ? $confirmation['heading']
-    : 'Thank you — your request is in';
-$serviceNames = array_column($appointment['services'], 'service_name');
+    : 'Your appointment is confirmed';
+
+// The date, then one row per service with its start time and artist (a
+// visit can be done by several artists), then the totals.
 $rows = array(
-    'Service' => implode(' + ', $serviceNames),
-    'Artist' => $appointment['appointment_artist_name'] !== NULL ? $appointment['appointment_artist_name'] : 'Next available artist',
-    'Date' => date('l, j F Y', strtotime($appointment['appointment_date'])),
-    'Time' => date('g:i A', strtotime($appointment['appointment_time'])),
-    'Time needed' => Booking_request::duration((int) $appointment['appointment_duration_minutes']),
-    'Estimated total' => $appointment['appointment_total_price'] !== NULL ? frontend_price($appointment['appointment_total_price']) : '',
+    array('label' => 'Date', 'value' => date('l, j F Y', strtotime($appointment['appointment_date']))),
+);
+foreach ($appointment['services'] as $service) {
+    $rows[] = array(
+        'label' => $service['service_start_time'] !== NULL
+            ? date('g:i A', strtotime($service['service_start_time']))
+            : 'Service',
+        'value' => $service['service_name']
+            .($service['service_artist_name'] !== NULL ? ' with '.$service['service_artist_name'] : ''),
+    );
+}
+$rows[] = array(
+    'label' => 'Time needed',
+    'value' => Booking_request::duration((int) $appointment['appointment_duration_minutes']),
+);
+$rows[] = array(
+    'label' => 'Estimated total',
+    'value' => $appointment['appointment_total_price'] !== NULL ? frontend_price($appointment['appointment_total_price']) : '',
 );
 if ($appointment['appointment_offer_title'] !== NULL) {
-    $rows = array_merge(array('Offer' => $appointment['appointment_offer_title']), $rows);
+    $rows[] = array('label' => 'Offer', 'value' => $appointment['appointment_offer_title']);
 }
 ?>
 <main id="main">
@@ -37,23 +51,23 @@ if ($appointment['appointment_offer_title'] !== NULL) {
                     <?php if (isset($confirmation['contents']) && trim($confirmation['contents']) !== '') { ?>
                         <?php echo html_escape($confirmation['contents']); ?>
                     <?php } ?>
-                    A copy of your request is on its way to <?php echo html_escape($appointment['customer_email']); ?>.
+                    A confirmation is on its way to <?php echo html_escape($appointment['customer_email']); ?>.
                 </p>
             </div>
 
             <div class="mt-10 rounded-xl bg-petal p-6 shadow-[var(--shadow-card)] sm:p-8">
                 <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-rose-200 pb-5">
-                    <h2 class="font-display text-xl">Your request</h2>
+                    <h2 class="font-display text-xl">Your appointment</h2>
                     <p class="text-sm text-muted-foreground">
                         Reference <span class="font-semibold text-primary-ink"><?php echo html_escape($appointment['appointment_reference']); ?></span>
                     </p>
                 </div>
                 <dl class="mt-5 space-y-4 text-[0.95rem]">
-                    <?php foreach ($rows as $label => $value) { ?>
-                        <?php if ($value !== '') { ?>
+                    <?php foreach ($rows as $row) { ?>
+                        <?php if ($row['value'] !== '') { ?>
                             <div class="flex justify-between gap-4">
-                                <dt class="text-muted-foreground"><?php echo html_escape($label); ?></dt>
-                                <dd class="text-right font-medium"><?php echo html_escape($value); ?></dd>
+                                <dt class="text-muted-foreground tabular-nums"><?php echo html_escape($row['label']); ?></dt>
+                                <dd class="text-right font-medium"><?php echo html_escape($row['value']); ?></dd>
                             </div>
                         <?php } ?>
                     <?php } ?>

@@ -1,28 +1,35 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Online appointment requests (/book, PROJECT_PLAN.md decision D1): the
- * wizard's catalogue (services, artists, offers), and the request itself —
- * a one-use session token, server-side validation of every choice,
- * reCAPTCHA Enterprise, the saved appointment with a snapshot of its
- * services, and two emails: the salon notification (Website Settings >
- * notification emails) and the client's "request received" email (email
- * template 2). Staff confirm each request in Manage > Appointments.
+ * Online booking (/book, PROJECT_PLAN.md decision D1 as changed in Phase 8):
+ * the wizard's catalogue (services, artists, offers), the free times
+ * (Booking_availability), and the booking itself — a one-use session token,
+ * server-side validation of every choice, reCAPTCHA Enterprise, a final
+ * availability check under a database lock, the appointment saved as
+ * Confirmed with each service's artist and start time, and two emails: the
+ * salon notification (Website Settings > notification emails) and the
+ * client's confirmation (email template 3).
  */
 class Booking_request
 {
     const RECAPTCHA_ACTION = 'BOOKING';
     const RECAPTCHA_MIN_SCORE = 0.5;
     const MAX_SERVICES = 10;
-    const CLIENT_TEMPLATE_ID = 2;
 
-    /** Client emails sent when staff change a request's status (Manage > Appointments). */
+    /**
+     * Client emails for a status: Confirmed is sent when a booking is made
+     * (and if staff confirm an older request); both are sent when staff
+     * change a status in Manage > Appointments.
+     */
     const STATUS_TEMPLATE_IDS = array(
         'Confirmed' => 3,
         'Cancelled' => 4,
     );
 
-    /** Session key of the last saved request, shown on /book/confirmed. */
+    /** MySQL named lock held while a booking's time is checked and saved. */
+    const BOOKING_LOCK = 'blossom_booking';
+
+    /** Session key of the last saved booking, shown on /book/confirmed. */
     const CONFIRMED_SESSION_KEY = 'booking_confirmed_id';
 
     private $CI;
@@ -33,12 +40,13 @@ class Booking_request
         $this->CI =& get_instance();
         $this->CI->load->helper('frontend');
         $this->CI->load->model(array('Service_model', 'Artist_model', 'Offer_model'));
-        $this->CI->load->library(array('booking_schedule', 'EmailService'));
+        $this->CI->load->library(array('booking_schedule', 'booking_availability', 'EmailService'));
     }
 
     /**
-     * What can be requested: 'groups' (service categories with their
-     * services), 'artists' and 'offers', keyed for js/booking.js.
+     * What can be booked: 'groups' (service categories with their services),
+     * 'artists' (with the services each offers) and 'offers', keyed for
+     * js/booking.js.
      */
     public function catalogue()
     {
@@ -71,8 +79,19 @@ class Booking_request
             );
         }
 
+        $allServices = array();
+        foreach ($groups as $group) {
+            $allServices = array_merge($allServices, $group['services']);
+        }
+
         $artists = array();
         foreach ($this->CI->Artist_model->get_all() as $artist) {
+            $offered = array();
+            foreach ($allServices as $service) {
+                if (in_array((int) $artist['artist_id'], $this->CI->booking_availability->artistsForAll(array($service)), TRUE)) {
+                    $offered[] = $service['slug'];
+                }
+            }
             $artists[] = array(
                 'id' => (int) $artist['artist_id'],
                 'slug' => $artist['artist_slug'],
@@ -82,6 +101,7 @@ class Booking_request
                 'image' => upload_thumb('artists', $artist['artist_image'], 160, 160, 'images/no_image.jpg'),
                 'placeholder' => (int) $artist['artist_is_placeholder'] === 1,
                 'workingDays' => array_values(array_filter(explode(',', (string) $artist['artist_working_days']))),
+                'services' => $offered,
             );
         }
 
@@ -105,6 +125,27 @@ class Booking_request
         );
 
         return $this->catalogue;
+    }
+
+    /**
+     * Free start times for the posted services (GET services[]) and artist
+     * (GET artist, a slug or "any"): Y-m-d => list of "HH:MM", or NULL when
+     * the choice itself is invalid.
+     */
+    public function availability()
+    {
+        $services = $this->resolveServices($this->CI->input->get('services'));
+        if (empty($services) || count($services) > self::MAX_SERVICES) {
+            return NULL;
+        }
+
+        $artistSlug = $this->CI->input->get('artist');
+        $artist = $this->resolveArtist(is_string($artistSlug) ? trim($artistSlug) : 'any');
+        if ($artist === FALSE || ($artist !== NULL && !$this->artistOffersAll($artist, $services))) {
+            return NULL;
+        }
+
+        return $this->CI->booking_availability->days($services, $artist !== NULL ? $artist['id'] : NULL);
     }
 
     /** The session-bound token the wizard posts back. */
@@ -148,6 +189,11 @@ class Booking_request
         }
 
         $appointmentId = $this->save($choice);
+        if ($appointmentId === 'taken') {
+            return $this->result('invalid', array(
+                'datetime' => 'Sorry, that time was just booked. Please choose another.',
+            ), 2);
+        }
         if (!$appointmentId) {
             return $this->result('error');
         }
@@ -161,9 +207,9 @@ class Booking_request
     }
 
     /**
-     * Email the client that their request was confirmed or cancelled (email
-     * templates 3 and 4). Returns TRUE when sent, FALSE when it failed, and
-     * NULL when $status has no email.
+     * Email the client that their appointment is confirmed or cancelled
+     * (email templates 3 and 4). Returns TRUE when sent, FALSE when it
+     * failed, and NULL when $status has no email.
      */
     public function sendStatusEmail($appointmentId, $status)
     {
@@ -181,12 +227,13 @@ class Booking_request
             'to' => $appointment['customer_email'],
             'values' => $this->emailValues($appointment),
             'parser' => 'parseAppointmentShortTags',
+            // parseAppointmentShortTags() already turns line breaks into <br>.
             'multiline_fields' => array(),
             'label' => 'Appointment '.strtolower($status).' email',
         ));
     }
 
-    /** The request saved in this session, with its services, or NULL. */
+    /** The booking saved in this session, with its services, or NULL. */
     public function confirmed()
     {
         $appointmentId = (int) $this->CI->session->userdata(self::CONFIRMED_SESSION_KEY);
@@ -229,36 +276,19 @@ class Booking_request
             $step = $step === NULL ? $fieldStep : min($step, $fieldStep);
         };
 
-        // Services (step 0).
-        $bySlug = array();
-        foreach ($catalogue['groups'] as $group) {
-            foreach ($group['services'] as $service) {
-                $bySlug[$service['slug']] = $service;
-            }
-        }
-        $posted = $this->CI->input->post('services');
-        $services = array();
-        foreach (is_array($posted) ? $posted : array() as $slug) {
-            if (is_string($slug) && isset($bySlug[$slug]) && !isset($services[$slug])) {
-                $services[$slug] = $bySlug[$slug];
-            }
-        }
+        // Services (step 0), in the order chosen: they are booked back to back.
+        $services = $this->resolveServices($this->CI->input->post('services'));
         if (empty($services) || count($services) > self::MAX_SERVICES) {
             $fail('services', 'Choose at least one service.', 0);
         }
 
-        // Artist (step 1): "any" or an enabled artist.
-        $artistSlug = $this->text('artist');
-        $artist = NULL;
-        if ($artistSlug !== '' && $artistSlug !== 'any') {
-            foreach ($catalogue['artists'] as $candidate) {
-                if ($candidate['slug'] === $artistSlug) {
-                    $artist = $candidate;
-                }
-            }
-            if ($artist === NULL) {
-                $fail('artist', 'That artist is no longer available. Please choose again.', 1);
-            }
+        // Artist (step 1): "any" or an enabled artist who offers every chosen service.
+        $artist = $this->resolveArtist($this->text('artist'));
+        if ($artist === FALSE) {
+            $artist = NULL;
+            $fail('artist', 'That artist is no longer available. Please choose again.', 1);
+        } elseif ($artist !== NULL && !empty($services) && !$this->artistOffersAll($artist, $services)) {
+            $fail('artist', $artist['name'].' does not offer every service you chose. Please choose again.', 1);
         }
 
         // Offer: optional, only a public offer.
@@ -270,17 +300,11 @@ class Booking_request
             }
         }
 
-        // Date and time (step 2).
-        $minutes = array_sum(array_column($services, 'minutes'));
+        // Date and time (step 2): checked against the diaries in save(), under the booking lock.
         $date = $this->text('date');
         $time = $this->text('time');
-        if (!$this->CI->booking_schedule->isAvailable(
-            $date,
-            $time,
-            $minutes,
-            $artist !== NULL ? $artist['workingDays'] : NULL
-        )) {
-            $fail('datetime', 'That time is no longer available. Please choose another.', 2);
+        if ($this->CI->booking_schedule->dayCode($date) === NULL || Booking_schedule::minute($time) === NULL) {
+            $fail('datetime', 'Please choose a day and a time.', 2);
         }
 
         // Details (step 3).
@@ -311,32 +335,115 @@ class Booking_request
         return array(
             'errors' => $errors,
             'step' => $step,
-            'services' => array_values($services),
+            'services' => $services,
             'artist' => $artist,
             'offer' => $offer,
             'date' => $date,
             'time' => $time,
-            'minutes' => $minutes,
             'details' => $details,
         );
     }
 
-    /** Save the appointment and its services together. Returns its ID or FALSE. */
+    /** Catalogue services for posted slugs, in the posted order, without repeats. */
+    private function resolveServices($posted)
+    {
+        $bySlug = array();
+        foreach ($this->catalogue()['groups'] as $group) {
+            foreach ($group['services'] as $service) {
+                $bySlug[$service['slug']] = $service;
+            }
+        }
+
+        $services = array();
+        foreach (is_array($posted) ? $posted : array() as $slug) {
+            if (is_string($slug) && isset($bySlug[$slug]) && !isset($services[$slug])) {
+                $services[$slug] = $bySlug[$slug];
+            }
+        }
+
+        return array_values($services);
+    }
+
+    /** NULL for "any" (or empty), the catalogue artist for a known slug, FALSE otherwise. */
+    private function resolveArtist($slug)
+    {
+        if ($slug === '' || $slug === 'any') {
+            return NULL;
+        }
+        foreach ($this->catalogue()['artists'] as $artist) {
+            if ($artist['slug'] === $slug) {
+                return $artist;
+            }
+        }
+
+        return FALSE;
+    }
+
+    private function artistOffersAll(array $artist, array $services)
+    {
+        return in_array($artist['id'], $this->CI->booking_availability->artistsForAll($services), TRUE);
+    }
+
+    /**
+     * Book the visit: under the booking lock, check that the time is still
+     * free, then save the appointment (Confirmed) and its services with their
+     * artists and start times. Returns the appointment ID, 'taken' when the
+     * time is no longer free, or FALSE on failure.
+     */
     private function save(array $choice)
+    {
+        $locked = (int) $this->CI->db
+            ->query('SELECT GET_LOCK(?, 10) AS locked', array(self::BOOKING_LOCK))
+            ->row()
+            ->locked;
+        if ($locked !== 1) {
+            log_message('error', 'Booking_request could not get the booking lock.');
+            return FALSE;
+        }
+
+        try {
+            $segments = $this->CI->booking_availability->schedule(
+                $choice['services'],
+                $choice['artist'] !== NULL ? $choice['artist']['id'] : NULL,
+                $choice['date'],
+                $choice['time']
+            );
+            if ($segments === NULL) {
+                return 'taken';
+            }
+
+            return $this->insert($choice, $segments);
+        } finally {
+            $this->CI->db->query('SELECT RELEASE_LOCK(?)', array(self::BOOKING_LOCK));
+        }
+    }
+
+    /** Save the appointment and its service segments together. Returns its ID or FALSE. */
+    private function insert(array $choice, array $segments)
     {
         $prices = array_filter(array_column($choice['services'], 'price'), 'is_numeric');
         $now = date('Y-m-d H:i:s');
+        $artistNames = array();
+        $artistIds = array();
+        foreach ($segments as $segment) {
+            $artistIds[$segment['artist']['id']] = TRUE;
+            $artistNames[$segment['artist']['id']] = $segment['artist']['name'];
+        }
+        $first = reset($segments);
+        $last = end($segments);
+        $oneArtist = count($artistIds) === 1;
 
         $this->CI->db->trans_start();
         $this->CI->db->insert('appointments', array(
             'appointment_reference' => $this->newReference(),
-            'appointment_status' => 'New',
+            'appointment_status' => 'Confirmed',
             'appointment_date' => $choice['date'],
-            'appointment_time' => $choice['time'].':00',
-            'appointment_duration_minutes' => $choice['minutes'] > 0 ? $choice['minutes'] : NULL,
+            'appointment_time' => Booking_schedule::clock($first['start']).':00',
+            'appointment_duration_minutes' => $last['end'] - $first['start'],
             'appointment_total_price' => !empty($prices) ? array_sum($prices) : NULL,
-            'appointment_artist_id' => $choice['artist'] !== NULL ? $choice['artist']['id'] : NULL,
-            'appointment_artist_name' => $choice['artist'] !== NULL ? $choice['artist']['name'] : NULL,
+            // Set when one artist does the whole visit; otherwise each service row names its artist.
+            'appointment_artist_id' => $oneArtist ? $first['artist']['id'] : NULL,
+            'appointment_artist_name' => implode(', ', $artistNames),
             'appointment_offer_id' => $choice['offer'] !== NULL ? $choice['offer']['id'] : NULL,
             'appointment_offer_title' => $choice['offer'] !== NULL ? $choice['offer']['title'] : NULL,
             'customer_name' => $choice['details']['name'],
@@ -351,19 +458,23 @@ class Booking_request
         ));
         $appointmentId = (int) $this->CI->db->insert_id();
 
-        foreach ($choice['services'] as $service) {
+        foreach ($segments as $segment) {
+            $service = $segment['service'];
             $this->CI->db->insert('appointment_services', array(
                 'appointment_id' => $appointmentId,
                 'service_id' => $service['id'],
                 'service_name' => $service['name'],
                 'service_price' => $service['price'],
-                'service_duration_minutes' => $service['minutes'] > 0 ? $service['minutes'] : NULL,
+                'service_duration_minutes' => $segment['end'] - $segment['start'],
+                'service_artist_id' => $segment['artist']['id'],
+                'service_artist_name' => $segment['artist']['name'],
+                'service_start_time' => Booking_schedule::clock($segment['start']).':00',
             ));
         }
         $this->CI->db->trans_complete();
 
         if ($this->CI->db->trans_status() === FALSE || $appointmentId < 1) {
-            log_message('error', 'Booking_request could not save an appointment request.');
+            log_message('error', 'Booking_request could not save a booking.');
             return FALSE;
         }
 
@@ -410,6 +521,7 @@ class Booking_request
             'Reference' => $values['reference'],
             'Services' => $values['services'],
             'Artist' => $values['artist'],
+            'Schedule' => str_replace("\n", '; ', $values['schedule']),
             'Offer' => $values['offer'],
             'Date' => $values['date'],
             'Time' => $values['time'],
@@ -422,8 +534,8 @@ class Booking_request
         );
 
         $table = '';
-        $text = array('A new appointment request was sent from the website.', '');
-        foreach ($rows as $label => $value) {
+        $text = array('A new appointment was booked on the website. It is confirmed and in Manage > Appointments.', '');
+        foreach (array_filter($rows, 'strlen') as $label => $value) {
             $table .= '<tr>'
                 .'<td style="padding:4px 16px 4px 0;vertical-align:top"><strong>'.$this->escape($label).':</strong></td>'
                 .'<td style="padding:4px 0;vertical-align:top">'.$this->escape($value).'</td>'
@@ -437,12 +549,12 @@ class Booking_request
             $text[] = $notes;
         }
 
-        $subject = 'New appointment request '.$values['reference'].': '.$values['date'].' '.$values['time'];
+        $subject = 'New booking '.$values['reference'].': '.$values['date'].' '.$values['time'];
         $message = $this->CI->emailservice->renderTemplate(array(
             'site_settings' => $settings,
-            'heading' => 'New appointment request',
-            'body' => '<p>A new appointment request was sent from the website. Please confirm it with the client'
-                .' and update its status in Manage &gt; Appointments.</p>'
+            'heading' => 'New booking',
+            'body' => '<p>A new appointment was booked on the website. It is confirmed and the client has been'
+                .' emailed; you can see it, or cancel it, in Manage &gt; Appointments.</p>'
                 .'<table cellpadding="0" cellspacing="0" style="margin:16px 0">'.$table.'</table>'
                 .($notes !== '' ? '<h3>Notes</h3><p>'.nl2br($this->escape($notes), false).'</p>' : ''),
         ));
@@ -470,24 +582,26 @@ class Booking_request
         return $sent;
     }
 
-    /** The client's "request received" email, from email template 2. */
+    /** The client's booking confirmation (email template 3). */
     private function acknowledge(array $appointment)
     {
-        return $this->CI->emailservice->sendManagedTemplate(array(
-            'template_id' => self::CLIENT_TEMPLATE_ID,
-            'to' => $appointment['customer_email'],
-            'values' => $this->emailValues($appointment),
-            'parser' => 'parseAppointmentShortTags',
-            // parseAppointmentShortTags() already turns the notes' line breaks into <br>.
-            'multiline_fields' => array(),
-            'label' => 'Appointment request acknowledgement',
-        ));
+        return $this->sendStatusEmail($appointment['appointment_id'], 'Confirmed');
     }
 
     /** Short tag values for the appointment emails (EmailService 'appointment' entity). */
     private function emailValues(array $appointment)
     {
         $nameParts = preg_split('/\s+/u', trim((string) $appointment['customer_name']), 2);
+
+        // One line per service: "10:00 am Gel Manicure with Ewa Mazur" (bookings made since Phase 8).
+        $schedule = array();
+        foreach ($appointment['services'] as $service) {
+            if ($service['service_start_time'] !== NULL) {
+                $schedule[] = $this->CI->emailservice->formatTime($service['service_start_time'])
+                    .' '.$service['service_name']
+                    .($service['service_artist_name'] !== NULL ? ' with '.$service['service_artist_name'] : '');
+            }
+        }
 
         return array(
             'reference' => $appointment['appointment_reference'],
@@ -497,7 +611,8 @@ class Booking_request
             'customer_phone' => (string) $appointment['customer_phone'],
             'contact_preference' => strtolower($appointment['customer_contact_preference']),
             'services' => implode(', ', array_column($appointment['services'], 'service_name')),
-            'artist' => $appointment['appointment_artist_name'] !== NULL
+            'schedule' => implode("\n", $schedule),
+            'artist' => $appointment['appointment_artist_name'] !== NULL && $appointment['appointment_artist_name'] !== ''
                 ? $appointment['appointment_artist_name']
                 : 'Next available artist',
             'offer' => (string) $appointment['appointment_offer_title'],

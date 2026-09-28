@@ -44,8 +44,9 @@ $config['short_tag_entities'] = array(
             'customer_email' => 'anna@example.com',
             'customer_phone' => '+48 500 000 000',
             'contact_preference' => 'Phone',
-            'services' => 'Gel Manicure, Nail Art',
-            'artist' => 'Ewa Mazur',
+            'services' => 'Gel Manicure, Hair Styling',
+            'schedule' => '10:00 am Gel Manicure with Ewa Mazur / 11:15 am Hair Styling with Anna',
+            'artist' => 'Ewa Mazur, Anna',
             'offer' => 'Manicure + nail art',
             'date' => 'Oct 12, 2026',
             'time' => '10:30 am',
@@ -67,7 +68,6 @@ $config['short_tag_entities'] = array(
 */
 $config['short_tag_template_entities'] = array(
     1 => 'contact',
-    2 => 'appointment',
     3 => 'appointment',
     4 => 'appointment',
 );
