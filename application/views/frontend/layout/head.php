@@ -12,6 +12,14 @@ $image = $meta['og_image'];
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#ffffff">
+    <?php /* Website Settings > Favicon, resized per device; the bundled Blossom icon when none is set. */ ?>
+    <?php $faviconTags = favicon_tags(); ?>
+    <?php if ($faviconTags !== '') { ?>
+        <?php echo $faviconTags; ?>
+    <?php } else { ?>
+        <link rel="icon" type="image/png" href="<?php echo html_escape($this->frontend_layout->assetUrl('images/brand/favicon.png')); ?>">
+        <link rel="apple-touch-icon" href="<?php echo html_escape($this->frontend_layout->assetUrl('images/brand/favicon.png')); ?>">
+    <?php } ?>
     <title><?php echo html_escape($meta['title']); ?></title>
     <?php if ($meta['description'] !== '') { ?>
         <meta name="description" content="<?php echo html_escape($meta['description']); ?>">
