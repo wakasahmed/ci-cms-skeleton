@@ -572,7 +572,8 @@ Changes to the plan made during this phase:
   wording") were kept as editable page-section text where they are content; design-only
   notes ("Map embed to be added", "this is a design preview") were dropped.
 
-Carried over to Phase 7:
+Carried over to Phase 7 (all handled there, except the launch settings, which are on its
+launch checklist):
 
 - The 15 unused Alam Miscellaneous Contents sections (`get_in_touch`, `where_we_are`,
   `call_or_message`, `email_us`, `still_need_help`, `browse_tours`, `talk_to_us`,
@@ -606,6 +607,55 @@ Carried over to Phase 7:
   `docs/sql/phase-6-*-content.sql` files. Still open: one combined seed for a fresh
   environment, including the uploaded images.)*
 - Replace placeholder artists/offer validity once the salon supplies real data.
+
+**Status: code done (2026-09-28), branch `phase-7-seo-email-content`; the launch checklist
+below waits on the salon.** Decisions taken with the owner: clients are emailed when a
+request is marked Confirmed or Cancelled; the salon's own notifications stay built in code.
+
+- **Clean-up.** The 15 unused Alam Miscellaneous Contents sections and the Alam Sample Page
+  (Web Pages 34) were removed (`docs/sql/phase-7-cleanup.sql`, run after a backup of the
+  three affected tables).
+- **Structured data.** Every page prints one JSON-LD `@graph` from `Frontend_layout`: the
+  salon as a `NailSalon` (street, postal code, town and country parsed from the address;
+  `openingHoursSpecification` from Website Settings > Opening Hours; logo, map link and
+  social profiles), the `WebSite`, the `WebPage` typed per page (`CollectionPage`,
+  `AboutPage`, `ContactPage`, `FAQPage` with its questions, `ProfilePage`,
+  `SearchResultsPage`) and a `BreadcrumbList` taken from the page's breadcrumb. Record pages
+  add a `Service`, `BlogPosting` or `Person` node that points to the salon; the views'
+  separate snippets were removed. The Alam `TravelAgency` node and licence identifier are
+  gone. Journal posts get `og:type` article with `article:*` tags; pages with an image use
+  a large Twitter card. Payment methods are not claimed (not confirmed by the salon).
+- **Crawler files.** `sitemap.xml` lists the routed Web Pages, the 14 services (with
+  images), the artists and the posts; blog category URLs (now redirects) were dropped.
+  `llms.txt` describes the salon (address, phone, hours, booking), the services with prices
+  and durations, the offers, the team, the journal and the pages. `robots.txt` also keeps
+  `/book/confirmed` out.
+- **Emails.** Email templates 3 (Confirmed) and 4 (Cancelled) with the appointment short
+  tags (`docs/sql/phase-7-status-emails.sql`), sent by `Booking_request::sendStatusEmail()`
+  when Manage > Appointments changes a request to one of those statuses. A failed email is
+  reported to staff as an error.
+- **Favicon.** The public site now prints the Website Settings favicon (it printed none);
+  a placeholder italic "B" monogram (`assets/frontend/images/brand/favicon.png`) replaced
+  the Alam icon until the salon supplies one.
+- **Seeding.** `docs/sql/README.md` lists every script in run order, marks those that
+  replace existing rows, and names the upload folders to copy. Copying the local database
+  is the recommended way to build staging/production.
+- The opening-hours parser moved to `frontend_parse_opening_hours()` (used by the booking
+  schedule and the structured data).
+
+**Launch checklist (needs the salon):**
+
+- Website Settings: sender email (no email is sent until it is set), a site email,
+  notification emails, the Instagram and Facebook links (the icons stay hidden while
+  empty), and the real favicon.
+- reCAPTCHA Enterprise keys for Blossom (D4) in the production constants; without them the
+  live contact and booking forms reject every submission.
+- Real artist profiles for the two placeholder "Team member" artists, real offer validity
+  dates (the offers show a placeholder note), real customer reviews, and the salon's own
+  journal posts in place of the sample articles.
+- The legal pages, cancellation policy and FAQ answers marked "Placeholder", which need the
+  salon's policies (and a legal review for the privacy policy under GDPR).
+- Payment methods, if they should be listed (FAQ and structured data).
 
 ---
 

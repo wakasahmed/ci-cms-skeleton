@@ -1201,6 +1201,17 @@ Every public page renders through `Frontend_layout::render($view, $data, $page)`
   "one" and "two") to every view.
 - Head values come from `Frontend_layout::pageMeta()` (a Web Pages record, or any row with
   the same SEO columns) through `Frontend_seo`. Pass `$page['meta']`, not ad-hoc meta tags.
+- Structured data: the layout prints one JSON-LD `@graph` per page (the salon as a
+  `NailSalon`, the `WebSite`, the `WebPage` and a `BreadcrumbList` taken from
+  `$data['hero']['crumbs']` or `$data['crumbs']`). Never print a separate
+  `application/ld+json` script in a view. Describe the page through the `render()` options
+  instead: `page_type` (for example `CollectionPage`, `ContactPage`), `webpage` (extra
+  WebPage properties), `schema` (record nodes such as `Service`, `BlogPosting`, `Person`,
+  pointing to the salon with `Frontend_seo::organizationId()`), `crumbs` (when the view
+  builds its own breadcrumb) and `is_home`. Only state facts the salon has confirmed.
+- A new public route must also be added to `sitemap.xml` and, where useful, `llms.txt`
+  (`controllers/Seo.php`, `models/Seo_model.php`). Web Pages records are listed only when
+  their slug is routed to `frontend/…`.
 - Page scripts go in `$page['scripts']` (loaded after jQuery and `site.js`); vendor bundles
   in `$page['vendors']` (`swiper`, `photoswipe`).
 - Shared markup lives in `views/frontend/partials/`. Reuse these before writing page
@@ -1235,8 +1246,9 @@ Every public page renders through `Frontend_layout::render($view, $data, $page)`
   39 gallery, 40 offers, 42 book). Keep those IDs when seeding another environment.
   Texts shared by every service or artist page are Miscellaneous Contents
   (`service_page`, `artist_page`, `nail_shapes_finishes`).
-- Content changes that Phase 6 made are recorded as re-runnable SQL in
-  `docs/sql/phase-6-*.sql`; follow that pattern for further content seeding.
+- Content and schema changes are recorded as SQL in `docs/sql/`; `docs/sql/README.md` gives
+  the run order and marks the content scripts that replace existing rows. Follow that
+  pattern for further changes and add each new script to the README.
 
 ## Public forms
 
@@ -1256,8 +1268,11 @@ one pattern. Follow it for any new public form:
 - Email the salon at Website Settings > notification emails and the client through a
   managed Email Template sent with `EmailService::sendManagedTemplate()`. Short tags are
   registered per entity in `EmailService::$shortTagFields` (`contact`, `appointment`) with
-  examples in `config/short_tags.php`; templates 1 (contact) and 2 (appointment request)
-  are mapped there.
+  examples in `config/short_tags.php`; templates 1 (contact), 2 (appointment request
+  received), 3 (appointment confirmed) and 4 (appointment cancelled) are mapped there.
+  Changing a request to Confirmed or Cancelled in Manage > Appointments sends template 3
+  or 4 (`Booking_request::sendStatusEmail()`); the salon's own notifications are built in
+  code by `Contact_form` and `Booking_request`.
 - Emails need a sender address (Website Settings > sender or site email). Locally
   `EMAIL_HOST` is `log`, so messages are written to `email_logs/` instead of being sent.
 
