@@ -194,6 +194,35 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /** Offers (/offers): featured offers first, then the rest. */
+    public function offers()
+    {
+        $page = $this->listingPage('offers');
+        $this->load->model('Offer_model');
+        $this->load->library('content_section_service');
+
+        $featured = array();
+        $others = array();
+        foreach ($this->Offer_model->get_public(FALSE) as $offer) {
+            if ((int) $offer['offer_featured'] === 1) {
+                $featured[] = $offer;
+            } else {
+                $others[] = $offer;
+            }
+        }
+
+        $this->frontend_layout->render('frontend/offers', array(
+            'hero' => $this->listingHero($page),
+            'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
+            'featured' => $featured,
+            'others' => $others,
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url('offers'), array(
+                'images' => array(array('offers', !empty($featured) ? $featured[0]['offer_image'] : '')),
+            )),
+        ));
+    }
+
     /** Artists listing (/artists): the first artist leads, the rest follow. */
     public function artists()
     {

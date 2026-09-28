@@ -54,6 +54,7 @@ $route['manage/miscellaneous-contents/(:any)/save'] = 'manage/miscellaneous_cont
 $route['services'] = 'frontend/services';
 $route['services/(:any)'] = 'frontend/service/$1';
 $route['gallery'] = 'frontend/gallery';
+$route['offers'] = 'frontend/offers';
 $route['artists'] = 'frontend/artists';
 $route['artists/(:any)'] = 'frontend/artist/$1';
 

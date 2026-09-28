@@ -31,8 +31,9 @@ $hasImage = !empty($hero['image']['url']);
     <div aria-hidden="true" class="absolute inset-x-0 top-0 -z-10 h-full bg-gradient-to-b from-petal via-lilac to-background"></div>
     <div aria-hidden="true" class="absolute -top-32 -right-28 -z-10 hidden size-[26rem] rounded-full bg-rose-100/60 blur-[2px] lg:block"></div>
     <div class="mx-auto w-full max-w-[86rem] px-5 pt-28 pb-12 sm:px-8 sm:pt-32 lg:px-12 lg:pt-36 lg:pb-16">
-        <div class="grid items-center gap-10 lg:grid-cols-12 lg:gap-14">
-            <div class="reveal <?php echo $hasImage ? 'lg:col-span-6' : 'lg:col-span-8'; ?>">
+        <?php /* With an image: two columns. Without: a single text column with a smaller heading (as on the reference's text pages). */ ?>
+        <div class="<?php echo $hasImage ? 'grid items-center gap-10 lg:grid-cols-12 lg:gap-14' : ''; ?>">
+            <div class="reveal <?php echo $hasImage ? 'lg:col-span-6' : 'max-w-3xl'; ?>">
                 <?php if (!empty($hero['crumbs'])) { ?>
                     <?php $this->load->view('frontend/partials/breadcrumb', array('crumbs' => $hero['crumbs'])); ?>
                 <?php } ?>
@@ -40,7 +41,7 @@ $hasImage = !empty($hero['image']['url']);
                 <?php if ($hero['label'] !== '') { ?>
                     <p class="section-label"><?php echo html_escape($hero['label']); ?></p>
                 <?php } ?>
-                <h1 id="page-hero-heading" class="text-foreground mt-4 text-[clamp(2.25rem,5.4vw,3.75rem)]"><?php echo html_escape($hero['heading']); ?></h1>
+                <h1 id="page-hero-heading" class="text-foreground mt-4 <?php echo $hasImage ? 'text-[clamp(2.25rem,5.4vw,3.75rem)]' : 'text-[clamp(2rem,4.6vw,3rem)]'; ?>"><?php echo html_escape($hero['heading']); ?></h1>
                 <?php if ($hero['lead'] !== '') { ?>
                     <p class="mt-5 text-lg leading-relaxed text-muted-foreground max-w-2xl"><?php echo html_escape($hero['lead']); ?></p>
                 <?php } ?>

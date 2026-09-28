@@ -453,6 +453,36 @@ $config['web_page_sections'] = array(
             ),
         ),
     ),
+    // Offers (/offers). The hero comes from the page's banner fields; featured
+    // offers are listed first, the rest under "More Offers".
+    40 => array(
+        array(
+            'key' => 'more_offers',
+            'label' => 'More Offers',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+                array('key' => 'note', 'type' => 'textarea', 'label' => 'Note under the offers (optional)', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+        array(
+            'key' => 'services_link',
+            'label' => 'Services Link',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'button_text', 'type' => 'text', 'label' => 'Button Text', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+        array(
+            'key' => 'cta',
+            'label' => 'Call to Action',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+    ),
     // Artists (/artists). The hero comes from the page's banner fields; the
     // first artist in Manage > Artists is shown as the lead artist.
     38 => array(
