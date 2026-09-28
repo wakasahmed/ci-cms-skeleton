@@ -25,6 +25,7 @@ class Seo extends CI_Controller
         );
 
         $this->load->library('frontend_seo');
+        $this->load->helper('frontend');
         $this->load->model('Seo_model');
     }
 
@@ -38,6 +39,8 @@ class Seo extends CI_Controller
         } else {
             $lines[] = 'Allow: /';
             $lines[] = 'Disallow: /recaptcha-enterprise';
+            // Shows the visitor's own booking request; there is nothing to index.
+            $lines[] = 'Disallow: /book/confirmed';
             $lines[] = '';
             $lines[] = 'Sitemap: ' . base_url('sitemap.xml');
         }
@@ -56,7 +59,8 @@ class Seo extends CI_Controller
         $entries = array_merge(
             $this->homeEntries(),
             $this->pageEntries(),
-            $this->blogCategoryEntries(),
+            $this->serviceEntries(),
+            $this->artistEntries(),
             $this->blogPostEntries()
         );
 
@@ -83,6 +87,55 @@ class Seo extends CI_Controller
             '',
         );
 
+        $contact = array();
+        $settings = $this->config->item('frontend_site_settings');
+        $address = implode(', ', frontend_lines(isset($settings['address']) ? $settings['address'] : ''));
+        if ($address !== '') {
+            $contact[] = '- Address: ' . $address;
+        }
+        if ($seo->setting('phone') !== '') {
+            $contact[] = '- Phone: ' . $seo->setting('phone');
+        }
+        // The raw setting keeps its line breaks (Frontend_seo::setting() flattens them).
+        $openingHours = isset($settings['opening_hours']) ? $settings['opening_hours'] : '';
+        foreach (frontend_opening_hours($openingHours) as $row) {
+            $contact[] = '- ' . $row['days'] . ': ' . $row['hours'];
+        }
+        $contact[] = '- Book online: ' . $seo->encodeUrl(base_url('book'))
+            . ' (appointment requests are confirmed by the salon)';
+
+        $services = array();
+        foreach ($this->Seo_model->get_services() as $row) {
+            $details = array_filter(array(frontend_service_price($row), $row['service_duration_label']));
+            $services[] = $this->llmsItem(
+                $row['service_name'],
+                base_url('services/' . rawurlencode($row['service_slug'])),
+                trim(implode(' · ', $details) . '. ' . $seo->plainText($row['service_summary']), '. ')
+            );
+        }
+
+        $offers = array();
+        $this->load->model('Offer_model');
+        foreach ($this->Offer_model->get_public(FALSE) as $row) {
+            $offers[] = $this->llmsItem(
+                $row['offer_title'],
+                base_url('offers') . '#offer-' . rawurlencode($row['offer_slug']),
+                trim(frontend_price($row['offer_price']) . '. ' . $seo->plainText($row['offer_summary']), '. ')
+            );
+        }
+
+        $team = array();
+        foreach ($this->Seo_model->get_artists() as $row) {
+            $team[] = $this->llmsItem(
+                $row['artist_name'],
+                base_url('artists/' . rawurlencode($row['artist_slug'])),
+                implode(' · ', array_filter(array_merge(
+                    array($row['artist_role']),
+                    frontend_lines($row['artist_specialties'])
+                )))
+            );
+        }
+
         $posts = array();
         foreach ($this->Seo_model->get_blog_posts() as $row) {
             $posts[] = $this->llmsItem(
@@ -94,7 +147,7 @@ class Seo extends CI_Controller
 
         $pages = array();
         foreach ($this->Seo_model->get_pages() as $row) {
-            if ((int) $row['page_id'] === 1) {
+            if ((int) $row['page_id'] === 1 || !$this->isRoutedPage(trim((string) $row['page_slug']))) {
                 continue;
             }
             $pages[] = $this->llmsItem(
@@ -105,7 +158,11 @@ class Seo extends CI_Controller
         }
 
         $sections = array(
-            'Articles' => $posts,
+            'Visit and contact' => $contact,
+            'Services' => $services,
+            'Offers' => $offers,
+            'Team' => $team,
+            'Journal' => $posts,
             'Pages' => $pages,
         );
         foreach ($sections as $heading => $items) {
@@ -161,7 +218,7 @@ class Seo extends CI_Controller
             }
 
             $slug = trim((string) $row['page_slug']);
-            if ($slug === '') {
+            if (!$this->isRoutedPage($slug)) {
                 continue;
             }
 
@@ -183,29 +240,52 @@ class Seo extends CI_Controller
         return $entries;
     }
 
-    private function blogCategoryEntries()
+    private function serviceEntries()
     {
         $entries = array();
 
-        foreach ($this->Seo_model->get_blog_categories() as $row) {
-            $slug = trim((string) $row['cat_slug']);
-            if ($slug === '') {
-                continue;
-            }
-
-            $images = $this->imageUrls(
-                array(array('blog-categories', $row['og_image']), array('blog-categories', $row['cat_cover_image'])),
-                1
-            );
-
+        foreach ($this->Seo_model->get_services() as $row) {
             $entries[] = $this->entry(
-                $this->frontend_seo->blogCategoryUrl($slug),
-                $this->frontend_seo->isoDate($row['cat_updated']),
-                $images
+                base_url('services/' . rawurlencode($row['service_slug'])),
+                $this->frontend_seo->isoDate($row['service_updated']),
+                $this->imageUrls(
+                    array(
+                        array('services', $row['og_image']),
+                        array('services', $row['service_hero_image']),
+                        array('services', $row['service_card_image']),
+                    ),
+                    2
+                )
             );
         }
 
         return $entries;
+    }
+
+    private function artistEntries()
+    {
+        $entries = array();
+
+        foreach ($this->Seo_model->get_artists() as $row) {
+            $entries[] = $this->entry(
+                base_url('artists/' . rawurlencode($row['artist_slug'])),
+                $this->frontend_seo->isoDate($row['artist_updated']),
+                $this->imageUrls(array(array('artists', $row['artist_image'])), 1)
+            );
+        }
+
+        return $entries;
+    }
+
+    /**
+     * TRUE when a Web Pages slug is a public route (listing, legal or
+     * booking page). Pages without a route would only lead to the 404 page.
+     */
+    private function isRoutedPage($slug)
+    {
+        return $slug !== ''
+            && isset($this->router->routes[$slug])
+            && strpos($this->router->routes[$slug], 'frontend/') === 0;
     }
 
     private function blogPostEntries()

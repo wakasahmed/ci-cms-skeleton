@@ -347,11 +347,6 @@ class Frontend_seo
         return base_url(BLOG_URI . rawurlencode(trim((string) $slug)));
     }
 
-    public function blogCategoryUrl($slug)
-    {
-        return base_url(BLOG_CATEGORY_URI . rawurlencode(trim((string) $slug)));
-    }
-
     /** Percent-encodes non-ASCII characters so canonical and sitemap URLs agree. */
     public function encodeUrl($url)
     {
