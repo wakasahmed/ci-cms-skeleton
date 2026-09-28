@@ -12,7 +12,7 @@ if (!function_exists('frontend_button_class')) {
     /**
      * Classes for the reference design's pill button.
      *
-     * $variant is one of: primary, outline, light, outline-light.
+     * $variant is one of: primary, outline, light, outline-light, soft, ghost.
      * $extra carries the size and spacing classes (for example "h-13 px-8"),
      * written in the calling view so Tailwind finds them there.
      */
@@ -36,6 +36,8 @@ if (!function_exists('frontend_button_class')) {
                 .' focus-visible:outline-background',
             'outline-light' => 'border border-background/40 text-background hover:bg-background/12'
                 .' focus-visible:outline-background',
+            'soft' => 'bg-petal text-primary hover:bg-rose-100 focus-visible:outline-primary',
+            'ghost' => 'text-foreground hover:text-primary focus-visible:outline-primary',
         );
 
         $classes = $base.' '.(isset($variants[$variant]) ? $variants[$variant] : $variants['primary']);
@@ -126,6 +128,29 @@ if (!function_exists('frontend_split_lines')) {
         }
 
         return $rows;
+    }
+}
+
+if (!function_exists('frontend_intro')) {
+    /**
+     * The opening of a plain-text biography for cards: whole sentences from
+     * the first paragraph, as many as fit in $maxLength (at least one).
+     */
+    function frontend_intro($text, $maxLength = 160)
+    {
+        $paragraphs = preg_split('/\R\s*\R/', trim(strip_tags((string) $text)));
+        $sentences = preg_split('/(?<=[.!?])\s+/', trim((string) $paragraphs[0]));
+        $intro = '';
+
+        foreach ($sentences as $sentence) {
+            $candidate = trim($intro.' '.$sentence);
+            if ($intro !== '' && mb_strlen($candidate, 'UTF-8') > $maxLength) {
+                break;
+            }
+            $intro = $candidate;
+        }
+
+        return $intro;
     }
 }
 

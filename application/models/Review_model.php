@@ -14,6 +14,7 @@ class Review_model extends SqlModel
             'review_caption',
             'review_name',
             'review_desc',
+            'review_rating',
         )), false);
         $this->db->from('customer_reviews');
         $this->db->where('review_status', 'Enable');

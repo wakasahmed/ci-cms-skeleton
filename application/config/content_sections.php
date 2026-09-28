@@ -434,9 +434,48 @@ $config['web_page_sections'] = array(
             ),
         ),
     ),
+    // Artists (/artists). The hero comes from the page's banner fields; the
+    // first artist in Manage > Artists is shown as the lead artist.
+    38 => array(
+        array(
+            'key' => 'team',
+            'label' => 'Team',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+                array('key' => 'placeholder_note', 'type' => 'textarea', 'label' => 'Note shown while placeholder profiles are listed', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+        array(
+            'key' => 'cta',
+            'label' => 'Call to Action',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+    ),
 );
 
 $config['miscellaneous_content_sections'] = array(
+    // Headings and call to action shared by every artist page (/artists/{slug}).
+    array(
+        'key' => 'artist_page',
+        'label' => 'Artist Page',
+        'fields' => array(
+            array('key' => 'services_heading', 'type' => 'text', 'label' => 'Services Heading ({name} is replaced by the first name)', 'group' => 'Services', 'required' => true, 'layout' => 'full'),
+            array('key' => 'days_heading', 'type' => 'text', 'label' => 'Heading', 'group' => 'Working Days', 'required' => false, 'layout' => 'half'),
+            array('key' => 'days_button', 'type' => 'text', 'label' => 'Button Text', 'group' => 'Working Days', 'required' => false, 'layout' => 'half'),
+            array('key' => 'days_note', 'type' => 'textarea', 'label' => 'Note', 'group' => 'Working Days', 'required' => false, 'layout' => 'full'),
+            array('key' => 'work_heading', 'type' => 'text', 'label' => 'Heading', 'group' => 'Recent Work', 'required' => false, 'layout' => 'half'),
+            array('key' => 'work_button', 'type' => 'text', 'label' => 'Button Text', 'group' => 'Recent Work', 'required' => false, 'layout' => 'half'),
+            array('key' => 'work_text', 'type' => 'textarea', 'label' => 'Text', 'group' => 'Recent Work', 'required' => false, 'layout' => 'full'),
+            array('key' => 'reviews_heading', 'type' => 'text', 'label' => 'Heading', 'group' => 'Reviews', 'required' => false, 'layout' => 'half'),
+            array('key' => 'reviews_note', 'type' => 'textarea', 'label' => 'Note', 'group' => 'Reviews', 'required' => false, 'layout' => 'full'),
+            array('key' => 'cta_heading', 'type' => 'text', 'label' => 'Heading ({name} is replaced by the first name)', 'group' => 'Call to Action', 'required' => true, 'layout' => 'full'),
+            array('key' => 'cta_text', 'type' => 'textarea', 'label' => 'Text', 'group' => 'Call to Action', 'required' => false, 'layout' => 'full'),
+        ),
+    ),
     // Headings and call to action shared by every service page (/services/{slug}).
     array(
         'key' => 'service_page',

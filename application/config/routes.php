@@ -53,6 +53,8 @@ $route['manage/miscellaneous-contents/(:any)/save'] = 'manage/miscellaneous_cont
 // Public site (Frontend.php).
 $route['services'] = 'frontend/services';
 $route['services/(:any)'] = 'frontend/service/$1';
+$route['artists'] = 'frontend/artists';
+$route['artists/(:any)'] = 'frontend/artist/$1';
 
 $route['404_override'] = 'frontend/error_404';
 $route['translate_uri_dashes'] = TRUE;

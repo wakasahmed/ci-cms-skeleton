@@ -93,21 +93,25 @@ class Service_model extends SqlModel
         return $this->db->get()->result_array();
     }
 
-    /** Enabled gallery images linked to the service, gallery order. */
+    /**
+     * Enabled gallery images linked to the service (Manage > Gallery >
+     * Related Service), in gallery order. The same file uploaded twice is
+     * shown once.
+     */
     public function get_gallery($serviceId, $limit = 4)
     {
         return $this->db
-            ->select('i.image_file, i.image_caption')
+            ->select('i.image_file, MIN(i.image_caption) AS image_caption', FALSE)
             ->from('gallery_images i')
-            ->join('gallery_categories c', 'c.category_id = i.image_category_id', 'left')
+            ->join('gallery_categories gc', 'gc.category_id = i.image_category_id', 'left')
             ->where('i.image_service_id', (int) $serviceId)
             ->where('i.image_status', 'Enable')
             ->group_start()
-                ->where('c.category_status', 'Enable')
+                ->where('gc.category_status', 'Enable')
                 ->or_where('i.image_category_id IS NULL', NULL, FALSE)
             ->group_end()
-            ->order_by('i.image_order', 'ASC')
-            ->order_by('i.image_id', 'ASC')
+            ->group_by('i.image_file')
+            ->order_by('MIN(i.image_order)', 'ASC', FALSE)
             ->limit((int) $limit)
             ->get()
             ->result_array();

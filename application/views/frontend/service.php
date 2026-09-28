@@ -192,7 +192,7 @@ $tipGroups = array_filter(array(
                 <div class="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
                     <?php foreach ($artists as $index => $artist) { ?>
                         <div class="reveal"<?php echo $index > 0 ? ' style="transition-delay:'.($index * 80).'ms"' : ''; ?>>
-                            <?php $this->load->view('frontend/partials/artist_card', array('artist' => $artist)); ?>
+                            <?php $this->load->view('frontend/partials/artist_card', array('artist' => $artist, 'variant' => 'compact')); ?>
                         </div>
                     <?php } ?>
                 </div>
@@ -208,7 +208,7 @@ $tipGroups = array_filter(array(
                 </div>
                 <ul class="mt-6 divide-y divide-border border-y border-border">
                     <?php foreach ($related as $relatedService) { ?>
-                        <?php $this->load->view('frontend/partials/service_related_item', array('service' => $relatedService)); ?>
+                        <?php $this->load->view('frontend/partials/service_related_item', array('service' => $relatedService, 'variant' => 'related')); ?>
                     <?php } ?>
                 </ul>
             </div>

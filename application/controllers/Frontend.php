@@ -153,6 +153,110 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /** Artists listing (/artists): the first artist leads, the rest follow. */
+    public function artists()
+    {
+        $page = $this->listingPage('artists');
+        $this->load->model('Artist_model');
+        $this->load->library('content_section_service');
+
+        $artists = $this->Artist_model->get_all();
+        $lead = !empty($artists) ? array_shift($artists) : NULL;
+
+        $this->frontend_layout->render('frontend/artists', array(
+            'page' => $page,
+            'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
+            'lead' => $lead,
+            'team' => $artists,
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url('artists'), array(
+                'images' => array(array('artists', $lead !== NULL ? $lead['artist_image'] : '')),
+            )),
+        ));
+    }
+
+    /** Artist detail (/artists/{slug}). */
+    public function artist($slug = '')
+    {
+        $this->load->model(array('Artist_model', 'Gallery_model', 'Review_model'));
+        $this->load->library('content_section_service');
+
+        $artist = $this->Artist_model->get_by_slug(urldecode((string) $slug));
+        if ($artist === NULL) {
+            return $this->error_404();
+        }
+
+        $firstName = strtok($artist['artist_name'], ' ');
+        $misc = $this->content_section_service->get_miscellaneous_contents();
+        $labels = array();
+        foreach ((isset($misc['artist_page']) ? $misc['artist_page'] : array()) as $key => $value) {
+            $labels[$key] = str_replace('{name}', $firstName, (string) $value);
+        }
+
+        $url = base_url('artists/'.rawurlencode($artist['artist_slug']));
+        $bookUrl = base_url('book').'?artist='.rawurlencode($artist['artist_slug']);
+        $dayNames = array(
+            'mon' => 'Monday',
+            'tue' => 'Tuesday',
+            'wed' => 'Wednesday',
+            'thu' => 'Thursday',
+            'fri' => 'Friday',
+            'sat' => 'Saturday',
+            'sun' => 'Sunday',
+        );
+        $workingDays = array_filter(explode(',', (string) $artist['artist_working_days']));
+        $days = array();
+        foreach ($dayNames as $code => $name) {
+            if (in_array($code, $workingDays, TRUE)) {
+                $days[] = $name;
+            }
+        }
+
+        $this->frontend_layout->render('frontend/artist', array(
+            'artist' => $artist,
+            'hero' => array(
+                'crumbs' => array(
+                    array('label' => 'Home', 'url' => base_url()),
+                    array('label' => $this->listingLabel('artists', 'Artists'), 'url' => base_url('artists')),
+                    array('label' => $artist['artist_name']),
+                ),
+                'label' => $artist['artist_role'],
+                'heading' => $artist['artist_name'],
+                'lead' => $this->frontend_seo->plainText($artist['artist_bio']),
+                'actions' => array(
+                    array('label' => 'Book with '.$firstName, 'url' => $bookUrl),
+                    array('label' => 'All artists', 'url' => base_url('artists'), 'variant' => 'outline'),
+                ),
+                'chips' => frontend_lines($artist['artist_specialties']),
+                'image' => array(
+                    'url' => upload_thumb('artists', $artist['artist_image'], 1200, 0, 'images/no_image.jpg'),
+                    'alt' => 'Portrait of '.$artist['artist_name'],
+                ),
+            ),
+            'services' => $this->Artist_model->get_services((int) $artist['artist_id']),
+            'days' => $days,
+            'work' => $this->Gallery_model->get_recent(6),
+            'reviews' => $this->Review_model->get_reviews(3),
+            'labels' => $labels,
+            'book_url' => $bookUrl,
+            'cta' => array(
+                'heading' => isset($labels['cta_heading']) && $labels['cta_heading'] !== ''
+                    ? $labels['cta_heading']
+                    : 'Book with '.$firstName,
+                'text' => isset($labels['cta_text']) ? $labels['cta_text'] : '',
+                'book_url' => $bookUrl,
+                'book_label' => 'Book an appointment',
+            ),
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta(array(), $url, array(
+                'name' => $artist['artist_name'],
+                'description' => array($artist['artist_bio']),
+                'image_dir' => 'artists',
+                'images' => array(array('artists', $artist['artist_image'])),
+            )),
+        ));
+    }
+
     /**
      * Target of $route['404_override'] for public URLs, and of show_404()
      * during a public request (see MY_Exceptions).

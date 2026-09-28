@@ -12,6 +12,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  *   lead      lead paragraph (optional)
  *   actions   array of array('label', 'url', 'variant' => 'primary'|'outline')
  *   facts     array of array('label', 'value', 'icon' => Font Awesome class or '')
+ *   chips     short tags shown under the actions (optional)
  *   image     array('url', 'alt') (optional)
  */
 $hero = array_merge(array(
@@ -21,6 +22,7 @@ $hero = array_merge(array(
     'lead' => '',
     'actions' => array(),
     'facts' => array(),
+    'chips' => array(),
     'image' => array(),
 ), $hero);
 $hasImage = !empty($hero['image']['url']);
@@ -52,6 +54,14 @@ $hasImage = !empty($hero['image']['url']);
                             ><?php echo html_escape($action['label']); ?></a>
                         <?php } ?>
                     </div>
+                <?php } ?>
+
+                <?php if (!empty($hero['chips'])) { ?>
+                    <ul class="mt-8 flex flex-wrap gap-2">
+                        <?php foreach ($hero['chips'] as $chip) { ?>
+                            <li class="chip"><?php echo html_escape($chip); ?></li>
+                        <?php } ?>
+                    </ul>
                 <?php } ?>
 
                 <?php if (!empty($hero['facts'])) { ?>
