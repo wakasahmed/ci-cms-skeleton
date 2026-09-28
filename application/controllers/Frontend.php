@@ -556,6 +556,110 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /** Search (/search?q=): services, offers, artists, journal articles and FAQs. */
+    public function search()
+    {
+        $this->load->model(array('Search_model', 'Service_model'));
+
+        $query = trim(preg_replace('/\s+/u', ' ', (string) $this->input->get('q')));
+        $query = mb_substr($query, 0, 100);
+        $words = array();
+        foreach (explode(' ', mb_strtolower($query)) as $word) {
+            if (mb_strlen($word) >= 2 && !in_array($word, $words, TRUE)) {
+                $words[] = $word;
+            }
+        }
+        $words = array_slice($words, 0, 5);
+
+        $groups = array();
+        if (!empty($words)) {
+            $plain = function ($text) {
+                $text = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags((string) $text), ENT_QUOTES, 'UTF-8')));
+
+                return mb_strlen($text) > 160 ? rtrim(mb_substr($text, 0, 157)).'…' : $text;
+            };
+
+            $items = array();
+            foreach ($this->Search_model->services($words) as $row) {
+                $items[] = array(
+                    'title' => $row['service_name'],
+                    'url' => base_url('services/'.rawurlencode($row['service_slug'])),
+                    'meta' => implode(' · ', array_filter(array(frontend_service_price($row), $row['service_duration_label']))),
+                    'text' => $plain($row['service_summary']),
+                );
+            }
+            $groups[] = array('title' => 'Services', 'items' => $items);
+
+            $items = array();
+            foreach ($this->Search_model->offers($words) as $row) {
+                $items[] = array(
+                    'title' => $row['offer_title'],
+                    'url' => base_url('offers').'#offer-'.rawurlencode($row['offer_slug']),
+                    'meta' => implode(' · ', array_filter(array($row['offer_label'], frontend_price($row['offer_price'])))),
+                    'text' => $plain($row['offer_summary']),
+                );
+            }
+            $groups[] = array('title' => 'Offers', 'items' => $items);
+
+            $items = array();
+            foreach ($this->Search_model->artists($words) as $row) {
+                $items[] = array(
+                    'title' => $row['artist_name'],
+                    'url' => base_url('artists/'.rawurlencode($row['artist_slug'])),
+                    'meta' => (string) $row['artist_role'],
+                    'text' => implode(' · ', frontend_lines($row['artist_specialties'])),
+                );
+            }
+            $groups[] = array('title' => 'Artists', 'items' => $items);
+
+            $items = array();
+            foreach ($this->Search_model->articles($words) as $row) {
+                $items[] = array(
+                    'title' => $row['blog_name'],
+                    'url' => base_url('blog/'.rawurlencode($row['blog_slug'])),
+                    'meta' => (int) $row['blog_time_to_read'].' min read',
+                    'text' => $plain($row['blog_short_description']),
+                );
+            }
+            $groups[] = array('title' => 'Journal', 'items' => $items);
+
+            $items = array();
+            foreach ($this->Search_model->faqs($words) as $row) {
+                // The same anchor the FAQ page gives the question's category.
+                $anchor = url_title($row['cat_name'], '-', TRUE);
+                $items[] = array(
+                    'title' => $row['faq_question'],
+                    'url' => base_url('faq').($anchor !== '' ? '#'.$anchor : ''),
+                    'meta' => $row['cat_name'],
+                    'text' => $plain($row['faq_answer']),
+                );
+            }
+            $groups[] = array('title' => 'Questions', 'items' => $items);
+
+            $groups = array_values(array_filter($groups, function ($group) {
+                return !empty($group['items']);
+            }));
+        }
+
+        $meta = $this->frontend_layout->pageMeta(array(
+            'page_name' => 'Search',
+            'meta_description' => 'Search Blossom Ewa Mazur’s services, offers, team, journal and frequently asked questions.',
+        ), base_url('search'));
+        $meta['robots'] = 'noindex, follow';
+
+        $this->frontend_layout->render('frontend/search', array(
+            'query' => $query,
+            'searched' => !empty($words),
+            'groups' => $groups,
+            'total' => array_sum(array_map(function ($group) {
+                return count($group['items']);
+            }, $groups)),
+            'suggestions' => array_column($this->Service_model->get_featured(3), 'service_name'),
+        ), array(
+            'meta' => $meta,
+        ));
+    }
+
     /** FAQ (/faq): the visible FAQ categories with their questions. */
     public function faq()
     {

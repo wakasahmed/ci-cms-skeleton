@@ -63,6 +63,7 @@ $route['cancellation-policy'] = 'frontend/legal/cancellation-policy';
 $route['terms'] = 'frontend/legal/terms';
 $route['book'] = 'frontend/book';
 $route['book/confirmed'] = 'frontend/book_confirmed';
+$route['search'] = 'frontend/search';
 $route['blog'] = 'frontend/blog';
 $route['blog/category/(:any)'] = 'frontend/blog_category/$1';
 $route['blog/(:any)'] = 'frontend/article/$1';

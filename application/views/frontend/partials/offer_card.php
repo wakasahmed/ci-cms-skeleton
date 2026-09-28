@@ -19,7 +19,7 @@ if ($validity === '' && !empty($offer['offer_valid_to'])) {
     $validity = 'Valid until '.date('j F Y', strtotime($offer['offer_valid_to'])).'.';
 }
 ?>
-<article class="group flex flex-col overflow-hidden rounded-xl bg-background shadow-[var(--shadow-card)] transition-transform duration-300 ease-[var(--ease-out-soft)] hover:-translate-y-1 h-full">
+<article id="offer-<?php echo html_escape($offer['offer_slug']); ?>" class="group flex scroll-mt-28 flex-col overflow-hidden rounded-xl bg-background shadow-[var(--shadow-card)] transition-transform duration-300 ease-[var(--ease-out-soft)] hover:-translate-y-1 h-full">
     <div class="relative overflow-hidden bg-muted <?php echo $featured ? 'aspect-16/10' : 'aspect-4/3'; ?>">
         <img
             alt=""
