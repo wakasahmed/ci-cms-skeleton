@@ -153,6 +153,47 @@ class Frontend extends CI_Controller
         ));
     }
 
+    /** Gallery (/gallery), optionally filtered with ?category={slug}. */
+    public function gallery()
+    {
+        $page = $this->listingPage('gallery');
+        $this->load->model('Gallery_model');
+        $this->load->library('content_section_service');
+
+        $images = $this->Gallery_model->get_all();
+        foreach ($images as &$image) {
+            // The lightbox opens the original upload at its real size.
+            $file = basename((string) $image['image_file']);
+            $relative = 'assets/frontend/images/gallery/'.$file;
+            $size = $file !== '' ? @getimagesize(FCPATH.$relative) : FALSE;
+            $image['full'] = array(
+                'url' => is_array($size) ? base_url($relative) : upload_thumb('gallery', $file, 1600, 0, 'images/no_image.jpg'),
+                'width' => is_array($size) ? (int) $size[0] : 1600,
+                'height' => is_array($size) ? (int) $size[1] : 1200,
+            );
+        }
+        unset($image);
+
+        $categories = $this->Gallery_model->get_categories();
+        $requested = (string) $this->input->get('category');
+        $category = in_array($requested, array_column($categories, 'category_slug'), TRUE) ? $requested : 'all';
+
+        $this->frontend_layout->render('frontend/gallery', array(
+            'page' => $page,
+            'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
+            'images' => $images,
+            'categories' => $categories,
+            'category' => $category,
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url('gallery'), array(
+                'images' => array(array('pages', $page['banner_background'])),
+            )),
+            'vendors' => array('photoswipe'),
+            'scripts' => array('js/gallery.js'),
+            'header' => 'overlay',
+        ));
+    }
+
     /** Artists listing (/artists): the first artist leads, the rest follow. */
     public function artists()
     {

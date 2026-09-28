@@ -16,6 +16,29 @@ class Gallery_model extends SqlModel
         return $this->db->get()->result_array();
     }
 
+    /** Every public image, in gallery order. */
+    public function get_all()
+    {
+        $this->publicImages();
+
+        return $this->db->get()->result_array();
+    }
+
+    /** Enabled categories that have public images, with their image counts. */
+    public function get_categories()
+    {
+        return $this->db
+            ->select('c.category_name, c.category_slug, COUNT(i.image_id) AS image_count')
+            ->from('gallery_categories c')
+            ->join('gallery_images i', "i.image_category_id = c.category_id AND i.image_status = 'Enable'", 'inner', FALSE)
+            ->where('c.category_status', 'Enable')
+            ->group_by('c.category_id')
+            ->order_by('c.category_order', 'ASC')
+            ->order_by('c.category_id', 'ASC')
+            ->get()
+            ->result_array();
+    }
+
     /** Starts a query over public images with their category name. */
     private function publicImages()
     {

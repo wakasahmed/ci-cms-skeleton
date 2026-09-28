@@ -345,6 +345,42 @@ header.ci-scrolled {
     backdrop-filter: blur(12px);
 }
 
+/* Overlay header (pages that open with a dark image hero): light until the
+   page scrolls, then the default colours on the white scrolled header. The
+   reference export kept the light colours on the white background. */
+header[data-header-overlay] .header-logo-dark,
+header[data-header-overlay].ci-scrolled .header-logo-light {
+    display: none;
+}
+
+header[data-header-overlay].ci-scrolled .header-logo-dark {
+    display: block;
+}
+
+header[data-header-overlay].ci-scrolled [data-header-link],
+header[data-header-overlay].ci-scrolled [data-header-tool] {
+    color: var(--color-foreground-soft);
+}
+
+header[data-header-overlay].ci-scrolled [data-header-link][aria-current] {
+    color: var(--color-primary-ink);
+}
+
+header[data-header-overlay].ci-scrolled [data-header-link]:hover,
+header[data-header-overlay].ci-scrolled [data-header-tool]:hover {
+    color: var(--color-primary-ink);
+}
+
+header[data-header-overlay].ci-scrolled [data-header-tool]:hover {
+    background-color: var(--color-petal);
+}
+
+header[data-header-overlay].ci-scrolled [data-menu-toggle] {
+    border-color: var(--color-border-strong);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+}
+
 .fa-solid,
 .fa-regular,
 .fa-brands {

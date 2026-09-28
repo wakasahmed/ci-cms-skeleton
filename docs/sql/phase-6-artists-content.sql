@@ -19,8 +19,8 @@ SET NAMES utf8mb4;
 DELETE FROM `gallery_images`;
 DELETE FROM `gallery_categories`;
 
-INSERT INTO `gallery_categories` (`category_id`, `category_name`, `category_slug`, `category_order`, `category_status`, `category_added`, `category_updated`) VALUES (1, 'Nail Art', 'nail-art', 1, 'Enable', NOW(), NOW());
-INSERT INTO `gallery_categories` (`category_id`, `category_name`, `category_slug`, `category_order`, `category_status`, `category_added`, `category_updated`) VALUES (2, 'Manicure', 'manicure', 2, 'Enable', NOW(), NOW());
+INSERT INTO `gallery_categories` (`category_id`, `category_name`, `category_slug`, `category_order`, `category_status`, `category_added`, `category_updated`) VALUES (1, 'Nail Art', 'nail-art', 2, 'Enable', NOW(), NOW());
+INSERT INTO `gallery_categories` (`category_id`, `category_name`, `category_slug`, `category_order`, `category_status`, `category_added`, `category_updated`) VALUES (2, 'Manicure', 'manicure', 1, 'Enable', NOW(), NOW());
 INSERT INTO `gallery_categories` (`category_id`, `category_name`, `category_slug`, `category_order`, `category_status`, `category_added`, `category_updated`) VALUES (3, 'Hair', 'hair', 3, 'Enable', NOW(), NOW());
 INSERT INTO `gallery_categories` (`category_id`, `category_name`, `category_slug`, `category_order`, `category_status`, `category_added`, `category_updated`) VALUES (4, 'Makeup', 'makeup', 4, 'Enable', NOW(), NOW());
 INSERT INTO `gallery_categories` (`category_id`, `category_name`, `category_slug`, `category_order`, `category_status`, `category_added`, `category_updated`) VALUES (5, 'Beauty', 'beauty', 5, 'Enable', NOW(), NOW());

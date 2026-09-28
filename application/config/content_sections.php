@@ -434,6 +434,25 @@ $config['web_page_sections'] = array(
             ),
         ),
     ),
+    // Gallery (/gallery). The hero comes from the page's banner fields.
+    39 => array(
+        array(
+            'key' => 'hero_link',
+            'label' => 'Hero Button',
+            'fields' => array(
+                array('key' => 'button_text', 'type' => 'text', 'label' => 'Text', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'button_url', 'type' => 'text', 'label' => 'URL', 'group' => null, 'required' => false, 'layout' => 'half'),
+            ),
+        ),
+        array(
+            'key' => 'cta',
+            'label' => 'Call to Action',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+    ),
     // Artists (/artists). The hero comes from the page's banner fields; the
     // first artist in Manage > Artists is shown as the lead artist.
     38 => array(

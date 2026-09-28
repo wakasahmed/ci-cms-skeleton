@@ -67,6 +67,8 @@ class Frontend_layout
      *   vendors   names from $vendorAssets to load on this page only
      *   styles    extra stylesheets, relative to assets/frontend/
      *   scripts   extra deferred scripts, relative to assets/frontend/
+     *   header    'default', or 'overlay' for a page that opens with a dark
+     *             image hero (light header until the page scrolls)
      */
     public function render($view, array $data = array(), array $page = array())
     {
@@ -94,6 +96,7 @@ class Frontend_layout
             'vendors' => array(),
             'styles' => array(),
             'scripts' => array(),
+            'header' => 'default',
         ), $page);
 
         return array(
@@ -107,6 +110,7 @@ class Frontend_layout
             'vendor_scripts' => $this->vendorAssetUrls($page['vendors'], 'scripts'),
             'scripts' => array_map(array($this, 'assetUrl'), $page['scripts']),
             'navigation' => $this->navigation(),
+            'header_overlay' => $page['header'] === 'overlay',
             'footer' => $this->footerData(),
         );
     }
