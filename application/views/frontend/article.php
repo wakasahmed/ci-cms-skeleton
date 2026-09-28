@@ -11,12 +11,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * $published  publish date (Y-m-d H:i:s)
  * $more       other recent posts
  * $cta        the Journal page's Call to Action section
- * $schema     JSON-LD Article description
  */
 $hasService = !empty($post['service_slug']);
 ?>
 <main id="main">
-    <script type="application/ld+json"><?php echo json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
     <article>
         <header class="relative isolate overflow-hidden">
             <div aria-hidden="true" class="absolute inset-x-0 top-0 -z-10 h-full bg-gradient-to-b from-petal via-lilac to-background"></div>

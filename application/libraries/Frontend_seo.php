@@ -381,12 +381,13 @@ class Frontend_seo
      * The JSON-LD @graph printed in every page head.
      *
      * $page keys: canonical, title, description, page_type, image (url/width/height), crumbs (label/href), nodes
-     * (record-specific nodes), is_home, organization (see organizationNode()).
+     * (record-specific nodes), is_home, organization (see organizationNode()), webpage (extra properties of the
+     * WebPage node, such as an FAQPage's mainEntity).
      */
     public function graph(array $page)
     {
         $organization = $this->organizationNode($page['organization']);
-        $organizationId = $organization['@id'];
+        $organizationId = $this->organizationId();
         $websiteId = $this->siteRootId() . '#website';
 
         $graph = array(
@@ -422,6 +423,9 @@ class Frontend_seo
         if (!empty($page['is_home'])) {
             $webPage['about'] = array('@id' => $organizationId);
         }
+        if (!empty($page['webpage']) && is_array($page['webpage'])) {
+            $webPage = array_merge($webPage, $page['webpage']);
+        }
 
         $breadcrumb = $this->breadcrumbNode($page['crumbs'], $page['canonical']);
         if ($breadcrumb !== null) {
@@ -442,38 +446,114 @@ class Frontend_seo
         return array('@context' => 'https://schema.org', '@graph' => $graph);
     }
 
-    /** The business itself. Its @id is shared by every node that refers to the publisher. */
+    /**
+     * The salon as a NailSalon (a LocalBusiness). Its @id is shared by every
+     * node that refers to the business (publisher, provider, employer).
+     *
+     * $facts keys: name, url, telephone, email, description, logo, image,
+     * address (PostalAddress node or array()), opening_hours (see
+     * openingHoursSpecification()), same_as (profile URLs), map_url.
+     */
     public function organizationNode(array $facts)
     {
         $node = array(
-            '@type' => 'TravelAgency',
-            '@id' => $this->siteRootId() . '#organization',
+            '@type' => 'NailSalon',
+            '@id' => $this->organizationId(),
             'name' => $facts['name'],
             'url' => $facts['url'],
             'telephone' => $facts['telephone'],
             'email' => $facts['email'],
-            'areaServed' => $facts['area_served'],
+            'description' => $facts['description'],
             'address' => $facts['address'],
+            'openingHoursSpecification' => $facts['opening_hours'],
+            'hasMap' => $facts['map_url'],
             'sameAs' => $facts['same_as'],
+            'currenciesAccepted' => 'PLN',
             'knowsLanguage' => array(self::LANGUAGE),
         );
 
-        if ($facts['description'] !== '') {
-            $node['description'] = $facts['description'];
-        }
         if ($facts['logo'] !== '') {
             $node['logo'] = array('@type' => 'ImageObject', 'url' => $facts['logo']);
-            $node['image'] = $facts['logo'];
         }
-        if ($facts['license_value'] !== '') {
-            $node['identifier'] = array(
-                '@type' => 'PropertyValue',
-                'name' => $facts['license_label'],
-                'value' => $facts['license_value'],
-            );
+        if ($facts['image'] !== '') {
+            $node['image'] = $facts['image'];
         }
 
         return $this->withoutEmpty($node);
+    }
+
+    /** @id of the salon node, for nodes that point to it. */
+    public function organizationId()
+    {
+        return $this->siteRootId() . '#organization';
+    }
+
+    /**
+     * PostalAddress from the Website Settings address lines: the first line
+     * is the street; a later line such as "38-300 Gorlice, Poland" gives the
+     * postal code, town and country. array() when there is no address.
+     */
+    public function postalAddress(array $lines)
+    {
+        $lines = array_values(array_filter(array_map('trim', $lines), 'strlen'));
+        if (empty($lines)) {
+            return array();
+        }
+
+        $address = array(
+            '@type' => 'PostalAddress',
+            'streetAddress' => $lines[0],
+        );
+
+        foreach (array_slice($lines, 1) as $line) {
+            if (preg_match('/^(\d{2}-\d{3})\s+([^,]+?)(?:,\s*(.+))?$/u', $line, $parts)) {
+                $address['postalCode'] = $parts[1];
+                $address['addressLocality'] = trim($parts[2]);
+                if (!empty($parts[3])) {
+                    $country = trim($parts[3]);
+                    $address['addressCountry'] = strcasecmp($country, 'Poland') === 0 ? 'PL' : $country;
+                }
+            }
+        }
+
+        return $address;
+    }
+
+    /**
+     * OpeningHoursSpecification list from frontend_parse_opening_hours()
+     * (day code => array(open minute, close minute)); days with the same
+     * hours share one entry.
+     */
+    public function openingHoursSpecification(array $hours)
+    {
+        $names = array(
+            'mon' => 'Monday',
+            'tue' => 'Tuesday',
+            'wed' => 'Wednesday',
+            'thu' => 'Thursday',
+            'fri' => 'Friday',
+            'sat' => 'Saturday',
+            'sun' => 'Sunday',
+        );
+        $groups = array();
+
+        foreach ($hours as $code => $times) {
+            if (!isset($names[$code])) {
+                continue;
+            }
+            $key = $times[0] . '-' . $times[1];
+            if (!isset($groups[$key])) {
+                $groups[$key] = array(
+                    '@type' => 'OpeningHoursSpecification',
+                    'dayOfWeek' => array(),
+                    'opens' => sprintf('%02d:%02d', intdiv($times[0], 60), $times[0] % 60),
+                    'closes' => sprintf('%02d:%02d', intdiv($times[1], 60), $times[1] % 60),
+                );
+            }
+            $groups[$key]['dayOfWeek'][] = $names[$code];
+        }
+
+        return array_values($groups);
     }
 
     /** BreadcrumbList from array(label, href); the last crumb is the current page. */
@@ -515,11 +595,11 @@ class Frontend_seo
         );
     }
 
-    /** A blog post as an Article published by the agency. */
+    /** A journal post as a BlogPosting published by the salon. */
     public function articleNode(array $article)
     {
         $node = array(
-            '@type' => 'Article',
+            '@type' => 'BlogPosting',
             '@id' => $article['url'] . '#article',
             'headline' => mb_substr($article['headline'], 0, 110, 'UTF-8'),
             'description' => $article['description'],
@@ -528,10 +608,10 @@ class Frontend_seo
             'inLanguage' => self::LANGUAGE,
             'datePublished' => $article['published'],
             'dateModified' => $article['modified'] !== '' ? $article['modified'] : $article['published'],
-            'publisher' => array('@id' => $this->siteRootId() . '#organization'),
+            'publisher' => array('@id' => $this->organizationId()),
             'author' => $article['author'] !== ''
                 ? array('@type' => 'Person', 'name' => $article['author'])
-                : array('@id' => $this->siteRootId() . '#organization'),
+                : array('@id' => $this->organizationId()),
         );
 
         if (!empty($article['image'])) {

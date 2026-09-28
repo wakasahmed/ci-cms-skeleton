@@ -36,8 +36,9 @@ class Booking_schedule
     public function __construct()
     {
         $CI =& get_instance();
+        $CI->load->helper('frontend');
         $settings = $CI->SqlModel->getSingleRecord('site_settings', array('id' => 1));
-        $this->hours = $this->parse(isset($settings['opening_hours']) ? $settings['opening_hours'] : '');
+        $this->hours = frontend_parse_opening_hours(isset($settings['opening_hours']) ? $settings['opening_hours'] : '');
     }
 
     /** TRUE when at least one day has opening hours. */
@@ -103,93 +104,5 @@ class Booking_schedule
         }
 
         return TRUE;
-    }
-
-    /**
-     * Opening hours text as day code => array(open minute, close minute).
-     * Lines that cannot be read are skipped.
-     */
-    private function parse($text)
-    {
-        $hours = array();
-
-        foreach (preg_split('/\R/', (string) $text) as $line) {
-            $parts = array_map('trim', explode('|', $line, 2));
-            if (count($parts) !== 2) {
-                continue;
-            }
-
-            $days = $this->days($parts[0]);
-            $times = $this->times($parts[1]);
-            foreach ($days as $code) {
-                if ($times === NULL) {
-                    unset($hours[$code]);
-                } else {
-                    $hours[$code] = $times;
-                }
-            }
-        }
-
-        // Keep the week in order for the wizard.
-        $ordered = array();
-        foreach (self::DAY_CODES as $code) {
-            if (isset($hours[$code])) {
-                $ordered[$code] = $hours[$code];
-            }
-        }
-
-        return $ordered;
-    }
-
-    /** Day codes named in "Monday – Friday", "Saturday" or "Mon, Wed". */
-    private function days($text)
-    {
-        $codes = array_values(self::DAY_CODES);
-        $days = array();
-
-        foreach (preg_split('/\s*,\s*/', mb_strtolower($text, 'UTF-8')) as $piece) {
-            $ends = preg_split('/\s*(?:–|—|-|to)\s*/u', $piece);
-            $from = array_search(substr(trim($ends[0]), 0, 3), $codes, TRUE);
-            if ($from === FALSE) {
-                continue;
-            }
-
-            $to = count($ends) > 1 ? array_search(substr(trim($ends[1]), 0, 3), $codes, TRUE) : $from;
-            if ($to === FALSE) {
-                $to = $from;
-            }
-
-            for ($index = $from; ; $index = ($index + 1) % 7) {
-                $days[] = $codes[$index];
-                if ($index === $to) {
-                    break;
-                }
-            }
-        }
-
-        return array_unique($days);
-    }
-
-    /** array(open minute, close minute) from "9:00 AM – 5:00 PM" or "09:00-17:00"; NULL when closed. */
-    private function times($text)
-    {
-        preg_match_all('/(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i', (string) $text, $matches, PREG_SET_ORDER);
-        if (count($matches) < 2) {
-            return NULL;
-        }
-
-        $minutes = array();
-        foreach (array_slice($matches, 0, 2) as $match) {
-            $hour = (int) $match[1];
-            $period = isset($match[3]) ? strtolower($match[3]) : '';
-            if ($period === 'pm' && $hour < 12) {
-                $hour += 12;
-            } elseif ($period === 'am' && $hour === 12) {
-                $hour = 0;
-            }
-            $minutes[] = $hour * 60 + (isset($match[2]) && $match[2] !== '' ? (int) $match[2] : 0);
-        }
-
-        return $minutes[1] > $minutes[0] ? $minutes : NULL;
     }
 }

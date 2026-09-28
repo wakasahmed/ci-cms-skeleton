@@ -69,9 +69,24 @@ class Frontend_layout
      *   scripts   extra deferred scripts, relative to assets/frontend/
      *   header    'default', or 'overlay' for a page that opens with a dark
      *             image hero (light header until the page scrolls)
+     *   crumbs    breadcrumb for the structured data (array of label/url);
+     *             defaults to $data['hero']['crumbs'] or $data['crumbs']
+     *   page_type schema.org type of the page (WebPage, CollectionPage,
+     *             AboutPage, ContactPage, FAQPage, SearchResultsPage, ...)
+     *   webpage   extra properties of the WebPage node
+     *   schema    extra JSON-LD nodes for the page's record (Service,
+     *             BlogPosting, Person, ...)
+     *   is_home   TRUE on the home page
      */
     public function render($view, array $data = array(), array $page = array())
     {
+        if (!isset($page['crumbs'])) {
+            if (isset($data['hero']['crumbs'])) {
+                $page['crumbs'] = $data['hero']['crumbs'];
+            } elseif (isset($data['crumbs'])) {
+                $page['crumbs'] = $data['crumbs'];
+            }
+        }
         $layout = $this->layoutData($page);
 
         $this->CI->load->view('frontend/layout/head', $layout);
@@ -97,11 +112,18 @@ class Frontend_layout
             'styles' => array(),
             'scripts' => array(),
             'header' => 'default',
+            'crumbs' => array(),
+            'page_type' => 'WebPage',
+            'webpage' => array(),
+            'schema' => array(),
+            'is_home' => FALSE,
         ), $page);
+        $meta = $this->headMeta($page['meta']);
 
         return array(
             'site' => $this->siteData(),
-            'meta' => $this->headMeta($page['meta']),
+            'meta' => $meta,
+            'json_ld' => $this->structuredData($page, $meta),
             'styles' => array_merge(
                 $this->vendorAssetUrls($page['vendors'], 'styles'),
                 array_map(array($this, 'assetUrl'), $page['styles'])
@@ -229,7 +251,56 @@ class Frontend_layout
             'og_image' => $image,
             'og_image_alt' => isset($meta['og_image_alt']) ? $meta['og_image_alt'] : $title,
             'og_type' => isset($meta['og_type']) ? $meta['og_type'] : 'website',
+            // article:published_time and similar, for og_type "article".
+            'article' => isset($meta['article']) && is_array($meta['article']) ? $meta['article'] : array(),
         );
+    }
+
+    /** The page's JSON-LD graph: the salon, the website, the page and its own nodes. */
+    private function structuredData(array $page, array $meta)
+    {
+        $seo = $this->CI->frontend_seo;
+        $crumbs = array();
+        foreach ($page['crumbs'] as $crumb) {
+            $crumbs[] = array(
+                'label' => isset($crumb['label']) ? $crumb['label'] : '',
+                'href' => isset($crumb['url']) ? $crumb['url'] : '',
+            );
+        }
+
+        $sameAs = array();
+        foreach ($this->socials() as $social) {
+            $sameAs[] = $social['url'];
+        }
+        $logo = $this->logo('logo', 'blossom-logo.png');
+        $defaultImage = $seo->image(array());
+
+        return $seo->graph(array(
+            'canonical' => $meta['canonical'] !== '' ? $meta['canonical'] : $seo->homeUrl(),
+            'title' => $meta['title'],
+            'description' => $meta['description'],
+            'page_type' => $page['page_type'],
+            'image' => !empty($meta['og_image']['url']) ? $meta['og_image'] : array(),
+            'crumbs' => $crumbs,
+            'nodes' => $page['schema'],
+            'is_home' => $page['is_home'],
+            'webpage' => $page['webpage'],
+            'organization' => array(
+                'name' => $seo->siteName() !== '' ? $seo->siteName() : 'Blossom Ewa Mazur',
+                'url' => $seo->homeUrl(),
+                'telephone' => $this->setting('phone'),
+                'email' => $this->setting('email'),
+                'description' => $seo->siteDescription(),
+                'logo' => $logo['url'],
+                'image' => !empty($defaultImage['url']) ? $defaultImage['url'] : '',
+                'address' => $seo->postalAddress(frontend_lines($this->setting('address'))),
+                'opening_hours' => $seo->openingHoursSpecification(
+                    frontend_parse_opening_hours($this->setting('opening_hours'))
+                ),
+                'same_as' => $sameAs,
+                'map_url' => $this->setting('map_url'),
+            ),
+        ));
     }
 
     /** Versioned URLs of the requested vendor bundles' stylesheets or scripts. */

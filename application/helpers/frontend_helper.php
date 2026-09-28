@@ -259,3 +259,99 @@ if (!function_exists('frontend_html_sections')) {
         return $result;
     }
 }
+
+if (!function_exists('frontend_parse_opening_hours')) {
+    /**
+     * Website Settings > Opening Hours ("Days | Hours" lines such as
+     * "Monday – Friday | 9:00 AM – 5:00 PM", "Sat | 10.00-14.00" or
+     * "Sunday | Closed") as day code (mon…sun) => array(open minute, close
+     * minute), in week order. Closed days are absent; lines that cannot be
+     * read are skipped. Used by the booking schedule and the structured data.
+     */
+    function frontend_parse_opening_hours($text)
+    {
+        $codes = array('mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun');
+        $hours = array();
+
+        foreach (preg_split('/\R/', (string) $text) as $line) {
+            $parts = array_map('trim', explode('|', $line, 2));
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            $days = frontend_opening_days($parts[0], $codes);
+            $times = frontend_opening_times($parts[1]);
+            foreach ($days as $code) {
+                if ($times === NULL) {
+                    unset($hours[$code]);
+                } else {
+                    $hours[$code] = $times;
+                }
+            }
+        }
+
+        $ordered = array();
+        foreach ($codes as $code) {
+            if (isset($hours[$code])) {
+                $ordered[$code] = $hours[$code];
+            }
+        }
+
+        return $ordered;
+    }
+}
+
+if (!function_exists('frontend_opening_days')) {
+    /** Day codes named in "Monday – Friday", "Saturday" or "Mon, Wed" (wrapping ranges allowed). */
+    function frontend_opening_days($text, array $codes)
+    {
+        $days = array();
+
+        foreach (preg_split('/\s*,\s*/', mb_strtolower($text, 'UTF-8')) as $piece) {
+            $ends = preg_split('/\s*(?:–|—|-|to)\s*/u', $piece);
+            $from = array_search(substr(trim($ends[0]), 0, 3), $codes, TRUE);
+            if ($from === FALSE) {
+                continue;
+            }
+
+            $to = count($ends) > 1 ? array_search(substr(trim($ends[1]), 0, 3), $codes, TRUE) : $from;
+            if ($to === FALSE) {
+                $to = $from;
+            }
+
+            for ($index = $from; ; $index = ($index + 1) % 7) {
+                $days[] = $codes[$index];
+                if ($index === $to) {
+                    break;
+                }
+            }
+        }
+
+        return array_unique($days);
+    }
+}
+
+if (!function_exists('frontend_opening_times')) {
+    /** array(open minute, close minute) from "9:00 AM – 5:00 PM" or "09:00-17:00"; NULL when closed or unreadable. */
+    function frontend_opening_times($text)
+    {
+        preg_match_all('/(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?/i', (string) $text, $matches, PREG_SET_ORDER);
+        if (count($matches) < 2) {
+            return NULL;
+        }
+
+        $minutes = array();
+        foreach (array_slice($matches, 0, 2) as $match) {
+            $hour = (int) $match[1];
+            $period = isset($match[3]) ? strtolower($match[3]) : '';
+            if ($period === 'pm' && $hour < 12) {
+                $hour += 12;
+            } elseif ($period === 'am' && $hour === 12) {
+                $hour = 0;
+            }
+            $minutes[] = $hour * 60 + (isset($match[2]) && $match[2] !== '' ? (int) $match[2] : 0);
+        }
+
+        return $minutes[1] > $minutes[0] ? $minutes : NULL;
+    }
+}

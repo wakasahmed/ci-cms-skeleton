@@ -9,7 +9,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * $hero      page hero data (see partials/page_hero.php)
  * $sections  Web Page Sections of the FAQ page, keyed by section
  * $groups    FAQ groups from Faq_model::get_faq_groups()
- * $schema    JSON-LD FAQPage description, or NULL without questions
  */
 $sidebar = isset($sections['sidebar']) ? $sections['sidebar'] : array();
 $questions = isset($sections['questions']) ? $sections['questions'] : array();
@@ -31,9 +30,6 @@ foreach ($groups as $group) {
 }
 ?>
 <main id="main">
-    <?php if ($schema !== NULL) { ?>
-        <script type="application/ld+json"><?php echo json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
-    <?php } ?>
 
     <?php $this->load->view('frontend/partials/page_hero', array('hero' => $hero)); ?>
 

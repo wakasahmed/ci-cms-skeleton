@@ -13,7 +13,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * $labels    Miscellaneous Contents > Service Page
  * $shapes    Miscellaneous Contents > Nail Shapes & Finishes, or NULL when not shown
  * $cta       call-to-action data (see partials/cta_band.php)
- * $schema    JSON-LD Service description
  */
 $label = function ($key, $default) use ($labels) {
     return isset($labels[$key]) && trim((string) $labels[$key]) !== '' ? $labels[$key] : $default;
@@ -29,7 +28,6 @@ $tipGroups = array_filter(array(
 });
 ?>
 <main id="main">
-    <script type="application/ld+json"><?php echo json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
 
     <?php $this->load->view('frontend/partials/page_hero', array('hero' => $hero)); ?>
 

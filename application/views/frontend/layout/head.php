@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
  * Document head and opening <body> for every public page.
- * Data comes from Frontend_layout: $meta, $site, $styles, $vendor_scripts, $scripts.
+ * Data comes from Frontend_layout: $meta, $site, $json_ld, $styles, $vendor_scripts, $scripts.
  */
 $image = $meta['og_image'];
 ?><!DOCTYPE html>
@@ -42,11 +42,19 @@ $image = $meta['og_image'];
         <?php } ?>
         <meta property="og:image:alt" content="<?php echo html_escape($meta['og_image_alt']); ?>">
     <?php } ?>
-    <meta name="twitter:card" content="summary">
+    <meta name="twitter:card" content="<?php echo !empty($image['url']) ? 'summary_large_image' : 'summary'; ?>">
     <meta name="twitter:title" content="<?php echo html_escape($meta['og_title']); ?>">
     <?php if ($meta['og_description'] !== '') { ?>
         <meta name="twitter:description" content="<?php echo html_escape($meta['og_description']); ?>">
     <?php } ?>
+    <?php if (!empty($image['url'])) { ?>
+        <meta name="twitter:image" content="<?php echo html_escape($image['url']); ?>">
+        <meta name="twitter:image:alt" content="<?php echo html_escape($meta['og_image_alt']); ?>">
+    <?php } ?>
+    <?php foreach ($meta['article'] as $property => $value) { ?>
+        <meta property="article:<?php echo html_escape($property); ?>" content="<?php echo html_escape($value); ?>">
+    <?php } ?>
+    <script type="application/ld+json"><?php echo json_encode($json_ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP); ?></script>
 
     <link rel="stylesheet" href="<?php echo html_escape($this->frontend_layout->assetUrl('css/app.css')); ?>">
     <link rel="stylesheet" href="<?php echo html_escape($this->frontend_layout->assetUrl('vendor/fontawesome/css/all.min.css')); ?>">

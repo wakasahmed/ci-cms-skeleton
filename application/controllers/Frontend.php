@@ -68,6 +68,7 @@ class Frontend extends CI_Controller
             'reviews' => $this->Review_model->get_reviews(3),
         ), array(
             'meta' => $this->frontend_layout->pageMeta($page, base_url()),
+            'is_home' => TRUE,
             'vendors' => array('swiper'),
             'scripts' => array('js/home.js'),
         ));
@@ -94,6 +95,7 @@ class Frontend extends CI_Controller
             'menu' => $menu,
             'category' => $category,
         ), array(
+            'page_type' => 'CollectionPage',
             'meta' => $this->frontend_layout->pageMeta($page, base_url('services'), array(
                 'images' => array(array('pages', $page['banner_background'])),
             )),
@@ -173,8 +175,8 @@ class Frontend extends CI_Controller
                 'book_url' => $bookUrl,
                 'book_label' => 'Book this service',
             ),
-            'schema' => $this->serviceSchema($service, $url),
         ), array(
+            'schema' => array($this->serviceSchema($service, $url, $heroImage)),
             'meta' => $this->frontend_layout->pageMeta($service, $url, array(
                 'name' => $service['service_name'],
                 'description' => array($service['service_summary'], $service['service_description']),
@@ -216,6 +218,11 @@ class Frontend extends CI_Controller
             'categories' => $categories,
             'category' => $category,
         ), array(
+            'page_type' => 'CollectionPage',
+            'crumbs' => array(
+                array('label' => 'Home', 'url' => base_url()),
+                array('label' => html_entity_decode((string) $page['page_name'], ENT_QUOTES, 'UTF-8')),
+            ),
             'meta' => $this->frontend_layout->pageMeta($page, base_url('gallery'), array(
                 'images' => array(array('pages', $page['banner_background'])),
             )),
@@ -248,6 +255,7 @@ class Frontend extends CI_Controller
             'featured' => $featured,
             'others' => $others,
         ), array(
+            'page_type' => 'CollectionPage',
             'meta' => $this->frontend_layout->pageMeta($page, base_url('offers'), array(
                 'images' => array(array('offers', !empty($featured) ? $featured[0]['offer_image'] : '')),
             )),
@@ -266,6 +274,7 @@ class Frontend extends CI_Controller
             'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
             'artists' => $this->Artist_model->get_all(),
         ), array(
+            'page_type' => 'AboutPage',
             'meta' => $this->frontend_layout->pageMeta($page, base_url('about'), array(
                 'images' => array(array('pages', $page['banner_background'])),
             )),
@@ -309,6 +318,7 @@ class Frontend extends CI_Controller
             'categories' => $categories,
             'category' => $category,
         ), array(
+            'page_type' => 'CollectionPage',
             'meta' => $this->frontend_layout->pageMeta($page, base_url('blog'), array(
                 'images' => array(array('blogs', $lead !== NULL ? $lead['blog_image'] : '')),
             )),
@@ -350,22 +360,30 @@ class Frontend extends CI_Controller
             'published' => $published,
             'more' => $this->Blog_model->get_more((int) $post['blog_id'], 3),
             'cta' => $cta,
-            'schema' => array(
-                '@context' => 'https://schema.org',
-                '@type' => 'Article',
+        ), array(
+            'schema' => array($this->frontend_seo->articleNode(array(
+                'url' => $url,
                 'headline' => $post['blog_name'],
                 'description' => $this->frontend_seo->plainText($post['blog_short_description']),
-                'datePublished' => date('Y-m-d', strtotime($published)),
+                'published' => $this->frontend_seo->isoDate($published),
+                'modified' => $this->frontend_seo->isoDate($post['blog_updated']),
+                'author' => '',
                 'image' => upload_thumb('blogs', $image, 1200, 0, 'images/no_image.jpg'),
-                'author' => array('@type' => 'Organization', 'name' => $this->frontend_seo->siteName()),
-                'publisher' => array('@type' => 'Organization', 'name' => $this->frontend_seo->siteName()),
-            ),
-        ), array(
-            'meta' => $this->frontend_layout->pageMeta($post, $url, array(
+                'section' => (string) $post['category_name'],
+                'keywords' => $this->frontend_seo->keywords($post['meta_keywords']),
+            ))),
+            'meta' => array_merge($this->frontend_layout->pageMeta($post, $url, array(
                 'name' => $post['blog_name'],
                 'description' => array($post['blog_short_description']),
                 'image_dir' => 'blogs',
                 'images' => array(array('blogs', $image)),
+            )), array(
+                'og_type' => 'article',
+                'article' => array_filter(array(
+                    'published_time' => $this->frontend_seo->isoDate($published),
+                    'modified_time' => $this->frontend_seo->isoDate($post['blog_updated']),
+                    'section' => (string) $post['category_name'],
+                )),
             )),
         ));
     }
@@ -425,6 +443,7 @@ class Frontend extends CI_Controller
                 'action' => Contact_form::RECAPTCHA_ACTION,
             ),
         ), array(
+            'page_type' => 'ContactPage',
             'meta' => $this->frontend_layout->pageMeta($page, base_url('contact')),
             'scripts' => array('js/contact.js'),
         ));
@@ -656,6 +675,11 @@ class Frontend extends CI_Controller
             }, $groups)),
             'suggestions' => array_column($this->Service_model->get_featured(3), 'service_name'),
         ), array(
+            'page_type' => 'SearchResultsPage',
+            'crumbs' => array(
+                array('label' => 'Home', 'url' => base_url()),
+                array('label' => 'Search'),
+            ),
             'meta' => $meta,
         ));
     }
@@ -683,14 +707,9 @@ class Frontend extends CI_Controller
             'hero' => $this->listingHero($page),
             'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
             'groups' => $groups,
-            'schema' => !empty($questions)
-                ? array(
-                    '@context' => 'https://schema.org',
-                    '@type' => 'FAQPage',
-                    'mainEntity' => $questions,
-                )
-                : NULL,
         ), array(
+            'page_type' => !empty($questions) ? 'FAQPage' : 'WebPage',
+            'webpage' => !empty($questions) ? array('mainEntity' => $questions) : array(),
             'meta' => $this->frontend_layout->pageMeta($page, base_url('faq')),
         ));
     }
@@ -711,6 +730,11 @@ class Frontend extends CI_Controller
             'lead' => $lead,
             'team' => $artists,
         ), array(
+            'page_type' => 'CollectionPage',
+            'crumbs' => array(
+                array('label' => 'Home', 'url' => base_url()),
+                array('label' => html_entity_decode((string) $page['page_name'], ENT_QUOTES, 'UTF-8')),
+            ),
             'meta' => $this->frontend_layout->pageMeta($page, base_url('artists'), array(
                 'images' => array(array('artists', $lead !== NULL ? $lead['artist_image'] : '')),
             )),
@@ -790,6 +814,18 @@ class Frontend extends CI_Controller
                 'book_label' => 'Book an appointment',
             ),
         ), array(
+            'page_type' => 'ProfilePage',
+            'schema' => array(array_filter(array(
+                '@type' => 'Person',
+                '@id' => $url.'#person',
+                'name' => $artist['artist_name'],
+                'jobTitle' => (string) $artist['artist_role'],
+                'url' => $url,
+                'image' => upload_thumb('artists', $artist['artist_image'], 1200, 0, ''),
+                'knowsAbout' => frontend_lines($artist['artist_specialties']),
+                'worksFor' => array('@id' => $this->frontend_seo->organizationId()),
+            ))),
+            'webpage' => array('mainEntity' => array('@id' => $url.'#person')),
             'meta' => $this->frontend_layout->pageMeta(array(), $url, array(
                 'name' => $artist['artist_name'],
                 'description' => array($artist['artist_bio']),
@@ -910,22 +946,18 @@ class Frontend extends CI_Controller
         return $slides;
     }
 
-    /** schema.org Service description for a service page. */
-    private function serviceSchema(array $service, $url)
+    /** schema.org Service node for a service page, provided by the salon. */
+    private function serviceSchema(array $service, $url, $image)
     {
-        $site = $this->frontend_layout->settings();
         $schema = array(
-            '@context' => 'https://schema.org',
             '@type' => 'Service',
+            '@id' => $url.'#service',
             'name' => $service['service_name'],
             'description' => $this->frontend_seo->plainText($service['service_summary']),
             'serviceType' => $service['category_name'],
             'url' => $url,
-            'provider' => array(
-                '@type' => 'NailSalon',
-                'name' => $this->frontend_seo->siteName(),
-                'telephone' => isset($site['phone']) ? $site['phone'] : '',
-            ),
+            'image' => upload_thumb('services', $image, 1200, 0, 'images/no_image.jpg'),
+            'provider' => array('@id' => $this->frontend_seo->organizationId()),
         );
 
         if ($service['service_price_from'] !== NULL && $service['service_price_from'] !== '') {
