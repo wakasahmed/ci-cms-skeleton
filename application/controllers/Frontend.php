@@ -220,7 +220,7 @@ class Frontend extends CI_Controller
                 'images' => array(array('pages', $page['banner_background'])),
             )),
             'vendors' => array('photoswipe'),
-            'scripts' => array('js/gallery.js'),
+            'scripts' => array('js/category-filter.js', 'js/gallery.js'),
             'header' => 'overlay',
         ));
     }
@@ -268,6 +268,104 @@ class Frontend extends CI_Controller
         ), array(
             'meta' => $this->frontend_layout->pageMeta($page, base_url('about'), array(
                 'images' => array(array('pages', $page['banner_background'])),
+            )),
+        ));
+    }
+
+    /**
+     * Journal (/blog): the latest post leads, the rest follow with category
+     * chips (optionally preselected with ?category={slug}).
+     */
+    public function blog()
+    {
+        $page = $this->listingPage('blog');
+        $this->load->model('Blog_model');
+        $this->load->library('content_section_service');
+
+        $posts = $this->Blog_model->get_published();
+        $lead = !empty($posts) ? array_shift($posts) : NULL;
+
+        // Chips for the categories used by the posts after the lead.
+        $counts = array_count_values(array_filter(array_column($posts, 'category_slug')));
+        $categories = array();
+        foreach ($this->Blog_model->get_categories() as $category) {
+            if (isset($counts[$category['cat_slug']])) {
+                $categories[] = array(
+                    'slug' => $category['cat_slug'],
+                    'name' => $category['cat_name'],
+                    'count' => $counts[$category['cat_slug']],
+                );
+            }
+        }
+
+        $requested = (string) $this->input->get('category');
+        $category = in_array($requested, array_column($categories, 'slug'), TRUE) ? $requested : 'all';
+
+        $this->frontend_layout->render('frontend/blog', array(
+            'hero' => $this->listingHero($page),
+            'sections' => $this->content_section_service->get_web_page_sections((int) $page['page_id']),
+            'lead' => $lead,
+            'posts' => $posts,
+            'categories' => $categories,
+            'category' => $category,
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($page, base_url('blog'), array(
+                'images' => array(array('blogs', $lead !== NULL ? $lead['blog_image'] : '')),
+            )),
+            'scripts' => array('js/category-filter.js'),
+        ));
+    }
+
+    /** Old category URLs (/blog/category/{slug}) open the filtered journal. */
+    public function blog_category($slug = '')
+    {
+        redirect(base_url('blog').'?category='.rawurlencode(urldecode((string) $slug)), 'location', 301);
+    }
+
+    /** Journal article (/blog/{slug}). */
+    public function article($slug = '')
+    {
+        $this->load->model('Blog_model');
+        $this->load->library('content_section_service');
+
+        $post = $this->Blog_model->get_by_slug(urldecode((string) $slug));
+        if ($post === NULL) {
+            return $this->error_404();
+        }
+
+        $url = base_url('blog/'.rawurlencode($post['blog_slug']));
+        $image = trim((string) $post['blog_cover_image']) !== '' ? $post['blog_cover_image'] : $post['blog_image'];
+        $published = $post['blog_pdate'] !== NULL && $post['blog_pdate'] !== '' ? $post['blog_pdate'] : $post['blog_added'];
+        $journalSections = $this->content_section_service->get_web_page_sections(8);
+        $cta = isset($journalSections['cta']) ? $journalSections['cta'] : array();
+
+        $this->frontend_layout->render('frontend/article', array(
+            'post' => $post,
+            'crumbs' => array(
+                array('label' => 'Home', 'url' => base_url()),
+                array('label' => $this->listingLabel('blog', 'Journal'), 'url' => base_url('blog')),
+                array('label' => $post['blog_name']),
+            ),
+            'image' => upload_thumb('blogs', $image, 1200, 0, 'images/no_image.jpg'),
+            'published' => $published,
+            'more' => $this->Blog_model->get_more((int) $post['blog_id'], 3),
+            'cta' => $cta,
+            'schema' => array(
+                '@context' => 'https://schema.org',
+                '@type' => 'Article',
+                'headline' => $post['blog_name'],
+                'description' => $this->frontend_seo->plainText($post['blog_short_description']),
+                'datePublished' => date('Y-m-d', strtotime($published)),
+                'image' => upload_thumb('blogs', $image, 1200, 0, 'images/no_image.jpg'),
+                'author' => array('@type' => 'Organization', 'name' => $this->frontend_seo->siteName()),
+                'publisher' => array('@type' => 'Organization', 'name' => $this->frontend_seo->siteName()),
+            ),
+        ), array(
+            'meta' => $this->frontend_layout->pageMeta($post, $url, array(
+                'name' => $post['blog_name'],
+                'description' => array($post['blog_short_description']),
+                'image_dir' => 'blogs',
+                'images' => array(array('blogs', $image)),
             )),
         ));
     }

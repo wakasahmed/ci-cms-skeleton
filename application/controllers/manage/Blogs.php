@@ -114,6 +114,7 @@ class Blogs extends CI_Controller {
 				'ASC'
 			),
 			'selected_categories' => $assigned,
+			'services' => $this->SqlModel->getRecords('service_id,service_name,service_status', 'services', 'service_name', 'ASC'),
 			'cats' => $this->SqlModel->getRecords('cat_id,cat_name,cat_status', 'blog_categories', 'cat_name', 'ASC', array('cat_id >' => 1)),
 			'useColorPicker' => TRUE,
 			'useUserSelect' => TRUE,
@@ -276,6 +277,7 @@ class Blogs extends CI_Controller {
 			$data[$f] = $v === '' ? NULL : $v;
 		}
 		$data['blog_author'] = (int) $this->input->post('blog_author');
+		$data['blog_service_id'] = $this->validServiceID($this->input->post('blog_service_id')) ? (int) $this->input->post('blog_service_id') : NULL;
 		$data['blog_time_to_read'] = $this->validTimeToRead($this->input->post('blog_time_to_read')) ? (int) $this->input->post('blog_time_to_read') : 5;
 		$data['blog_status'] = $this->input->post('blog_status') === 'Un-Published' ? 'Un-Published' : 'Published';
 		$data['blog_featured'] = $this->input->post('blog_featured') === 'Yes' ? 'Yes' : 'No';
@@ -313,6 +315,7 @@ class Blogs extends CI_Controller {
 		$v = array(
 			'page_slug' => '',
 			'blog_author' => isset($this->user_data['id']) ? (int) $this->user_data['id'] : 0,
+			'blog_service_id' => 0,
 			'blog_time_to_read' => 5,
 			'blog_status' => 'Published',
 			'blog_featured' => 'No',
@@ -329,6 +332,7 @@ class Blogs extends CI_Controller {
 		foreach (array('blog_status', 'blog_featured', 'robots_index', 'robots_follow', 'show_top_banner', 'banner_overlay') as $f) if (isset($r[$f])) $v[$f] = $r[$f];
 		if (isset($r['blog_author']) && $this->validAuthorID($r['blog_author'])) $v['blog_author'] = (int) $r['blog_author'];
 		if (isset($r['blog_time_to_read']) && $this->validTimeToRead($r['blog_time_to_read'])) $v['blog_time_to_read'] = (int) $r['blog_time_to_read'];
+		if (!empty($r['blog_service_id'])) $v['blog_service_id'] = (int) $r['blog_service_id'];
 
 		if (isset($r['blog_slug'])) $v['page_slug'] = $r['blog_slug'];
 		$v['current_blog_image'] = isset($r['blog_image']) ? basename($r['blog_image']) : '';
@@ -351,6 +355,20 @@ class Blogs extends CI_Controller {
 		return $this->SqlModel->countRecords(
 			'admin_users',
 			array('id' => (int) $authorID)
+		) === 1;
+	}
+
+	/** An existing service for the optional "Related service" card. */
+	private function validServiceID($serviceID)
+	{
+		if (!ctype_digit((string) $serviceID) || (int) $serviceID < 1)
+		{
+			return FALSE;
+		}
+
+		return $this->SqlModel->countRecords(
+			'services',
+			array('service_id' => (int) $serviceID)
 		) === 1;
 	}
 

@@ -362,6 +362,26 @@ $config['web_page_sections'] = array(
             ),
         ),
     ),
+    // Journal (/blog). The hero comes from the page's banner fields; the
+    // latest published post is shown as the lead article.
+    8 => array(
+        array(
+            'key' => 'articles',
+            'label' => 'Articles',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'note', 'type' => 'textarea', 'label' => 'Note under the articles (optional)', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+        array(
+            'key' => 'cta',
+            'label' => 'Call to Action',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+    ),
     // Artists (/artists). The hero comes from the page's banner fields; the
     // first artist in Manage > Artists is shown as the lead artist.
     38 => array(

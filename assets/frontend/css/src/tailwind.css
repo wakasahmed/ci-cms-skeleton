@@ -293,6 +293,69 @@
         transition: opacity 0.9s var(--ease-out-soft), transform 1.2s var(--ease-out-soft);
     }
 
+    /* Journal article body: the HTML saved by the CMS editor, styled like the
+       reference article pages. */
+    .article-body > p,
+    .article-body > ol,
+    .article-body > ul,
+    .article-body > blockquote {
+        @apply mt-5 text-lg leading-relaxed text-foreground-soft;
+    }
+
+    .article-body > h2 {
+        @apply mt-12 text-[clamp(1.5rem,3vw,2rem)] text-foreground first:mt-0;
+    }
+
+    .article-body > h3 {
+        @apply mt-10 text-xl text-foreground first:mt-0;
+    }
+
+    .article-body > ul,
+    .article-body > ol {
+        @apply space-y-2.5;
+    }
+
+    .article-body > ul > li {
+        @apply relative pl-4.5;
+    }
+
+    .article-body > ul > li::before {
+        @apply absolute top-2.5 left-0 size-1.5 rounded-full bg-primary;
+        content: "";
+    }
+
+    .article-body > ol {
+        @apply list-decimal pl-6 marker:text-primary-ink;
+    }
+
+    .article-body > blockquote {
+        @apply border-l-2 border-primary pl-5 italic;
+    }
+
+    .article-body a {
+        @apply text-primary-ink underline underline-offset-3 hover:text-primary;
+    }
+
+    .article-body strong {
+        @apply font-semibold text-foreground;
+    }
+
+    .article-body > figure {
+        @apply mt-10;
+    }
+
+    .article-body img {
+        @apply h-auto w-full rounded-xl bg-muted;
+    }
+
+    .article-body > figure > img {
+        @apply aspect-16/10 object-cover;
+    }
+
+    .article-body figcaption {
+        @apply mt-3 text-sm text-muted-foreground;
+    }
+
     @keyframes fade-up {
         0% {
             opacity: 0;

@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
  * Gallery (/gallery): image hero, category chips (?category= works without
- * JavaScript), a mosaic grid and a PhotoSwipe lightbox (js/gallery.js).
+ * JavaScript), a mosaic grid and a PhotoSwipe lightbox (js/category-filter.js, js/gallery.js).
  *
  * $page        the Gallery Web Pages record (banner fields)
  * $sections    Web Page Sections of the Gallery page, keyed by section
@@ -27,13 +27,6 @@ $tiles = array(
     array('class' => 'sm:col-span-2 lg:col-span-4 aspect-4/5', 'width' => 800),
     array('class' => 'sm:col-span-2 lg:col-span-12 aspect-16/9', 'width' => 1600),
 );
-$chipBase = 'inline-flex min-h-11 shrink-0 snap-start cursor-pointer items-center gap-2 rounded-full px-5 text-[0.95rem] font-medium'
-    .' transition-[background-color,color,border-color] duration-200 ease-[var(--ease-out-soft)]'
-    .' focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
-$chipActive = 'bg-primary-cta text-primary-foreground shadow-[var(--shadow-card)]';
-$chipInactive = 'border border-border-strong bg-background text-foreground-soft hover:border-primary hover:bg-petal hover:text-primary';
-$countActive = 'text-primary-foreground/75';
-$countInactive = 'text-muted-foreground';
 $shown = 0;
 foreach ($images as $image) {
     if ($category === 'all' || $image['category_slug'] === $category) {
@@ -85,37 +78,28 @@ foreach ($images as $image) {
         </div>
     </section>
 
-    <section class="py-18 md:py-22 lg:py-26 bg-background text-foreground" aria-label="Gallery" data-gallery>
+    <section class="py-18 md:py-22 lg:py-26 bg-background text-foreground" aria-label="Gallery" data-gallery data-category-filter>
         <div class="mx-auto w-full max-w-[86rem] px-5 sm:px-8 lg:px-12">
             <?php if (empty($images)) { ?>
                 <p class="text-muted-foreground">New photos are on their way.</p>
             <?php } else { ?>
-                <div role="radiogroup" aria-label="Filter gallery by category" class="-mx-5 flex snap-x gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-                    <?php
-                    $chips = array(array('slug' => 'all', 'name' => 'All', 'count' => count($images)));
-                    foreach ($categories as $group) {
-                        $chips[] = array(
-                            'slug' => $group['category_slug'],
-                            'name' => $group['category_name'],
-                            'count' => (int) $group['image_count'],
-                        );
-                    }
-                    ?>
-                    <?php foreach ($chips as $chip) { ?>
-                        <?php $active = $category === $chip['slug']; ?>
-                        <button
-                            type="button"
-                            role="radio"
-                            aria-checked="<?php echo $active ? 'true' : 'false'; ?>"
-                            data-gallery-filter="<?php echo html_escape($chip['slug']); ?>"
-                            class="<?php echo $chipBase.' '.($active ? $chipActive : $chipInactive); ?>"
-                        >
-                            <?php echo html_escape($chip['name']); ?>
-                            <span class="text-sm tabular-nums <?php echo $active ? $countActive : $countInactive; ?>" data-gallery-count><?php echo (int) $chip['count']; ?></span>
-                        </button>
-                    <?php } ?>
-                </div>
-                <p class="sr-only" role="status" data-gallery-status><?php echo (int) $shown; ?> photos shown</p>
+                <?php
+                $chips = array(array('slug' => 'all', 'name' => 'All', 'count' => count($images)));
+                foreach ($categories as $group) {
+                    $chips[] = array(
+                        'slug' => $group['category_slug'],
+                        'name' => $group['category_name'],
+                        'count' => (int) $group['image_count'],
+                    );
+                }
+                $this->load->view('frontend/partials/category_chips', array(
+                    'chips' => $chips,
+                    'active' => $category,
+                    'label' => 'Filter gallery by category',
+                    'noun' => 'photos',
+                    'shown' => $shown,
+                ));
+                ?>
 
                 <ul class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:mt-12 lg:grid-cols-12 lg:gap-5">
                     <?php foreach ($images as $index => $image) { ?>
@@ -126,7 +110,7 @@ foreach ($images as $image) {
                         ?>
                         <li
                             class="reveal group <?php echo $tile['class']; ?>"
-                            data-gallery-category="<?php echo html_escape((string) $image['category_slug']); ?>"
+                            data-filter-item="<?php echo html_escape((string) $image['category_slug']); ?>"
                             <?php echo $index > 0 ? 'style="transition-delay:'.(($index % 6) * 60).'ms"' : ''; ?>
                             <?php echo $visible ? '' : 'hidden'; ?>
                         >

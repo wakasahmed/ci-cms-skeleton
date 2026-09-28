@@ -72,7 +72,17 @@ $textField = function ($name, $label, $type = 'input', $help = '', $required = F
                                                 <option value="<?php echo (int) $cat['cat_id']; ?>"<?php echo in_array((int) $cat['cat_id'], $selected_categories, TRUE) ? ' selected' : ''; ?>><?php echo htmlspecialchars(html_entity_decode((string) $cat['cat_name'], ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?><?php echo $cat['cat_status'] === 'Disable' ? ' (Disabled)' : ''; ?></option>
                                             <?php } ?>
                                         </select>
-                                        <div class="form-text">Categories are shared by both language versions.</div>
+                                        <div class="form-text">The journal shows the first category, following the order in Blog Categories.</div>
+                                    </div>
+                                    <div class="admin-field mb-3 col-md-6">
+                                        <label class="form-label" for="blog_service_id">Related Service</label>
+                                        <select class="form-select select2" name="blog_service_id" id="blog_service_id" aria-describedby="blog_service_id_help">
+                                            <option value="">None</option>
+                                            <?php foreach ($services as $service) { ?>
+                                                <option value="<?php echo (int) $service['service_id']; ?>"<?php echo (int) $form_values['blog_service_id'] === (int) $service['service_id'] ? ' selected' : ''; ?>><?php echo htmlspecialchars(html_entity_decode((string) $service['service_name'], ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8'); ?><?php echo $service['service_status'] === 'Disable' ? ' (Disabled)' : ''; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                        <div class="form-text" id="blog_service_id_help">Optional. Shown as a booking card at the end of the article.</div>
                                     </div>
                                 </div><?php $textField('blog_short_description', 'Short Description', 'textarea', '', TRUE); ?><div class="admin-field mb-4"><label class="form-label" for="blog_text">Blog Contents</label><?php echo $this->ckeditor->editor('blog_text', isset($text_values['blog_text']) ? (string)$text_values['blog_text'] : ''); ?></div><?php
                                 $this->load->view('admin/partials/file_upload', array(
