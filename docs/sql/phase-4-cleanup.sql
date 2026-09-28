@@ -301,7 +301,11 @@ SET
     `address_note` = COALESCE(NULLIF(`address_note`, ''), 'Above the 5.10.15 children''s store'),
     `opening_hours` = COALESCE(
         NULLIF(`opening_hours`, ''),
-        CONCAT('Monday – Friday | 9:00 AM – 5:00 PM', '\n', 'Saturday | 9:00 AM – 2:00 PM')
+        CONCAT(
+            'Monday – Friday | 9:00 AM – 5:00 PM', '\n',
+            'Saturday | 9:00 AM – 2:00 PM', '\n',
+            'Sunday | Closed'
+        )
     ),
     `map_url` = COALESCE(
         NULLIF(`map_url`, ''),

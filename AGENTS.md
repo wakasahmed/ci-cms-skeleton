@@ -22,10 +22,11 @@ Review the existing implementation before making changes. Prefer extending exist
   codes, referrals, tour reports and Plan Your Visit were removed in Phase 2. Do not
   reintroduce them. Their code is readable only from the baseline git tag, as a structural
   reference (see "Manage/admin module standards").
-- **Public site.** The Alam public website was retired in Phase 2. Until the Blossom frontend
-  is built (Phase 5), `Frontend.php` serves a holding page (`views/frontend/holding.php`) for
-  every public URL, and Website Settings > Under Construction is "Yes" locally so robots.txt
-  blocks crawlers and the sitemap is hidden.
+- **Public site.** The Blossom frontend is rendered by `Frontend.php` through
+  `libraries/Frontend_layout.php` (see "Frontend layout"). While Website Settings > Under
+  Construction is "Yes", visitors get `views/frontend/under_construction.php` (503) and
+  signed-in administrators see the real site; robots.txt blocks crawlers and the sitemap is
+  hidden. It stays "Yes" locally until launch.
 - **Removed integrations.** Do not reintroduce Google Cloud Translation, Google Places, the
   WhatsApp Cloud API, or Moyasar payments.
 - **Kept integrations.** reCAPTCHA Enterprise (contact and booking-request forms) and SMTP
@@ -1145,23 +1146,25 @@ D:\wamp64\www\tailwindcss-v4-windows-x64.exe
 ```
 
 The binary lives one level above this project, next to the v3 binary other WAMP projects
-still use, and must never be committed. Do not use the v3 binary
-(`tailwindcss-windows-x64.exe`) for this project. Pin the v4 version in use here once the
-build is set up (Phase 5 of `PROJECT_PLAN.md`), and do not upgrade it as a side effect.
+still use (v3.4.17, used by the Alam project), and must never be committed. Do not use the
+v3 binary (`tailwindcss-windows-x64.exe`) for this project. The pinned version is
+**v4.3.3** (the official `tailwindcss-windows-x64.exe` release asset, the version the
+reference was compiled with); do not upgrade it as a side effect.
 
-v4 is configured in CSS, not in `tailwind.config.js`:
+v4 is configured in CSS; there is no `tailwind.config.js`:
 
-- `assets/frontend/css/src/tailwind.css` holds `@import "tailwindcss";`, the `@source`
-  paths (`application/views/frontend`, `assets/frontend/js`), the `@theme` tokens, and any
-  custom layers.
+- `assets/frontend/css/src/tailwind.css` holds `@import "tailwindcss" source(none);`, the
+  explicit `@source` paths (`application/views/frontend`,
+  `application/helpers/frontend_helper.php`, `assets/frontend/js`), the fonts, the `@theme`
+  tokens, the base and component layers, and the reference's server-rendering rules
+  (`.reveal`, `header.ci-scrolled`, `.ci-mobile-menu`). `source(none)` keeps Tailwind from
+  scanning `/ci3/` and the admin area.
 - The theme tokens come from `ci3/assets/css/site.css`: colors (`background`, `foreground`,
   `foreground-soft`, `muted`, `muted-foreground`, `border`, `border-strong`, `primary`,
   `primary-cta`, `primary-ink`, `primary-strong`, `primary-foreground`, `secondary`,
   `secondary-light`, `accent`, `plum`, `plum-deep`, `plum-deeper`, `lilac`, `petal`,
   `destructive`), fonts (`display`: Fraunces, `sans`: Plus Jakarta Sans) and easing
   variables. Keep token names identical to the reference so its markup works unchanged.
-- The root `tailwind.config.js` belongs to the old Alam design system and is removed when
-  the v4 build is introduced.
 
 `assets/frontend/css/app.css` is **generated. Never edit it by hand.** Every style change goes
 into `assets/frontend/css/src/tailwind.css`, then gets rebuilt:
@@ -1181,9 +1184,33 @@ Tailwind only emits classes it finds in the `@source` paths. A new class in a vi
 been recompiled does not exist in the stylesheet. Never build a class name by string
 concatenation.
 
-Frontend third-party assets are hosted locally under `assets/frontend/` (the versions used by
-the reference): jQuery 4.0.0, Swiper 14 (home hero only), PhotoSwipe 5 (gallery only) and
-Font Awesome Free 7. Load page-specific libraries only on the pages that need them.
+Frontend third-party assets are hosted locally under `assets/frontend/vendor/` (the versions
+used by the reference): jQuery 4.0.0, Swiper 14.0.7 (home hero only), PhotoSwipe 5.4.4
+(gallery only) and Font Awesome Free 7.3.1. Load page-specific libraries only on the pages
+that need them, through the `vendors` option of `Frontend_layout::render()`.
+
+## Frontend layout
+
+Every public page renders through `Frontend_layout::render($view, $data, $page)`:
+
+- `views/frontend/layout/head.php`, `header.php` and `footer.php` wrap the page view, which
+  outputs its own `<main id="main">`. Do not duplicate the header or footer in a page.
+- The layout loads Website Settings once per request and passes `$site` (name, phone,
+  address lines, address note, opening hours, map link, logos, socials, booking URL),
+  `$navigation` (top level of Manage > Menu) and `$footer` (featured services, Manage > Foot
+  "one" and "two") to every view.
+- Head values come from `Frontend_layout::pageMeta()` (a Web Pages record, or any row with
+  the same SEO columns) through `Frontend_seo`. Pass `$page['meta']`, not ad-hoc meta tags.
+- Page scripts go in `$page['scripts']` (loaded after jQuery and `site.js`); vendor bundles
+  in `$page['vendors']` (`swiper`, `photoswipe`).
+- Shared markup lives in `views/frontend/partials/` (`breadcrumb`, `cta_band` with the
+  `card` and `inline` variants). Add card partials there when a page first needs them.
+- `helpers/frontend_helper.php` holds the reference button classes
+  (`frontend_button_class()`), `frontend_phone_href()`, `frontend_opening_hours()` and
+  `frontend_lines()`. Escape output with `html_escape()`.
+- Each module listing (`/services`, `/artists`, `/gallery`, `/offers`, `/blog`, `/about`,
+  `/faq`, `/contact`, legal pages) has a Web Pages record whose slug is its URL. The record
+  supplies the page's SEO fields and its place in the header and footer menus.
 
 The admin area (`assets/admin/css/admin.css`) is plain CSS/Bootstrap and is not part of this
 Tailwind build.

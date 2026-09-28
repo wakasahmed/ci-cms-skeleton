@@ -438,11 +438,51 @@ Notes from this phase:
 **Done when:** the header, footer and an empty home page render with the Blossom design at
 desktop and mobile widths.
 
+**Status: done (2026-09-28), branch `phase-5-frontend-foundation`.** The Tailwind v4.3.3
+CLI was installed at `D:\wamp64\www\tailwindcss-v4-windows-x64.exe` (the existing
+`tailwindcss-windows-x64.exe` is v3.4.17) and the theme, fonts, base, components and CI3
+rules were rebuilt into `assets/frontend/css/src/tailwind.css`. The reference fonts, logos,
+jQuery 4.0.0, Swiper 14.0.7, PhotoSwipe 5.4.4 and Font Awesome 7.3.1 are under
+`assets/frontend/`; the Alam JS, vendor files, `images/alam`, `tailwind.config.js` and the
+unused `Frontend_presenter` were removed. `Frontend_layout` renders every page between the
+head, header and footer partials; `site.js` was ported. The header and footer were compared
+with `/ci3/` at 1440px and 390px (headless Chrome), and the mobile menu was exercised.
+`docs/sql/phase-5-content.sql` (content only) renamed the About and FAQ slugs to `about` and
+`faq`, added Web Pages records for Services, Artists, Gallery, Offers and Terms, set up the
+header menu and Foot menus one (Salon) and two (legal), and set the Blossom logos, address,
+opening hours (with Sunday), intro and footer headings.
+
+Changes to the plan made during this phase:
+
+- **Routes and card partials move to Phase 6.** Only `/` (an empty shell with the CTA band)
+  and the 404 page exist. Each route of §1.2, its card partial (`service_card`,
+  `artist_card`, …) and its part of `interactions.js` are added with the page that uses
+  them, so nothing is built without the data it renders. Until then, those URLs return the
+  Blossom 404 page.
+- **The holding page became the under-construction page.** Instead of deleting it, the
+  Alam rule was restored: with Under Construction "Yes", visitors get
+  `views/frontend/under_construction.php` (503, noindex) and signed-in administrators see
+  the real site. It stays "Yes" until launch.
+- **Kept:** `assets/frontend/xsl/sitemap.xsl` (the sitemap still uses it), the Alam
+  section definitions in `config/content_sections.php` (replaced page by page in Phase 6,
+  when the Blossom sections are defined), and the upload folders of the dropped tour
+  modules (Phase 9).
+- **Footer mapping:** first column = featured services (Services > Featured, heading
+  `foot_col_1`), second = Foot menu one (`foot_col_2`), third = Website Settings contact
+  details (`foot_col_4`); legal links = Foot menu two. Footer links use the page's menu
+  name, so "About us", "Our artists" and "All services" read "About", "Artists" and
+  "Services".
+- The optional sticky logo in Website Settings has no counterpart in the design and is not
+  used; the default sharing image is now `assets/frontend/images/brand/og-default.jpg`.
+
 ---
 
 ## Phase 6 — Frontend pages on CMS data
 
 Convert one page at a time; compare against the `/ci3/` version at desktop and mobile.
+Each page brings its own route, its card partials, its part of `interactions.js` and (where
+it uses Web Page Sections) its Blossom section definitions in
+`config/content_sections.php`, replacing the Alam ones (moved here from Phase 5).
 
 1. Home — Slider (hero), Web Page Sections (intro blocks, how-booking-works, location),
    featured Services, Gallery (latest), Artists, featured Offers, Customer Reviews,

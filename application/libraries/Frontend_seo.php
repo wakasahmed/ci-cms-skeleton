@@ -27,7 +27,7 @@ class Frontend_seo
     const LANGUAGE = 'en';
 
     /** Site-wide sharing image, used only when a record has no usable image. */
-    const DEFAULT_IMAGE = 'assets/frontend/images/alam/og-default.png';
+    const DEFAULT_IMAGE = 'assets/frontend/images/brand/og-default.jpg';
 
     /** Lets search engines show large image previews and full snippets. */
     const ROBOTS_SNIPPET_DIRECTIVES = 'max-image-preview:large, max-snippet:-1, max-video-preview:-1';

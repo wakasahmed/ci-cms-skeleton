@@ -31,9 +31,9 @@ application/logs/*
 /ci3/
 
 # Admin-uploaded content. Keep the folders (index.html) but not the uploaded files.
-# images/alam/ holds the old theme's static imagery and is removed in Phase 5.
+# images/brand/ holds the Blossom fallback logos, which are part of the theme.
 /assets/frontend/images/*/*
 !/assets/frontend/images/*/index.html
-!/assets/frontend/images/alam/**
+!/assets/frontend/images/brand/**
 /assets/uploads/*/*
 !/assets/uploads/*/index.html

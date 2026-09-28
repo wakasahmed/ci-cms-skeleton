@@ -1,4 +1,0 @@
-Alpine.js 3.17.4
-Source: https://registry.npmjs.org/alpinejs/-/alpinejs-3.17.4.tgz (dist/cdn.min.js, unmodified, renamed alpine.min.js)
-Integrity: sha512-N2gsr+58XVUt7OAPKnUGiKPDtkd+xbSGTae8C8IJxeRdkkhBJPIautkJ+qcwb7lcjJ/QK3/CPVIbN20JPvtK7A==
-License: MIT (see LICENSE)

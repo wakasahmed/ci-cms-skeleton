@@ -1,9 +1,0 @@
-Select2 4.0.13
-
-Arabic language file (added for the ar site build):
-  File:   i18n/ar.js
-  Source: https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/i18n/ar.js
-          (github.com/select2/select2 v4.0.13, dist/js/i18n/ar.js)
-  Unmodified. It registers the "select2/i18n/ar" AMD module on Select2's bundled
-  loader, so it must load after select2.min.js. js/select2-init.js passes
-  language: 'ar' and dir: 'rtl' when the page locale is Arabic.

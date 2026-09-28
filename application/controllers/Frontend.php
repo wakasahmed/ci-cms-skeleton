@@ -2,10 +2,13 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Temporary public frontend.
+ * Public website.
  *
- * The Alam tour website was retired in Phase 2 of PROJECT_PLAN.md. Until the
- * Blossom frontend is built (Phase 5), every public URL shows a holding page.
+ * Pages render through Frontend_layout (shared head, header and footer).
+ * The home page is built in Phase 5 as an empty shell; the other pages of
+ * the site map arrive with their CMS data in Phase 6 of PROJECT_PLAN.md,
+ * until then their URLs return the 404 page.
+ *
  * This controller is also the $route['404_override'] target, so unmatched
  * /manage URLs still get the admin-styled 404 page.
  */
@@ -22,34 +25,69 @@ class Frontend extends CI_Controller
         ) {
             $this->renderManageNotFound();
         }
+
+        $this->load->library('frontend_layout');
+
+        if ($this->frontend_layout->isUnderConstruction() && !$this->isAdministrator()) {
+            $this->renderUnderConstruction();
+        }
     }
 
     public function index()
     {
-        $this->renderHoldingPage(200);
+        $this->load->model('Webpage_model');
+        $page = $this->Webpage_model->get_page('id', 1, false, true);
+
+        $this->frontend_layout->render('frontend/home', array(), array(
+            'meta' => $this->frontend_layout->pageMeta(is_array($page) ? $page : array(), base_url()),
+        ));
     }
 
     /**
-     * Target of $route['404_override'] for public URLs.
+     * Target of $route['404_override'] for public URLs, and of show_404()
+     * during a public request (see MY_Exceptions).
      */
     public function error_404()
     {
-        $this->renderHoldingPage(404);
+        $this->output->set_status_header(404);
+
+        $this->frontend_layout->render('frontend/error_404', array(), array(
+            'meta' => array(
+                'page_title' => 'Page not found | '.$this->frontend_layout->setting('website_title'),
+                'robots' => 'noindex, follow',
+            ),
+        ));
     }
 
-    private function renderHoldingPage($statusCode)
+    /**
+     * Signed-in administrators keep browsing the real site while it is under
+     * construction, so they can review pages before launch.
+     */
+    private function isAdministrator()
     {
-        $settings = $this->SqlModel->getSingleRecord('site_settings', array('id' => 1));
-        $settings = is_array($settings) ? $settings : array();
+        return (string) $this->session->userdata('admin_auth') === 'allow';
+    }
 
-        $this->output->set_status_header($statusCode);
+    /**
+     * Serve the under-construction page for every public URL. 503 with
+     * Retry-After tells search engines the outage is temporary. Runs from the
+     * constructor, before the router dispatches, so it must flush and halt
+     * here to avoid a double render.
+     */
+    private function renderUnderConstruction()
+    {
+        $this->output->set_status_header(503);
+        $this->output->set_header('Retry-After: 3600');
+        $this->output->set_header('Cache-Control: no-store');
         $this->output->set_header('X-Robots-Tag: noindex, nofollow');
-        $this->load->view('frontend/holding', array(
-            'site_name' => !empty($settings['website_title']) ? $settings['website_title'] : 'Blossom Ewa Mazur',
-            'phone' => isset($settings['phone']) ? trim((string) $settings['phone']) : '',
-            'address' => isset($settings['address']) ? trim((string) $settings['address']) : '',
-            'is_not_found' => $statusCode === 404,
+
+        $this->frontend_layout->renderStandalone('frontend/under_construction', array(), array(
+            'meta' => array(
+                'page_title' => $this->frontend_layout->setting('website_title'),
+            ),
         ));
+        $this->output->_display();
+        exit;
     }
 
     private function renderManageNotFound()
