@@ -29,7 +29,7 @@ $hasImage = function ($column) use ($imagePath) {
 // the first one or when the server reported an invalid field inside it.
 $sections = array(
     'details' => array('service_category_id', 'service_name', 'service_slug', 'service_summary', 'service_price_from', 'service_price_suffix', 'service_duration_label', 'service_duration_minutes'),
-    'content' => array('service_description', 'service_included', 'service_before_visit', 'service_aftercare'),
+    'content' => array('service_description', 'service_included', 'service_before_visit', 'service_aftercare', 'related_services'),
     'addons' => array('addons'),
     'images' => array('card_image_upload', 'hero_image_upload'),
     'search' => array('page_title', 'meta_description'),
@@ -69,6 +69,18 @@ $panelClass = function ($section) use ($sectionOpen) {
 };
 $currentStatus = isset($tbl_data[$this->tStatus]) ? $tbl_data[$this->tStatus] : 'Enable';
 $selectedCategory = isset($tbl_data['service_category_id']) ? (int) $tbl_data['service_category_id'] : 0;
+
+// Other services grouped by category for the "Often booked with this" select.
+$relatedGroups = array();
+
+foreach ($service_options as $option) {
+    if ((int) $option['service_id'] === $recordId) {
+        continue;
+    }
+
+    $group = $option['category_name'] !== NULL ? $option['category_name'] : 'Uncategorised';
+    $relatedGroups[$group][] = $option;
+}
 $addonRow = function ($label, $price) {
     ?>
     <div class="admin-repeatable-row" data-repeatable-row>
@@ -314,6 +326,37 @@ $addonRow = function ($label, $price) {
                                         <label class="form-label" for="service_aftercare">Looking After It</label>
                                         <textarea rows="4" name="service_aftercare" id="service_aftercare" class="form-control" placeholder="Cuticle oil daily keeps the finish fresh"><?php echo $value('service_aftercare'); ?></textarea>
                                         <div class="form-text">One tip per line.</div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="admin-field mb-3 col-md-6">
+                                        <label class="form-label" for="related_services">Often Booked With This</label>
+                                        <select
+                                            class="form-select select2<?php echo $invalidClass('related_services'); ?>"
+                                            name="related_services[]"
+                                            id="related_services"
+                                            multiple
+                                            data-placeholder="Select services"
+                                        >
+                                            <?php foreach ($relatedGroups as $groupName => $groupServices) { ?>
+                                                <optgroup label="<?php echo htmlspecialchars($groupName, ENT_QUOTES, 'UTF-8'); ?>">
+                                                    <?php foreach ($groupServices as $option) { ?>
+                                                        <option value="<?php echo (int) $option['service_id']; ?>" <?php echo in_array((int) $option['service_id'], $related_services, TRUE) ? 'selected' : ''; ?>>
+                                                            <?php echo htmlspecialchars($option['service_name'], ENT_QUOTES, 'UTF-8'); ?><?php echo $option['service_status'] === 'Disable' ? ' (disabled)' : ''; ?>
+                                                        </option>
+                                                    <?php } ?>
+                                                </optgroup>
+                                            <?php } ?>
+                                        </select>
+                                        <div class="form-text">Up to 6. Shown at the end of the service page, in menu order.</div>
+                                    </div>
+                                    <div class="admin-field mb-3 col-md-6 d-flex align-items-end">
+                                        <div class="form-check">
+                                            <input type="hidden" name="service_show_shapes" value="0">
+                                            <input type="checkbox" name="service_show_shapes" id="service_show_shapes" value="1" class="form-check-input" <?php echo $checked('service_show_shapes'); ?>>
+                                            <label class="form-check-label" for="service_show_shapes">Show "Shapes and finishes"</label>
+                                            <div class="form-text">Edited under Miscellaneous Contents &gt; Nail Shapes &amp; Finishes.</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

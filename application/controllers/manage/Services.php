@@ -29,6 +29,9 @@ class Services extends CI_Controller
     /** Maximum add-on rows per service. */
     private $maxAddons = 20;
 
+    /** Maximum "Often booked with this" services per service. */
+    private $maxRelated = 6;
+
     public function __construct()
     {
         parent::__construct();
@@ -133,6 +136,7 @@ class Services extends CI_Controller
             $this->tStatus => 'Enable',
         );
         $addons = array();
+        $related = array();
 
         if ($isEdit) {
             $record = $this->SqlModel->getSingleRecord($this->tblName, array($this->pKey => (int) $editID));
@@ -145,6 +149,7 @@ class Services extends CI_Controller
             }
 
             $addons = $this->addons((int) $editID);
+            $related = $this->relatedIds((int) $editID);
         }
 
         $postedData = $this->session->flashdata($this->controller.'_data');
@@ -157,6 +162,7 @@ class Services extends CI_Controller
             }
 
             $addons = $this->postedAddonRows($postedData);
+            $related = admin_ids(isset($postedData['related_services']) ? $postedData['related_services'] : array());
         }
 
         $invalidFields = $this->session->flashdata($this->controller.'_invalid');
@@ -168,6 +174,8 @@ class Services extends CI_Controller
             'invalid_fields' => is_array($invalidFields) ? $invalidFields : array(),
             'tbl_data' => $record,
             'addons' => $addons,
+            'related_services' => $related,
+            'service_options' => $this->serviceOptions(),
             'categories' => $this->categories(),
             'description_editor' => $this->descriptionEditor(
                 isset($record[$this->colPrefix.'description']) ? (string) $record[$this->colPrefix.'description'] : ''
@@ -203,6 +211,7 @@ class Services extends CI_Controller
 
         if ($id) {
             $this->syncAddons($id, $posted['addons']);
+            $this->syncRelated($id, $posted['related']);
         }
 
         if (!$id || $this->db->trans_status() === FALSE) {
@@ -244,6 +253,7 @@ class Services extends CI_Controller
 
         if ($updated) {
             $this->syncAddons($editID, $posted['addons']);
+            $this->syncRelated($editID, $posted['related']);
         }
 
         if (!$updated || $this->db->trans_status() === FALSE) {
@@ -388,6 +398,7 @@ class Services extends CI_Controller
 
         if ($newId) {
             $this->syncAddons($newId, $this->addons($sourceId));
+            $this->syncRelated($newId, $this->relatedIds($sourceId));
         }
 
         if (!$newId || $this->db->trans_status() === FALSE) {
@@ -458,6 +469,50 @@ class Services extends CI_Controller
         );
     }
 
+    /**
+     * All services for the "Often booked with this" select, in menu order.
+     */
+    private function serviceOptions()
+    {
+        return $this->db
+            ->select('s.service_id, s.service_name, s.service_status, c.category_name')
+            ->from('services s')
+            ->join('service_categories c', 'c.category_id = s.service_category_id', 'left')
+            ->order_by('c.category_order', 'ASC')
+            ->order_by('s.service_order', 'ASC')
+            ->get()
+            ->result_array();
+    }
+
+    private function relatedIds($serviceId)
+    {
+        $rows = $this->SqlModel->getRecords(
+            'related_service_id',
+            'service_related',
+            'related_service_id',
+            'ASC',
+            array('service_id' => (int) $serviceId)
+        );
+
+        return array_map('intval', array_column($rows, 'related_service_id'));
+    }
+
+    private function syncRelated($serviceId, $relatedIds)
+    {
+        $this->SqlModel->deleteRecord('service_related', array('service_id' => (int) $serviceId));
+
+        foreach ($relatedIds as $relatedId) {
+            if ((int) $relatedId === (int) $serviceId) {
+                continue;
+            }
+
+            $this->SqlModel->insertRecord('service_related', array(
+                'service_id' => (int) $serviceId,
+                'related_service_id' => (int) $relatedId,
+            ));
+        }
+    }
+
     private function imageColumns()
     {
         return array(
@@ -498,6 +553,7 @@ class Services extends CI_Controller
             $this->colPrefix.'before_visit',
             $this->colPrefix.'aftercare',
             $this->colPrefix.'featured',
+            $this->colPrefix.'show_shapes',
             $this->tStatus,
             'page_title',
             'meta_description',
@@ -510,7 +566,8 @@ class Services extends CI_Controller
 
     /**
      * Validates the posted form and returns array('data' => row, 'addons' =>
-     * rows). Redirects back to the form when anything is invalid.
+     * rows, 'related' => service IDs). Redirects back to the form when
+     * anything is invalid.
      */
     private function validatedPost($editID)
     {
@@ -577,6 +634,18 @@ class Services extends CI_Controller
             $messages[] = 'A service can have at most '.$this->maxAddons.' add-ons.';
         }
 
+        // Only other, existing services are kept.
+        $knownServices = array_map('intval', array_column($this->serviceOptions(), 'service_id'));
+        $related = array_values(array_diff(
+            array_intersect(admin_ids($this->input->post('related_services')), $knownServices),
+            array((int) $editID)
+        ));
+
+        if (count($related) > $this->maxRelated) {
+            $invalid[] = 'related_services';
+            $messages[] = 'Choose at most '.$this->maxRelated.' services for "Often booked with this".';
+        }
+
         if (!empty($invalid)) {
             $this->formFailure(implode(' ', array_unique($messages)), $editID, array_unique($invalid));
         }
@@ -604,6 +673,7 @@ class Services extends CI_Controller
             $this->colPrefix.'before_visit' => admin_clean_lines($post($this->colPrefix.'before_visit')),
             $this->colPrefix.'aftercare' => admin_clean_lines($post($this->colPrefix.'aftercare')),
             $this->colPrefix.'featured' => $post($this->colPrefix.'featured') === '1' ? 1 : 0,
+            $this->colPrefix.'show_shapes' => $post($this->colPrefix.'show_shapes') === '1' ? 1 : 0,
             $this->tStatus => in_array($status, array('Enable', 'Disable'), TRUE) ? $status : 'Disable',
             'page_title' => admin_clean_text($post('page_title'), 255),
             'meta_description' => admin_clean_text($post('meta_description'), 500),
@@ -616,6 +686,7 @@ class Services extends CI_Controller
         return array(
             'data' => $data,
             'addons' => $addons,
+            'related' => $related,
         );
     }
 

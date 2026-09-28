@@ -407,9 +407,53 @@ $config['web_page_sections'] = array(
             ),
         ),
     ),
+    // Services (/services). The hero comes from the page's banner fields.
+    37 => array(
+        array(
+            'key' => 'featured_services',
+            'label' => 'Featured Services',
+            'fields' => array(
+                array('key' => 'pre_heading', 'type' => 'text', 'label' => 'Pre-Heading', 'group' => null, 'required' => false, 'layout' => 'half'),
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+            ),
+        ),
+        array(
+            'key' => 'full_menu',
+            'label' => 'Full Menu',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+        array(
+            'key' => 'cta',
+            'label' => 'Call to Action',
+            'fields' => array(
+                array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+                array('key' => 'contents', 'type' => 'textarea', 'label' => 'Contents', 'group' => null, 'required' => false, 'layout' => 'full'),
+            ),
+        ),
+    ),
 );
 
 $config['miscellaneous_content_sections'] = array(
+    // Headings and call to action shared by every service page (/services/{slug}).
+    array(
+        'key' => 'service_page',
+        'label' => 'Service Page',
+        'fields' => array(
+            array('key' => 'included_heading', 'type' => 'text', 'label' => 'What\'s Included Heading', 'group' => 'Details', 'required' => true, 'layout' => 'half'),
+            array('key' => 'before_heading', 'type' => 'text', 'label' => 'Before Your Visit Heading', 'group' => 'Details', 'required' => false, 'layout' => 'half'),
+            array('key' => 'aftercare_heading', 'type' => 'text', 'label' => 'Aftercare Heading', 'group' => 'Details', 'required' => false, 'layout' => 'half'),
+            array('key' => 'addons_heading', 'type' => 'text', 'label' => 'Add-ons Heading', 'group' => 'Add-ons', 'required' => false, 'layout' => 'half'),
+            array('key' => 'addons_note', 'type' => 'text', 'label' => 'Add-ons Note', 'group' => 'Add-ons', 'required' => false, 'layout' => 'full'),
+            array('key' => 'gallery_heading', 'type' => 'text', 'label' => 'Gallery Heading', 'group' => 'Related Content', 'required' => false, 'layout' => 'third'),
+            array('key' => 'artists_heading', 'type' => 'text', 'label' => 'Artists Heading', 'group' => 'Related Content', 'required' => false, 'layout' => 'third'),
+            array('key' => 'related_heading', 'type' => 'text', 'label' => 'Related Services Heading', 'group' => 'Related Content', 'required' => false, 'layout' => 'third'),
+            array('key' => 'cta_heading', 'type' => 'text', 'label' => 'Heading ({service} is replaced by the service name)', 'group' => 'Call to Action', 'required' => true, 'layout' => 'full'),
+            array('key' => 'cta_text', 'type' => 'textarea', 'label' => 'Text', 'group' => 'Call to Action', 'required' => false, 'layout' => 'full'),
+        ),
+    ),
     array(
         'key' => 'get_in_touch',
         'label' => 'Get In Touch',
@@ -611,5 +655,18 @@ $config['miscellaneous_content_sections'] = array(
             array('key' => 'experience', 'type' => 'textarea', 'label' => 'Experience', 'group' => null, 'required' => false, 'layout' => 'half'),
         ),
     ),
-
+    // Shown on the services with "Show shapes and finishes" ticked (Manage > Services).
+    array(
+        'key' => 'nail_shapes_finishes',
+        'label' => 'Nail Shapes & Finishes',
+        'fields' => array(
+            array('key' => 'pre_heading', 'type' => 'text', 'label' => 'Pre-Heading', 'group' => null, 'required' => false, 'layout' => 'half'),
+            array('key' => 'heading', 'type' => 'text', 'label' => 'Heading', 'group' => null, 'required' => true, 'layout' => 'half'),
+            array('key' => 'contents', 'type' => 'textarea', 'label' => 'Introduction', 'group' => null, 'required' => false, 'layout' => 'full'),
+            array('key' => 'shapes_heading', 'type' => 'text', 'label' => 'Heading', 'group' => 'Shapes', 'required' => false, 'layout' => 'half'),
+            array('key' => 'shapes', 'type' => 'textarea', 'label' => 'Shapes (one per line: Name | Description)', 'group' => 'Shapes', 'required' => false, 'layout' => 'full'),
+            array('key' => 'finishes_heading', 'type' => 'text', 'label' => 'Heading', 'group' => 'Finishes', 'required' => false, 'layout' => 'half'),
+            array('key' => 'finishes', 'type' => 'textarea', 'label' => 'Finishes (one per line: Name | Description | #colour)', 'group' => 'Finishes', 'required' => false, 'layout' => 'full'),
+        ),
+    ),
 );

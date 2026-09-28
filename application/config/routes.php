@@ -50,6 +50,10 @@ $route['manage/web-pages/(:num)/sections/save'] = 'manage/web_page_sections/save
 $route['manage/miscellaneous-contents/changestatus/(:num)/(:any)'] = 'manage/miscellaneous_contents/changestatus/$1/$2';
 $route['manage/miscellaneous-contents/(:any)/edit'] = 'manage/miscellaneous_contents/edit/$1';
 $route['manage/miscellaneous-contents/(:any)/save'] = 'manage/miscellaneous_contents/save/$1';
+// Public site (Frontend.php).
+$route['services'] = 'frontend/services';
+$route['services/(:any)'] = 'frontend/service/$1';
+
 $route['404_override'] = 'frontend/error_404';
 $route['translate_uri_dashes'] = TRUE;
 

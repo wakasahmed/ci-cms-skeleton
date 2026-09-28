@@ -33,11 +33,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 <ul class="relative flex items-center gap-8">
                     <?php foreach ($navigation as $item) { ?>
                         <li>
-                            <a
-                                class="block py-2 text-[1.0625rem] transition-colors duration-200 font-medium text-foreground-soft hover:text-primary-ink"
-                                href="<?php echo html_escape($item['url']); ?>"
-                                <?php echo $item['current'] ? 'aria-current="page"' : ''; ?>
-                            ><?php echo html_escape($item['label']); ?></a>
+                            <?php if ($item['current']) { ?>
+                                <a
+                                    aria-current="page"
+                                    class="block py-2 text-[1.0625rem] transition-colors duration-200 font-semibold text-primary-ink"
+                                    href="<?php echo html_escape($item['url']); ?>"
+                                ><?php echo html_escape($item['label']); ?></a>
+                            <?php } else { ?>
+                                <a
+                                    class="block py-2 text-[1.0625rem] transition-colors duration-200 font-medium text-foreground-soft hover:text-primary-ink"
+                                    href="<?php echo html_escape($item['url']); ?>"
+                                ><?php echo html_escape($item['label']); ?></a>
+                            <?php } ?>
                         </li>
                     <?php } ?>
                 </ul>

@@ -31,9 +31,11 @@ UPDATE `pages` SET `page_name` = 'Journal', `menu_name` = 'Journal' WHERE `page_
 
 -- 2. Web Pages for the module listings and the terms page --------------------
 -- Each listing page carries its own SEO fields and menu placement, the same
--- way the Blog page does for /blog.
+-- way the Blog page does for /blog. The IDs are fixed because
+-- config/content_sections.php keys page sections by page ID.
 
 INSERT INTO `pages` (
+    `page_id`,
     `page_slug`, `page_name`, `menu_name`, `page_title`, `page_text`,
     `robots_index`, `robots_follow`, `show_top_banner`, `banner_overlay`,
     `page_added`, `page_updated`, `page_year`, `page_month`, `page_month_year`,
@@ -41,20 +43,24 @@ INSERT INTO `pages` (
     `menu_order`, `menu_parent_id`, `menu_active`, `page_order`, `page_parent_id`
 )
 SELECT
+    `new_pages`.`id`,
     `new_pages`.`slug`, `new_pages`.`name`, `new_pages`.`name`, '', '',
     1, 1, 0, 'No',
     NOW(), NOW(), YEAR(NOW()), MONTH(NOW()), DATE_FORMAT(NOW(), '%M %Y'),
     'Published', NOW(), NOW(), 0,
     0, 0, 0, 0, 0
 FROM (
-    SELECT 'services' AS `slug`, 'Services' AS `name`
-    UNION ALL SELECT 'artists', 'Artists'
-    UNION ALL SELECT 'gallery', 'Gallery'
-    UNION ALL SELECT 'offers', 'Offers'
-    UNION ALL SELECT 'terms', 'Terms & Conditions'
+    SELECT 37 AS `id`, 'services' AS `slug`, 'Services' AS `name`
+    UNION ALL SELECT 38, 'artists', 'Artists'
+    UNION ALL SELECT 39, 'gallery', 'Gallery'
+    UNION ALL SELECT 40, 'offers', 'Offers'
+    UNION ALL SELECT 41, 'terms', 'Terms & Conditions'
 ) AS `new_pages`
 WHERE NOT EXISTS (
-    SELECT 1 FROM `pages` WHERE `pages`.`page_slug` = `new_pages`.`slug`
+    SELECT 1
+    FROM `pages`
+    WHERE `pages`.`page_slug` = `new_pages`.`slug`
+        OR `pages`.`page_id` = `new_pages`.`id`
 );
 
 -- 3. Header menu (Manage > Menu) ---------------------------------------------

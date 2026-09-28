@@ -80,6 +80,55 @@ if (!function_exists('frontend_opening_hours')) {
     }
 }
 
+if (!function_exists('frontend_price')) {
+    /** A złoty amount for display: "80 zł", "80.50 zł". Returns '' for an empty amount. */
+    function frontend_price($amount)
+    {
+        if ($amount === NULL || $amount === '' || !is_numeric($amount)) {
+            return '';
+        }
+
+        $amount = (float) $amount;
+        $formatted = floor($amount) == $amount
+            ? number_format($amount, 0, '.', ' ')
+            : number_format($amount, 2, '.', ' ');
+
+        return $formatted.' zł';
+    }
+}
+
+if (!function_exists('frontend_service_price')) {
+    /** A service's "from" price with its suffix ("from 20 zł / nail"), or '' when it has none. */
+    function frontend_service_price(array $service)
+    {
+        $price = frontend_price(isset($service['service_price_from']) ? $service['service_price_from'] : NULL);
+        if ($price === '') {
+            return '';
+        }
+
+        $suffix = isset($service['service_price_suffix']) ? trim((string) $service['service_price_suffix']) : '';
+
+        return 'from '.$price.($suffix !== '' ? ' '.$suffix : '');
+    }
+}
+
+if (!function_exists('frontend_split_lines')) {
+    /**
+     * "Name | Description" lines (Miscellaneous Contents lists) as arrays of
+     * trimmed parts, skipping blank lines.
+     */
+    function frontend_split_lines($value)
+    {
+        $rows = array();
+
+        foreach (frontend_lines($value) as $line) {
+            $rows[] = array_map('trim', explode('|', $line));
+        }
+
+        return $rows;
+    }
+}
+
 if (!function_exists('frontend_lines')) {
     /** Non-empty, trimmed lines of a multi-line setting such as the address. */
     function frontend_lines($value)
