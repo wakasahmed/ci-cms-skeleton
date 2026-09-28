@@ -964,8 +964,9 @@ The CMS and the website are English only.
 - The translation stack (Google Cloud Translation, translation jobs and cron, translation
   badges, language switchers, locale tabs) and the Countries module were removed in Phase 3.
   Do not reintroduce them.
-- The `_ar` columns and `ar` section-field rows still exist in the database until the Phase 4
-  SQL runs. No code reads or writes them; never add code that does.
+- The `_ar` columns, `ar` section-field rows and retired tables were dropped by the Phase 4
+  SQL (`docs/sql/phase-4-cleanup.sql`). `ci_cms` still has them; never copy schema or data
+  back from it.
 - Web page section and miscellaneous content fields keep their `locale` column. Every read
   and write uses the single `en` locale from `config/content_sections.php`.
 - The admin "Saving..." state is set by the shared `.validate` submit handler in `admin.js`

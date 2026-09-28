@@ -169,6 +169,51 @@ $sectionFooter = function () {
                         </div>
                     </div>
                     <div class="row">
+                        <div class="admin-field mb-3 col-md-6">
+                            <label class="form-label" for="address_note">Address Note</label>
+                            <input
+                                type="text"
+                                name="address_note"
+                                id="address_note"
+                                maxlength="255"
+                                value="<?php echo $value('address_note'); ?>"
+                                class="form-control<?php echo $isInvalid('address_note') ? ' is-invalid' : ''; ?>"
+                                placeholder="Above the 5.10.15 children's store"
+                                aria-describedby="address_note_help"
+                            >
+                            <div class="form-text" id="address_note_help">A short landmark shown under the address.</div>
+                        </div>
+                        <div class="admin-field mb-3 col-md-6">
+                            <label class="form-label" for="map_url">Map Link</label>
+                            <input
+                                type="url"
+                                name="map_url"
+                                id="map_url"
+                                maxlength="500"
+                                value="<?php echo $value('map_url'); ?>"
+                                class="form-control<?php echo $isInvalid('map_url') ? ' is-invalid' : ''; ?>"
+                                placeholder="https://maps.google.com/?q=..."
+                                aria-describedby="map_url_help"
+                                dir="ltr"
+                            >
+                            <div class="form-text" id="map_url_help">Opened by the "Open in Maps" buttons.</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="admin-field mb-3">
+                            <label class="form-label" for="opening_hours">Opening Hours</label>
+                            <textarea
+                                name="opening_hours"
+                                id="opening_hours"
+                                rows="4"
+                                class="form-control<?php echo $isInvalid('opening_hours') ? ' is-invalid' : ''; ?>"
+                                placeholder="Monday – Friday | 9:00 AM – 5:00 PM"
+                                aria-describedby="opening_hours_help"
+                            ><?php echo $value('opening_hours'); ?></textarea>
+                            <div class="form-text" id="opening_hours_help">One day group per line, written as <code>Days | Hours</code>.</div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="admin-field mb-0 col-md-6">
                             <label class="form-label is-required" for="phone">Phone</label>
                             <input type="tel" name="phone" id="phone" value="<?php echo $value('phone'); ?>" class="form-control intl-phone<?php echo $isInvalid('phone') ? ' is-invalid' : ''; ?>" data-initial-country="sa" data-validate="required,intlPhone" required autocomplete="tel" placeholder="Phone number">

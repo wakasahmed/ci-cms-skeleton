@@ -12,7 +12,7 @@ class Website_settings extends CI_Controller {
 
     private $textColumns = array(
         'website_title', 'website_url', 'under_construction',
-        'address', 'phone', 'email',
+        'address', 'address_note', 'opening_hours', 'map_url', 'phone', 'email',
         'facebook', 'twitter', 'instagram', 'linkedin', 'youtube',
         'notification_emails', 'sender_name', 'sender_email',
         'website_intro', 'foot_col_1', 'foot_col_2',
@@ -25,7 +25,8 @@ class Website_settings extends CI_Controller {
     private $fieldSections = array(
         'website_title' => 'general', 'website_url' => 'general',
         'under_construction' => 'general',
-        'address' => 'contact', 'phone' => 'contact', 'email' => 'contact',
+        'address' => 'contact', 'address_note' => 'contact', 'opening_hours' => 'contact',
+        'map_url' => 'contact', 'phone' => 'contact', 'email' => 'contact',
         'facebook' => 'social', 'twitter' => 'social', 'instagram' => 'social', 'linkedin' => 'social', 'youtube' => 'social',
         'notification_emails' => 'email', 'sender_name' => 'email', 'sender_email' => 'email',
         'website_intro' => 'footer', 'foot_col_1' => 'footer', 'foot_col_2' => 'footer',
@@ -226,6 +227,34 @@ class Website_settings extends CI_Controller {
             $errorSections['contact'] = TRUE;
         }
 
+        if (isset($values['address_note']) && mb_strlen($values['address_note'], 'UTF-8') > 255)
+        {
+            $invalidFields[] = 'address_note';
+            $errorSections['contact'] = TRUE;
+        }
+
+        if (isset($values['opening_hours']))
+        {
+            $openingHours = $this->normalizeOpeningHours($values['opening_hours']);
+            if ($openingHours === FALSE)
+            {
+                $invalidFields[] = 'opening_hours';
+                $errorSections['contact'] = TRUE;
+            }
+            else
+            {
+                $values['opening_hours'] = $openingHours;
+            }
+        }
+
+        if (isset($values['map_url'])
+            && $values['map_url'] !== ''
+            && (strlen($values['map_url']) > 500 || !$this->isValidLooseUrl($values['map_url']))
+        ) {
+            $invalidFields[] = 'map_url';
+            $errorSections['contact'] = TRUE;
+        }
+
         foreach (array('facebook', 'twitter', 'instagram', 'linkedin', 'youtube') as $social)
         {
             if (isset($values[$social]) && !$this->isValidLooseUrl($values[$social]))
@@ -284,6 +313,35 @@ class Website_settings extends CI_Controller {
         }
 
         return array($values, $invalidFields, $errorSections);
+    }
+
+    /**
+     * Opening hours are stored one day group per line as "Days | Hours", for
+     * example "Monday – Friday | 9:00 AM – 5:00 PM". Returns the normalised
+     * text, or FALSE when a line does not have exactly both parts.
+     */
+    private function normalizeOpeningHours($value)
+    {
+        $this->load->helper('admin_input');
+
+        $lines = array();
+        foreach (explode("\n", admin_clean_lines($value, 14, 120)) as $line)
+        {
+            if ($line === '')
+            {
+                continue;
+            }
+
+            $parts = array_map('trim', explode('|', $line));
+            if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '')
+            {
+                return FALSE;
+            }
+
+            $lines[] = $parts[0].' | '.$parts[1];
+        }
+
+        return implode("\n", $lines);
     }
 
     /**

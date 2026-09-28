@@ -382,6 +382,30 @@ Provide `docs/sql/phase-4-cleanup.sql`, reviewed before execution and run only a
   dark/light logos if not covered).
 - Empty sample data (bookings, contact requests, login attempts, sessions) before seeding.
 
+**Status: done (2026-09-28), branch `phase-4-db-cleanup`.** `docs/sql/phase-4-cleanup.sql`
+was rehearsed twice on a copy of `blossom_cms` (the second run is a no-op), the admin was
+smoke-tested against the copy, and the script was then applied to `blossom_cms` after a
+backup (`D:\wamp64\backups\blossom_cms-before-phase-4-20260928-131017.sql`, outside the
+repository). The database now has 34 tables, no `_ar` columns and only `en` section rows.
+
+Notes from this phase:
+
+- The script is idempotent: column, index and foreign-key changes go through temporary
+  `phase4_*` procedures that check `information_schema` first.
+- **Blossom fields added to `site_settings`:** `address_note`, `opening_hours` (one
+  `Days | Hours` line per day group) and `map_url`, seeded from the `/ci3/` contact page and
+  editable under Website Settings > Contact Information. The existing `logo`, `logo_sticky`,
+  `logo_white` and `instagram` columns cover the logos and Instagram link.
+- The tourism licence line was removed from the email footer along with
+  `site_settings.license_number`.
+- The Alam section definitions for the deleted pages 3, 4, 5 and 11 are still in
+  `config/content_sections.php`; the service skips them because the pages no longer exist.
+  They are removed with the other Alam definitions in Phase 5.
+- **Not changed (content, not schema):** the four admin accounts, and the Alam blog posts,
+  FAQs, reviews, slider, page and section content. These are replaced during content seeding.
+  Uploaded Alam image files for the deleted records remain on disk until the Phase 9
+  clean-up.
+
 ---
 
 ## Phase 5 — Frontend foundation

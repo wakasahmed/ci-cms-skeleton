@@ -212,13 +212,9 @@
                     </tr>
                     <tr>
                         <td class="email-footer">
-                            <?php if ($copyright_text !== '' || $license_number !== ''): ?>
+                            <?php if ($copyright_text !== ''): ?>
                                 <p>
                                     <?php echo htmlspecialchars($copyright_text, ENT_QUOTES, 'UTF-8'); ?>
-                                    <?php if ($copyright_text !== '' && $license_number !== ''): ?>
-                                        &nbsp;-&nbsp;
-                                    <?php endif; ?>
-                                    <?php echo htmlspecialchars($license_number, ENT_QUOTES, 'UTF-8'); ?>
                                 </p>
                             <?php endif; ?>
                             <?php if (!empty($footer)): ?>

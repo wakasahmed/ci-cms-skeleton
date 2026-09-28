@@ -168,7 +168,6 @@ class EmailService
         $copyrightText = !empty($settings['copyright_text'])
             ? str_replace('[YEAR]', date('Y'), trim($settings['copyright_text']))
             : '';
-        $licenseNumber = !empty($settings['license_number']) ? trim($settings['license_number']) : '';
 
         $data = array_merge($params, array(
             'site_settings' => $settings,
@@ -180,7 +179,6 @@ class EmailService
                 ? $params['footer']
                 : $this->CI->SqlModel->getFoot('three', TRUE),
             'copyright_text' => $copyrightText,
-            'license_number' => $licenseNumber,
         ));
 
         return $this->CI->load->view('email/english', $data, TRUE);
