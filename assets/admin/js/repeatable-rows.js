@@ -15,6 +15,8 @@
  *
  * Inputs carry [data-repeatable-aria="label"]; each row's inputs are given
  * an accessible name such as "Add-on 2 label" whenever rows change.
+ * A new row fires a bubbling "repeatable:added" event, which admin.js uses
+ * to set up .datepicker and .timepicker inputs inside it.
  */
 (function (window, document) {
     'use strict';
@@ -68,6 +70,11 @@
 
             var newRow = rows().pop();
             var firstField = newRow ? newRow.querySelector('input, select, textarea') : null;
+
+            // Lets shared widgets (date and time pickers in admin.js) set up the new row.
+            if (newRow) {
+                newRow.dispatchEvent(new CustomEvent('repeatable:added', { bubbles: true }));
+            }
 
             if (firstField) {
                 firstField.focus();

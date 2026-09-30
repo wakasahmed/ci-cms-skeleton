@@ -111,6 +111,8 @@ class Artists extends CI_Controller
         $isEdit = ($alert === 'edit');
         $record = array($this->tStatus => 'Enable');
         $assignedServices = array();
+        $hours = array();
+        $timeOff = array();
 
         if ($isEdit) {
             $record = $this->SqlModel->getSingleRecord($this->tblName, array($this->pKey => (int) $editID));
@@ -123,6 +125,8 @@ class Artists extends CI_Controller
             }
 
             $assignedServices = $this->assignedServiceIds((int) $editID);
+            $hours = $this->storedHours((int) $editID);
+            $timeOff = $this->storedTimeOff((int) $editID);
         }
 
         $postedData = $this->session->flashdata($this->controller.'_data');
@@ -134,10 +138,9 @@ class Artists extends CI_Controller
                 }
             }
 
-            $record[$this->colPrefix.'working_days'] = implode(',', $this->validDays(
-                isset($postedData['working_days']) ? $postedData['working_days'] : array()
-            ));
             $assignedServices = admin_ids(isset($postedData['services']) ? $postedData['services'] : array());
+            $hours = $this->postedHoursForForm($postedData);
+            $timeOff = $this->postedTimeOffForForm($postedData);
         }
 
         $invalidFields = $this->session->flashdata($this->controller.'_invalid');
@@ -151,10 +154,14 @@ class Artists extends CI_Controller
             'services' => $this->serviceOptions(),
             'assigned_services' => $assignedServices,
             'days' => $this->days(),
+            'hours' => $hours,
+            'salon_hours' => $this->salonHours(),
+            'time_off' => $timeOff,
             'image_directory' => $this->imageDirectory,
             'page_title' => PROJECT_TITLE.' | '.($isEdit ? 'Edit' : 'Add').' '.$this->moduleNameSingular,
             'userdata' => $this->user_data,
             'useSweetAlert' => TRUE,
+            'useRepeatableRows' => TRUE,
         ));
     }
 
@@ -180,6 +187,8 @@ class Artists extends CI_Controller
 
         if ($id) {
             $this->syncServices($id, $posted['services']);
+            $this->syncHours($id, $posted['hours']);
+            $this->syncTimeOff($id, $posted['time_off']);
         }
 
         if (!$id || $this->db->trans_status() === FALSE) {
@@ -221,6 +230,8 @@ class Artists extends CI_Controller
 
         if ($updated) {
             $this->syncServices($editID, $posted['services']);
+            $this->syncHours($editID, $posted['hours']);
+            $this->syncTimeOff($editID, $posted['time_off']);
         }
 
         if (!$updated || $this->db->trans_status() === FALSE) {
@@ -449,6 +460,9 @@ class Artists extends CI_Controller
         $knownServices = array_map('intval', array_column($this->serviceOptions(), 'service_id'));
         $services = array_values(array_intersect($requestedServices, $knownServices));
 
+        $hours = $this->postedHours($invalid, $messages);
+        $timeOff = $this->postedTimeOff($invalid, $messages);
+
         if (!empty($invalid)) {
             $this->formFailure(implode(' ', $messages), $editID, $invalid);
         }
@@ -469,12 +483,241 @@ class Artists extends CI_Controller
                 $this->colPrefix.'role' => admin_clean_text($this->input->post($this->colPrefix.'role'), 120),
                 $this->colPrefix.'bio' => admin_clean_text($this->input->post($this->colPrefix.'bio'), 5000),
                 $this->colPrefix.'specialties' => admin_clean_lines($this->input->post($this->colPrefix.'specialties'), 12, 80),
-                $this->colPrefix.'working_days' => implode(',', $this->validDays($this->input->post('working_days'))),
+                // Kept in step with artist_hours for the public profile.
+                $this->colPrefix.'working_days' => implode(',', array_keys($hours)),
                 $this->colPrefix.'is_placeholder' => $this->input->post($this->colPrefix.'is_placeholder') === '1' ? 1 : 0,
                 $this->tStatus => in_array($status, array('Enable', 'Disable'), TRUE) ? $status : 'Disable',
             ),
             'services' => $services,
+            'hours' => $hours,
+            'time_off' => $timeOff,
         );
+    }
+
+    /**
+     * Working hours from the form: day code => array(start, end) as 'H:i:s'
+     * or NULL ("the salon's opening/closing time"), for each ticked day.
+     */
+    private function postedHours(array &$invalid, array &$messages)
+    {
+        $days = $this->days();
+        $starts = (array) $this->input->post('hours_start');
+        $ends = (array) $this->input->post('hours_end');
+        $hours = array();
+
+        foreach ($this->validDays($this->input->post('working_days')) as $day) {
+            $start = admin_time_value(isset($starts[$day]) ? $starts[$day] : '');
+            $end = admin_time_value(isset($ends[$day]) ? $ends[$day] : '');
+
+            if ($start === FALSE || $end === FALSE) {
+                $invalid[] = $start === FALSE ? 'hours_start_'.$day : 'hours_end_'.$day;
+                $messages[] = $days[$day].': enter times like 9:00 AM.';
+                continue;
+            }
+
+            if ($start !== NULL && $end !== NULL && $start >= $end) {
+                $invalid[] = 'hours_end_'.$day;
+                $messages[] = $days[$day].': the finish time must be after the start time.';
+                continue;
+            }
+
+            $hours[$day] = array($start, $end);
+        }
+
+        return $hours;
+    }
+
+    /**
+     * Time-off rows from the form. Empty rows are skipped; the end date
+     * defaults to the start date, and times apply to every day of the range.
+     */
+    private function postedTimeOff(array &$invalid, array &$messages)
+    {
+        $fields = $this->timeOffFields();
+        $posted = array();
+
+        foreach ($fields as $field) {
+            $posted[$field] = array_values((array) $this->input->post($field));
+        }
+
+        $rows = array();
+        $count = min(count($posted['time_off_start_date']), 60);
+
+        for ($i = 0; $i < $count; $i++) {
+            $value = function ($field) use ($posted, $i) {
+                return isset($posted[$field][$i]) ? trim((string) $posted[$field][$i]) : '';
+            };
+
+            if (implode('', array_map($value, $fields)) === '') {
+                continue;
+            }
+
+            $label = 'Time off '.(count($rows) + 1).': ';
+            $startDate = admin_date_value($value('time_off_start_date'));
+            $endDate = $value('time_off_end_date') === '' ? $startDate : admin_date_value($value('time_off_end_date'));
+            $startTime = admin_time_value($value('time_off_start_time'));
+            $endTime = admin_time_value($value('time_off_end_time'));
+            $problem = '';
+
+            if (!is_string($startDate) || !is_string($endDate)) {
+                $problem = 'enter the first day off (and the last, if longer).';
+            } elseif ($endDate < $startDate) {
+                $problem = 'the last day must not be before the first.';
+            } elseif ($startTime === FALSE || $endTime === FALSE) {
+                $problem = 'enter times like 9:00 AM.';
+            } elseif (($startTime === NULL) !== ($endTime === NULL)) {
+                $problem = 'enter both times for part of a day, or neither for whole days.';
+            } elseif ($startTime !== NULL && $startTime >= $endTime) {
+                $problem = 'the "until" time must be after the "from" time.';
+            }
+
+            if ($problem !== '') {
+                $invalid[] = 'time_off';
+                $messages[] = $label.$problem;
+                continue;
+            }
+
+            $rows[] = array(
+                'time_off_start_date' => $startDate,
+                'time_off_end_date' => $endDate,
+                'time_off_start_time' => $startTime,
+                'time_off_end_time' => $endTime,
+                'time_off_note' => admin_clean_text($value('time_off_note'), 160),
+            );
+        }
+
+        return $rows;
+    }
+
+    private function timeOffFields()
+    {
+        return array(
+            'time_off_start_date',
+            'time_off_end_date',
+            'time_off_start_time',
+            'time_off_end_time',
+            'time_off_note',
+        );
+    }
+
+    /** Stored working hours for the form: day code => array('start', 'end') as picker text. */
+    private function storedHours($artistId)
+    {
+        $rows = $this->SqlModel->getRecords('*', 'artist_hours', 'hours_day', 'ASC', array('artist_id' => (int) $artistId));
+        $hours = array();
+
+        foreach ($rows as $row) {
+            $hours[$row['hours_day']] = array(
+                'start' => $row['hours_start'] !== NULL ? admin_timepicker_value($row['hours_start']) : '',
+                'end' => $row['hours_end'] !== NULL ? admin_timepicker_value($row['hours_end']) : '',
+            );
+        }
+
+        return $hours;
+    }
+
+    /** Working hours as the administrator typed them, after a validation failure. */
+    private function postedHoursForForm(array $postedData)
+    {
+        $starts = isset($postedData['hours_start']) ? (array) $postedData['hours_start'] : array();
+        $ends = isset($postedData['hours_end']) ? (array) $postedData['hours_end'] : array();
+        $hours = array();
+
+        foreach ($this->validDays(isset($postedData['working_days']) ? $postedData['working_days'] : array()) as $day) {
+            $hours[$day] = array(
+                'start' => isset($starts[$day]) ? (string) $starts[$day] : '',
+                'end' => isset($ends[$day]) ? (string) $ends[$day] : '',
+            );
+        }
+
+        return $hours;
+    }
+
+    /** Stored time off for the form, earliest first, as picker text. */
+    private function storedTimeOff($artistId)
+    {
+        $rows = $this->SqlModel->getRecords(
+            '*',
+            'artist_time_off',
+            'time_off_start_date',
+            'ASC',
+            array('artist_id' => (int) $artistId)
+        );
+
+        return array_map(function ($row) {
+            return array(
+                'time_off_start_date' => admin_datepicker_value($row['time_off_start_date']),
+                'time_off_end_date' => $row['time_off_end_date'] !== $row['time_off_start_date']
+                    ? admin_datepicker_value($row['time_off_end_date'])
+                    : '',
+                'time_off_start_time' => $row['time_off_start_time'] !== NULL ? admin_timepicker_value($row['time_off_start_time']) : '',
+                'time_off_end_time' => $row['time_off_end_time'] !== NULL ? admin_timepicker_value($row['time_off_end_time']) : '',
+                'time_off_note' => (string) $row['time_off_note'],
+            );
+        }, $rows);
+    }
+
+    /** Time-off rows as the administrator typed them, after a validation failure. */
+    private function postedTimeOffForForm(array $postedData)
+    {
+        $fields = $this->timeOffFields();
+        $count = isset($postedData['time_off_start_date']) ? min(count((array) $postedData['time_off_start_date']), 60) : 0;
+        $rows = array();
+
+        for ($i = 0; $i < $count; $i++) {
+            $row = array();
+            foreach ($fields as $field) {
+                $values = isset($postedData[$field]) ? array_values((array) $postedData[$field]) : array();
+                $row[$field] = isset($values[$i]) ? (string) $values[$i] : '';
+            }
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    /** The salon's opening hours per day code, as text, or NULL when closed. */
+    private function salonHours()
+    {
+        $this->load->library('booking_schedule');
+        $format = function ($minute) {
+            return date('g:i A', mktime(0, 0, 0) + $minute * 60);
+        };
+        $hours = array();
+
+        foreach (array_keys($this->days()) as $day) {
+            $open = $this->booking_schedule->hoursFor($day);
+            $hours[$day] = $open !== NULL ? $format($open[0]).' – '.$format($open[1]) : NULL;
+        }
+
+        return $hours;
+    }
+
+    private function syncHours($artistId, array $hours)
+    {
+        $this->SqlModel->deleteRecord('artist_hours', array('artist_id' => (int) $artistId));
+
+        foreach ($hours as $day => $times) {
+            $this->SqlModel->insertRecord('artist_hours', array(
+                'artist_id' => (int) $artistId,
+                'hours_day' => $day,
+                'hours_start' => $times[0],
+                'hours_end' => $times[1],
+            ));
+        }
+    }
+
+    private function syncTimeOff($artistId, array $rows)
+    {
+        $this->SqlModel->deleteRecord('artist_time_off', array('artist_id' => (int) $artistId));
+        $now = date('Y-m-d H:i:s');
+
+        foreach ($rows as $row) {
+            $this->SqlModel->insertRecord('artist_time_off', $row + array(
+                'artist_id' => (int) $artistId,
+                'time_off_added' => $now,
+            ));
+        }
     }
 
     /**

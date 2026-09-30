@@ -44,6 +44,12 @@ class Booking_schedule
         return !empty($this->hours);
     }
 
+    /** array(open minute, close minute) for a day code (mon…sun), or NULL when closed. */
+    public function hoursFor($dayCode)
+    {
+        return isset($this->hours[$dayCode]) ? $this->hours[$dayCode] : NULL;
+    }
+
     /** The bookable window as Y-m-d dates, today first. */
     public function dates()
     {

@@ -18,9 +18,6 @@ $imagePath = $imageFile !== '' ? $image_directory.'/'.$imageFile : '';
 $artistName = isset($tbl_data['artist_name']) && trim((string) $tbl_data['artist_name']) !== ''
     ? trim((string) $tbl_data['artist_name'])
     : 'Artist';
-$workingDays = isset($tbl_data['artist_working_days']) && $tbl_data['artist_working_days'] !== ''
-    ? explode(',', (string) $tbl_data['artist_working_days'])
-    : array();
 $currentStatus = isset($tbl_data[$this->tStatus]) ? $tbl_data[$this->tStatus] : 'Enable';
 $isPlaceholder = isset($tbl_data['artist_is_placeholder']) && (string) $tbl_data['artist_is_placeholder'] === '1';
 
@@ -31,6 +28,30 @@ foreach ($services as $service) {
     $group = $service['category_name'] !== NULL ? $service['category_name'] : 'Uncategorised';
     $serviceGroups[$group][] = $service;
 }
+
+$escape = function ($text) {
+    return htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8');
+};
+
+// One time-off row; also rendered empty inside the repeatable <template>.
+$timeOffRow = function (array $row) use ($escape) {
+    $field = function ($key) use ($row, $escape) {
+        return isset($row[$key]) ? $escape($row[$key]) : '';
+    };
+    ?>
+    <div class="admin-repeatable-row admin-time-off-row" data-repeatable-row>
+        <input type="text" name="time_off_start_date[]" value="<?php echo $field('time_off_start_date'); ?>" class="form-control datepicker" placeholder="First day" autocomplete="off" data-repeatable-aria="first day">
+        <input type="text" name="time_off_end_date[]" value="<?php echo $field('time_off_end_date'); ?>" class="form-control datepicker" placeholder="Last day (if longer)" autocomplete="off" data-repeatable-aria="last day, optional">
+        <input type="text" name="time_off_start_time[]" value="<?php echo $field('time_off_start_time'); ?>" class="form-control timepicker" data-minute-step="15" placeholder="From (part of day)" autocomplete="off" data-repeatable-aria="from time, optional">
+        <input type="text" name="time_off_end_time[]" value="<?php echo $field('time_off_end_time'); ?>" class="form-control timepicker" data-minute-step="15" placeholder="Until" autocomplete="off" data-repeatable-aria="until time, optional">
+        <input type="text" name="time_off_note[]" value="<?php echo $field('time_off_note'); ?>" maxlength="160" class="form-control" placeholder="Note (staff only)" data-repeatable-aria="note">
+        <button type="button" class="btn btn-outline-danger" data-repeatable-remove>
+            <i class="bi bi-trash" aria-hidden="true"></i>
+            <span class="visually-hidden">Remove</span>
+        </button>
+    </div>
+    <?php
+};
 ?>
 <?php $this->load->view('admin/partials/breadcrumb', array(
     'items' => array(
@@ -157,9 +178,16 @@ foreach ($services as $service) {
                 </div>
 
                 <fieldset class="admin-form-choice-group mb-3">
-                    <legend>Usually in the Studio</legend>
-                    <div class="d-flex flex-wrap gap-3">
-                        <?php foreach ($days as $dayKey => $dayLabel) { ?>
+                    <legend>Working Hours</legend>
+                    <div class="admin-hours-grid">
+                        <span class="admin-hours-head" aria-hidden="true">Day</span>
+                        <span class="admin-hours-head" aria-hidden="true">From</span>
+                        <span class="admin-hours-head" aria-hidden="true">Until</span>
+                        <span class="admin-hours-head" aria-hidden="true">Salon hours</span>
+                        <?php foreach ($days as $dayKey => $dayLabel) {
+                            $dayHours = isset($hours[$dayKey]) ? $hours[$dayKey] : NULL;
+                            $salonDay = isset($salon_hours[$dayKey]) ? $salon_hours[$dayKey] : NULL;
+                            ?>
                             <div class="form-check">
                                 <input
                                     type="checkbox"
@@ -167,13 +195,62 @@ foreach ($services as $service) {
                                     id="working_day_<?php echo $dayKey; ?>"
                                     value="<?php echo $dayKey; ?>"
                                     class="form-check-input"
-                                    <?php echo in_array($dayKey, $workingDays, TRUE) ? 'checked' : ''; ?>
+                                    <?php echo $dayHours !== NULL ? 'checked' : ''; ?>
                                 >
                                 <label class="form-check-label" for="working_day_<?php echo $dayKey; ?>"><?php echo $dayLabel; ?></label>
                             </div>
+                            <input
+                                type="text"
+                                name="hours_start[<?php echo $dayKey; ?>]"
+                                id="hours_start_<?php echo $dayKey; ?>"
+                                value="<?php echo $dayHours !== NULL ? $escape($dayHours['start']) : ''; ?>"
+                                class="form-control form-control-sm timepicker<?php echo $invalidClass('hours_start_'.$dayKey); ?>"
+                                data-minute-step="15"
+                                placeholder="Opening"
+                                autocomplete="off"
+                                aria-label="<?php echo $dayLabel; ?> from, optional"
+                            >
+                            <input
+                                type="text"
+                                name="hours_end[<?php echo $dayKey; ?>]"
+                                id="hours_end_<?php echo $dayKey; ?>"
+                                value="<?php echo $dayHours !== NULL ? $escape($dayHours['end']) : ''; ?>"
+                                class="form-control form-control-sm timepicker<?php echo $invalidClass('hours_end_'.$dayKey); ?>"
+                                data-minute-step="15"
+                                placeholder="Closing"
+                                autocomplete="off"
+                                aria-label="<?php echo $dayLabel; ?> until, optional"
+                            >
+                            <span class="admin-hours-salon"><?php echo $salonDay !== NULL ? $escape($salonDay) : 'Closed'; ?></span>
                         <?php } ?>
                     </div>
-                    <div class="form-text">Shown on the artist's profile as a guide; it does not block bookings.</div>
+                    <div class="form-text">
+                        Tick the days this artist works. Leave the times empty to follow the salon's hours, or narrow the day
+                        (for example from 12:00 PM). Online booking offers only these times; leave every day unticked to take
+                        bookings whenever the salon is open. The ticked days are also listed on the artist's profile.
+                    </div>
+                </fieldset>
+
+                <fieldset
+                    class="admin-form-choice-group mb-3<?php echo in_array('time_off', $invalid_fields, TRUE) ? ' is-invalid' : ''; ?>"
+                    data-repeatable
+                    data-repeatable-max="60"
+                    data-repeatable-label="Time off"
+                >
+                    <legend>Time Off</legend>
+                    <div class="admin-repeatable-list" data-repeatable-list><?php foreach ($time_off as $row) {
+                        $timeOffRow($row);
+                    } ?></div>
+                    <p class="admin-repeatable-empty" data-repeatable-empty>No time off planned.</p>
+                    <template data-repeatable-template><?php $timeOffRow(array()); ?></template>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-repeatable-add>
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i> Add time off
+                    </button>
+                    <div class="form-text">
+                        Holidays, training days or appointments. Leave the times empty for whole days; with times, the same
+                        hours are blocked on each day of the range. Online booking skips this time; existing appointments
+                        are not changed.
+                    </div>
                 </fieldset>
 
                 <hr>

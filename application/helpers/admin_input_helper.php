@@ -138,6 +138,46 @@ if (!function_exists('admin_datepicker_value')) {
     }
 }
 
+if (!function_exists('admin_time_value')) {
+    /**
+     * Parses a time from the shared .timepicker control ("09:30 AM", or
+     * typed as "9:30 am" or 24-hour "09:30"). Returns 'H:i:s', NULL for an
+     * empty value, or FALSE when the value is not a time.
+     */
+    function admin_time_value($value)
+    {
+        $value = strtoupper(preg_replace('/\s+/', ' ', trim((string) $value)));
+
+        if ($value === '') {
+            return NULL;
+        }
+
+        if (preg_match('/^(0?[1-9]|1[0-2]):([0-5][0-9]) ?(AM|PM)$/', $value, $match) === 1) {
+            $hour = (int) $match[1] % 12 + ($match[3] === 'PM' ? 12 : 0);
+
+            return sprintf('%02d:%02d:00', $hour, (int) $match[2]);
+        }
+
+        if (preg_match('/^([01]?[0-9]|2[0-3]):([0-5][0-9])(?::[0-5][0-9])?$/', $value, $match) === 1) {
+            return sprintf('%02d:%02d:00', (int) $match[1], (int) $match[2]);
+        }
+
+        return FALSE;
+    }
+}
+
+if (!function_exists('admin_timepicker_value')) {
+    /**
+     * Formats a stored H:i:s time for the shared .timepicker control.
+     */
+    function admin_timepicker_value($value)
+    {
+        $time = DateTime::createFromFormat('!H:i:s', (string) $value);
+
+        return $time !== FALSE ? $time->format('h:i A') : (string) $value;
+    }
+}
+
 if (!function_exists('admin_ids')) {
     /**
      * Converts a posted list of IDs into unique positive integers.

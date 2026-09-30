@@ -6,14 +6,16 @@
  *
  * A visit is a run of back-to-back segments, one per chosen service, in the
  * order chosen. Each segment needs an artist who offers that service (every
- * artist, when a service has none assigned), works that weekday (Manage >
- * Artists > working days) and has nothing else booked for that time. With a
- * chosen artist every segment goes to them; with "any artist" a segment
- * keeps the previous segment's artist when possible, otherwise the first
- * free artist in team order.
+ * artist, when a service has none assigned), works at that time (Manage >
+ * Artists > working hours: the weekday, and the day's start and end when
+ * set) and has nothing else booked for that time. With a chosen artist every
+ * segment goes to them; with "any artist" a segment keeps the previous
+ * segment's artist when possible, otherwise the first free artist in team
+ * order.
  *
- * Every appointment except a Cancelled one holds its artists' time.
- * Booking_schedule supplies the salon's hours, lead time and window.
+ * Every appointment except a Cancelled one holds its artists' time, and so
+ * does the artists' time off. Booking_schedule supplies the salon's hours,
+ * lead time and window.
  */
 class Booking_availability
 {
@@ -22,7 +24,11 @@ class Booking_availability
 
     private $CI;
 
-    /** artist id => array('id', 'name', 'workingDays', 'serviceIds', 'order'). */
+    /**
+     * artist id => array('id', 'name', 'hours', 'serviceIds'). 'hours' maps a
+     * day code to array(start minute, end minute), either one NULL for "the
+     * salon's opening or closing time"; an empty 'hours' means every day.
+     */
     private $artists = NULL;
 
     public function __construct()
@@ -39,7 +45,7 @@ class Booking_availability
         }
 
         $rows = $this->CI->db
-            ->select('a.artist_id, a.artist_name, a.artist_working_days, x.service_id')
+            ->select('a.artist_id, a.artist_name, x.service_id')
             ->from('artists a')
             ->join('artist_services x', 'x.artist_id = a.artist_id', 'left')
             ->where('a.artist_status', 'Enable')
@@ -55,12 +61,27 @@ class Booking_availability
                 $this->artists[$id] = array(
                     'id' => $id,
                     'name' => $row['artist_name'],
-                    'workingDays' => array_values(array_filter(explode(',', (string) $row['artist_working_days']))),
+                    'hours' => array(),
                     'serviceIds' => array(),
                 );
             }
             if ($row['service_id'] !== NULL) {
                 $this->artists[$id]['serviceIds'][] = (int) $row['service_id'];
+            }
+        }
+
+        if (!empty($this->artists)) {
+            $hours = $this->CI->db
+                ->select('artist_id, hours_day, hours_start, hours_end')
+                ->where_in('artist_id', array_keys($this->artists))
+                ->get('artist_hours')
+                ->result_array();
+
+            foreach ($hours as $row) {
+                $this->artists[(int) $row['artist_id']]['hours'][$row['hours_day']] = array(
+                    $row['hours_start'] !== NULL ? Booking_schedule::minute($row['hours_start']) : NULL,
+                    $row['hours_end'] !== NULL ? Booking_schedule::minute($row['hours_end']) : NULL,
+                );
             }
         }
 
@@ -159,7 +180,7 @@ class Booking_availability
             $chosen = NULL;
             foreach ($candidates as $artist) {
                 if ($this->offers($artist, $service)
-                    && (empty($artist['workingDays']) || in_array($dayCode, $artist['workingDays'], TRUE))
+                    && $this->works($artist, $dayCode, $cursor, $end)
                     && $this->isFree($busy, $artist['id'], $date, $cursor, $end)
                 ) {
                     $chosen = $artist;
@@ -214,6 +235,25 @@ class Booking_availability
         return !$assigned || in_array((int) $service['id'], $artist['serviceIds'], TRUE);
     }
 
+    /**
+     * Whether $artist works from $start to $end (minutes) on $dayCode. The
+     * salon's own hours are applied by Booking_schedule; this only narrows
+     * them to the artist's day.
+     */
+    private function works(array $artist, $dayCode, $start, $end)
+    {
+        if (empty($artist['hours'])) {
+            return TRUE;
+        }
+        if (!isset($artist['hours'][$dayCode])) {
+            return FALSE;
+        }
+
+        list($from, $until) = $artist['hours'][$dayCode];
+
+        return ($from === NULL || $start >= $from) && ($until === NULL || $end <= $until);
+    }
+
     private function serviceMinutes(array $service)
     {
         return (int) $service['minutes'] > 0 ? (int) $service['minutes'] : self::DEFAULT_SERVICE_MINUTES;
@@ -237,7 +277,8 @@ class Booking_availability
      * Booked time from $from to $to (Y-m-d): artist id => date => list of
      * array(start minute, end minute). Uses each service row's own artist
      * and start time; requests saved before Phase 8 fall back to the
-     * appointment's artist, time and total length.
+     * appointment's artist, time and total length. Time off is added on top:
+     * the whole day, or the same hours on each day of its range.
      */
     private function busy($from, $to)
     {
@@ -267,6 +308,34 @@ class Booking_availability
                 $start = Booking_schedule::minute($row['appointment_time']);
                 $length = max((int) $row['appointment_duration_minutes'], self::DEFAULT_SERVICE_MINUTES);
                 $busy[(int) $row['appointment_artist_id']][$date][] = array($start, $start + $length);
+            }
+        }
+
+        return $this->addTimeOff($busy, $from, $to);
+    }
+
+    private function addTimeOff(array $busy, $from, $to)
+    {
+        $rows = $this->CI->db
+            ->select('artist_id, time_off_start_date, time_off_end_date, time_off_start_time, time_off_end_time')
+            ->where('time_off_start_date <=', $to)
+            ->where('time_off_end_date >=', $from)
+            ->get('artist_time_off')
+            ->result_array();
+
+        foreach ($rows as $row) {
+            $interval = $row['time_off_start_time'] !== NULL && $row['time_off_end_time'] !== NULL
+                ? array(
+                    Booking_schedule::minute($row['time_off_start_time']),
+                    Booking_schedule::minute($row['time_off_end_time']),
+                )
+                : array(0, 24 * 60);
+
+            $day = new DateTime(max($row['time_off_start_date'], $from));
+            $last = min($row['time_off_end_date'], $to);
+            while ($day->format('Y-m-d') <= $last) {
+                $busy[(int) $row['artist_id']][$day->format('Y-m-d')][] = $interval;
+                $day->modify('+1 day');
             }
         }
 

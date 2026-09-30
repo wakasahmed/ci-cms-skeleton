@@ -393,9 +393,17 @@
     });
   }
 
-  function initializeDateTimeControls() {
+  // Runs on page load for the document and again for each row added by
+  // repeatable-rows.js ("repeatable:added"); inputs already set up are skipped.
+  function initializeDateTimeControls(root) {
     if (!window.flatpickr) { return; }
-    document.querySelectorAll('.datepicker').forEach(function (input) {
+    var scope = root || document;
+    var pending = function (selector) {
+      return Array.prototype.filter.call(scope.querySelectorAll(selector), function (input) {
+        return !input._flatpickr;
+      });
+    };
+    pending('.datepicker').forEach(function (input) {
       var longDate = input.id === 'pub_date' || input.id === 'unpub_date';
       flatpickr(input, {
         allowInput: true,
@@ -403,7 +411,7 @@
         disableMobile: true
       });
     });
-    document.querySelectorAll('.timepicker').forEach(function (input) {
+    pending('.timepicker').forEach(function (input) {
       var useMeridian = input.getAttribute('data-show-meridian') !== 'false';
       var showSeconds = input.getAttribute('data-show-seconds') === 'true';
       flatpickr(input, {
@@ -417,7 +425,7 @@
         disableMobile: true
       });
     });
-    document.querySelectorAll('.daterange').forEach(function (input) {
+    pending('.daterange').forEach(function (input) {
       flatpickr(input, {
         allowInput: true,
         mode: 'range',
@@ -989,6 +997,9 @@
     initializeCkeditorAccordions();
     initializeRequiredSubmitStates();
     initializeDateTimeControls();
+    document.addEventListener('repeatable:added', function (event) {
+      initializeDateTimeControls(event.target);
+    });
     wrapTables();
     enhanceListings();
     initializeImagePreview();
