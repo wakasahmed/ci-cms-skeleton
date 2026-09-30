@@ -10,5 +10,8 @@ RewriteCond %{REQUEST_FILENAME} !-f
 #link
 RewriteCond %{REQUEST_FILENAME} !-l
 
-RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
+# B escapes the path copied into the query string: Apache 2.4.56+ refuses
+# a rewritten query string containing spaces (AH10411, a 403 for searches
+# with more than one word). CodeIgniter reads REQUEST_URI, not "url".
+RewriteRule ^(.+)$ index.php?url=$1 [B,QSA,L]
 

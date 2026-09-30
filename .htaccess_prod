@@ -54,21 +54,23 @@ FileETag None
     # Block direct web access to application internals, VCS data, database
     # dumps and logs. (application/ and system/ also carry their own
     # .htaccess as a second layer.)
-    RewriteRule ^(application|system|database|db|email_logs|cgi-bin|\.git|\.claude|\.vscode)(/|$) - [F,L]
+    RewriteRule ^(application|system|database|db|docs|email_logs|cgi-bin|\.git|\.claude|\.vscode)(/|$) - [F,L]
 
     # Block project/config files that must not be served.
-    RewriteRule ^(composer\.(json|lock)|tailwind\.config\.js|AGENTS\.md|CLAUDE\.md|\.gitignore)$ - [F,L]
+    RewriteRule ^(composer\.(json|lock)|AGENTS\.md|CLAUDE\.md|PROJECT_PLAN\.md|\.gitignore)$ - [F,L]
 
     # Block uploaded scripts from ever executing, even if a bad upload slips
     # through validation. Static uploads are still served normally.
     RewriteRule ^assets/(uploads|ckfinder/userfiles)/.*\.(php[0-9]?|phtml|phar|pl|py|cgi|sh|asp|aspx|jsp)$ - [F,L]
 
     # Front controller: send everything that is not a real file, directory or
-    # symlink to index.php (same rule as the development .htaccess).
+    # symlink to index.php (same rule as the development .htaccess). B escapes
+    # the copied path: Apache 2.4.56+ refuses a rewritten query string with
+    # spaces (AH10411), which broke multi-word admin searches.
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-l
-    RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
+    RewriteRule ^(.+)$ index.php?url=$1 [B,QSA,L]
 </IfModule>
 
 # Deny hidden files and folders (.env, .git, .htpasswd, ...). The ACME

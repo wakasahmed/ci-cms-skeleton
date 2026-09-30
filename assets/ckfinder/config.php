@@ -20,17 +20,116 @@
  */
 function CheckAuthentication()
 {
-	// WARNING : DO NOT simply return "true". By doing so, you are allowing
-	// "anyone" to upload and list the files in your server. You must implement
-	// some kind of session validation here. Even something very simple as...
+    static $allowed = null;
 
-	// return isset($_SESSION['IsAuthorized']) && $_SESSION['IsAuthorized'];
+    if ($allowed === null) {
+        $allowed = blossomAdminSignedIn();
+    }
 
-	// ... where $_SESSION['IsAuthorized'] is set to "true" as soon as the
-	// user logs in your system. To be able to use session variables don't
-	// forget to add session_start() at the top of this file.
+    return $allowed;
+}
 
-	return true;
+/**
+ * TRUE when the request carries the session of a signed-in, enabled CMS
+ * administrator. CKFinder runs outside CodeIgniter, so this repeats the
+ * admin area's check (SqlModel::authAdmin()) against CodeIgniter's
+ * database session: the session cookie and settings come from
+ * application/config/config.php, the database from the environment's
+ * constants file.
+ */
+function blossomAdminSignedIn()
+{
+    $root = dirname(__DIR__, 2) . '/';
+    $environment = isset($_SERVER['CI_ENV']) ? (string) $_SERVER['CI_ENV'] : 'development';
+    if (preg_match('/^[a-z]+$/', $environment) !== 1) {
+        return false;
+    }
+
+    // The CodeIgniter config files exit unless BASEPATH is defined.
+    defined('BASEPATH') OR define('BASEPATH', $root . 'system/');
+
+    $constantsFile = $root . 'application/config/' . $environment . '/constants.php';
+    if (!is_file($constantsFile)) {
+        return false;
+    }
+    require_once $constantsFile;
+
+    $config = array();
+    require $root . 'application/config/config.php';
+
+    $cookieName = $config['cookie_prefix'] . $config['sess_cookie_name'];
+    $sessionId = isset($_COOKIE[$cookieName]) ? (string) $_COOKIE[$cookieName] : '';
+    if ($config['sess_driver'] !== 'database'
+        || preg_match('/^[0-9a-zA-Z,-]{22,256}$/', $sessionId) !== 1
+        || !defined('DB_HOSTNAME')
+        || !defined('DB_DATABASE')
+    ) {
+        return false;
+    }
+
+    mysqli_report(MYSQLI_REPORT_OFF);
+    $db = @new mysqli(DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+    if ($db->connect_errno) {
+        return false;
+    }
+    $db->set_charset('utf8mb4');
+
+    $sql = 'SELECT `data` FROM `' . str_replace('`', '', $config['sess_save_path']) . '` WHERE `id` = ?';
+    $types = 's';
+    $params = array($sessionId);
+    if (!empty($config['sess_match_ip'])) {
+        $sql .= ' AND `ip_address` = ?';
+        $types .= 's';
+        $params[] = isset($_SERVER['REMOTE_ADDR']) ? (string) $_SERVER['REMOTE_ADDR'] : '';
+    }
+    if ((int) $config['sess_expiration'] > 0) {
+        $sql .= ' AND `timestamp` > ?';
+        $types .= 'i';
+        $params[] = time() - (int) $config['sess_expiration'];
+    }
+
+    $data = blossomFetchValue($db, $sql, $types, $params);
+
+    // Session data uses PHP's session format: key|serialized value;...
+    $adminId = 0;
+    if ($data !== null
+        && preg_match('/(?:^|[;}])admin_auth\|s:5:"allow";/', $data) === 1
+        && preg_match('/(?:^|[;}])admin_id\|(?:s:\d+:"(\d+)"|i:(\d+));/', $data, $match) === 1
+    ) {
+        $adminId = (int) ($match[1] !== '' ? $match[1] : $match[2]);
+    }
+
+    $allowed = $adminId > 0 && blossomFetchValue(
+        $db,
+        "SELECT `id` FROM `admin_users` WHERE `id` = ? AND `status` = 'Enable'",
+        'i',
+        array($adminId)
+    ) !== null;
+
+    $db->close();
+
+    return $allowed;
+}
+
+/** The first column of the first row of a prepared query, or NULL. */
+function blossomFetchValue(mysqli $db, $sql, $types, array $params)
+{
+    $statement = $db->prepare($sql);
+    if ($statement === false) {
+        return null;
+    }
+
+    $statement->bind_param($types, ...$params);
+    $value = null;
+    if ($statement->execute()) {
+        $statement->bind_result($value);
+        if (!$statement->fetch()) {
+            $value = null;
+        }
+    }
+    $statement->close();
+
+    return $value === null ? null : (string) $value;
 }
 
 // LicenseKey : Paste your license key here. If left blank, CKFinder will be

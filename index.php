@@ -37,6 +37,7 @@ switch (ENVIRONMENT)
 	break;
 
 	case 'testing':
+	case 'staging':
 	case 'production':
 		ini_set('display_errors', 0);
 		if (PHP_VERSION_ID >= 80400)

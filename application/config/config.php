@@ -251,7 +251,7 @@ $config['encryption_key'] = APP_ENCRYPTION_KEY;
 |
 */
 $config['sess_driver'] = 'database';
-$config['sess_cookie_name'] = 'alam_al_munawara';
+$config['sess_cookie_name'] = 'blossom_session';
 $config['sess_samesite'] = 'Lax';
 $config['sess_expiration'] = 43200;
 $config['sess_save_path'] = 'ci_sessions';
@@ -305,8 +305,8 @@ $config['global_xss_filtering'] = FALSE;
 | 'csrf_expire' = The number in seconds the token should expire.
 */
 $config['csrf_protection'] = FALSE;
-$config['csrf_token_name'] = 'csrf_alam_al_munawara';
-$config['csrf_cookie_name'] = 'csrf_cookie_alam_al_munawara';
+$config['csrf_token_name'] = 'csrf_blossom';
+$config['csrf_cookie_name'] = 'csrf_cookie_blossom';
 $config['csrf_expire'] = 7200;
 $config['csrf_regenerate'] = TRUE;
 $config['csrf_exclude_uris'] = array();
