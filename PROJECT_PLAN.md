@@ -723,6 +723,102 @@ widths.
 - Production: `.htaccess_prod`, production database config, HTTPS base URL, SMTP
   credentials, reCAPTCHA production keys, cron jobs (none expected unless Phase 8).
 
+**Status: clean-up done (2026-09-30), branch `phase-9-qa-cleanup`; the signed-in QA and the
+production set-up are still open.**
+
+- **Checks.** `php -l` passes on all 1,299 tracked application PHP files and `node --check`
+  on the 27 project JS files. The leftover search finds nothing in the code apart from the
+  Artists controller's note on where it was ported from, and nothing in the `blossom_cms`
+  text columns.
+- **Security.** CKFinder (`assets/ckfinder/config.php`) let anyone list, upload, rename and
+  delete files in `assets/uploads/`: `CheckAuthentication()` returned `true`. It now allows
+  only a signed-in, enabled administrator, read from CodeIgniter's database session (the
+  same cookie, IP match, expiry and `admin_users` check as the admin area). Tested with
+  anonymous, forged, signed-out, unknown-admin, other-IP and expired sessions. The Alam
+  reCAPTCHA demo page (`/recaptcha-enterprise`, whose public `verify` endpoint created
+  billable assessments) was removed with its route and robots line.
+- **Configuration.** The session and CSRF cookie names no longer use the Alam name
+  (`blossom_session`; signed-in administrators are signed out once). `index.php` accepts
+  `CI_ENV=staging` (it returned "environment not set correctly"). `.htaccess_prod` also
+  blocks `docs/` and `PROJECT_PLAN.md`.
+- **Dead code.** Removed the tour-era admin CSS (Guide Availability, vehicle prices, tour
+  image upload, booking detail cards, reports and their print rules, itinerary action),
+  the unused multiselect sorter (`selected-items-sort.js`, `$useSortableJs`), the
+  itinerary and report-screen branches in `admin.js`, the payment-link copy handler in
+  `custom.js`, the legacy `images/…` path in `Frontend_seo::imagePath()`, and the
+  CKEditor and CKFinder sample folders.
+- **Files.** Deleted `/ci3/` and the Alam uploads: the attractions, experiences, guides,
+  tour-guide-licenses, tour-guides, tour-images, tour-itineraries, tours and vehicles
+  folders, 163 unreferenced Alam images in the folders still in use (all dated before the
+  baseline), and the Alam CKFinder uploads and thumbnails (the three images used by the
+  journal posts were kept). `assets/` went from 151 MB to 29 MB. `assets/frontend/xsl` was
+  kept: it is the sitemap's stylesheet.
+
+- **Browser QA (2026-09-30, Chrome, with an administrator session).** All 24 admin
+  screens and 45 public URLs (every page, service, artist and journal post, the category
+  filters, the booking pre-selections, search and the legal pages) return 200 with no PHP
+  errors or console exceptions; unknown URLs return the 404 page, and the sitemap and
+  llms.txt stay hidden while Under Construction is on. No page scrolls sideways at 390px
+  or 768px (public and admin). Every public page has one `<h1>`, the skip link, `#main`
+  and `alt` on every image; the skip link appears on focus and controls show a focus
+  ring. The menu manager (SortableJS), the blog editor (CKEditor, and CKFinder with the
+  new session check) and Select2 load. Validation: the contact form marks empty and
+  malformed fields and keeps the button enabled; the booking wizard keeps Continue
+  disabled until a service is chosen and loads 21 days (Sundays closed) with times that
+  follow the lead time; an empty service form marks its required fields; Website Settings
+  opens the collapsed section of an empty required field and focuses it. Only blocked
+  submissions were tried, so nothing was saved or emailed.
+
+- **Saving flows (2026-09-30, emails captured by the local mail log in `email_logs/`).**
+  Contact form: request saved, salon notification and client reply (template 1) logged
+  with every short tag filled. Booking: BLM-3849 saved as Confirmed with its service,
+  artist and start time, the salon "New booking" and client "confirmed" (template 3,
+  with the schedule) emails logged, and the artist's overlapping times removed from
+  `/book/availability`. Manage > Appointments: internal note added; Cancelled sent
+  template 4 and freed the time. Services: duplicate (disabled copy, unique slug), edit
+  (Saving… state), status toggle, bulk delete with no rows left behind. Gallery: Dropzone
+  upload (random file name, caption from the file name), image replacement (old file and
+  thumbnails removed), drag-sort request saved and restored, single delete removed the
+  file. Contact Requests: delete and its empty state. All test records were removed
+  afterwards; the appointment through SQL, as appointments have no delete action.
+- **Fixed during QA.** Multi-word admin searches returned Apache's 403: Apache 2.4.56+
+  refuses a rewritten query string that contains spaces (AH10411), and the front
+  controller copied the path into `index.php?url=`. Both `.htaccess` files now use the
+  `B` flag (CodeIgniter reads `REQUEST_URI`, so nothing else changes). Saving Website
+  Settings stores the phone as `+48512129654`, which the site then printed unspaced;
+  `frontend_phone_display()` now formats it (`+48 512 129 654`) in the layout and
+  llms.txt, while `tel:` links and structured data keep the compact form.
+
+- **Remaining modules (2026-09-30).** Add, edit and delete were run with labelled test
+  data on Artists, Offers, Blog Categories, Blogs (with an image upload), FAQ Categories,
+  FAQs, Customer Reviews, Service Categories, Gallery Categories, Image Sliders, slider
+  images (with an image upload) and Web Pages; Email Templates, Miscellaneous Contents,
+  Web Page Sections, Main Menu, the footer menus, Form Settings and an administrator
+  profile were saved unchanged. Every save succeeded. A database snapshot taken before
+  and compared after shows the same rows and IDs, and no image files were added or left
+  behind. Saving a menu renumbers `menu_order` / `menu_order_one` into a clean sequence
+  (several pages shared a value); the menus shown on the site were unchanged, and the
+  earlier values were restored afterwards.
+- **Also changed.** Manage > Appointments and the dashboard now speak of appointments
+  and bookings instead of requests (visible text only). The skip link focuses `<main>`
+  (`site.js`, with no outline on `main[tabindex="-1"]`). The slider-image thumbnail link
+  was announced as "Edit …" but opens the image preview; it now reads "Preview …", like
+  the other listings.
+
+**Still open:**
+
+- Website Settings holds demo placeholders (2026-09-30): Website URL
+  `http://ctech-cms.com`, Email `hello@example.com`, Sender Email `no-reply@example.com`,
+  Facebook and Instagram the platforms' home pages. Replace them with the salon's own
+  details before launch (Phase 7 checklist).
+- Not tested: creating an administrator (it needs a password typed on the site) and the
+  service category delete guard (a failure would delete real data).
+- Production: the production constants file (database, encryption key, SMTP, reCAPTCHA),
+  `.htaccess_prod` uploaded as `.htaccess` with the canonical host chosen, HTTPS confirmed.
+  `base_url` is built from `$_SERVER['HTTPS']`; if the host ends TLS at a proxy, check that
+  links come out as `https://`. No cron jobs are needed.
+- The Phase 7 launch checklist (salon content, keys and policies).
+
 ---
 
 ## Appendix — Files to keep, adapt, remove (quick reference)

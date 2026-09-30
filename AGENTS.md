@@ -38,21 +38,13 @@ Review the existing implementation before making changes. Prefer extending exist
   (blogs), FAQs and pages.
 
 
-# Reference frontend (`/ci3/`)
+# Reference frontend (`/ci3/`, removed)
 
-`/ci3/` contains the static design export of the new website. It is a **reference only**:
-
-- Never deploy it, route to it, or load assets from it at runtime.
-- Its views are minified, single-line HTML documents with duplicated headers/footers,
-  hard-coded content and `<?= ?>` short tags. Never copy them verbatim. Rebuild them as
-  formatted views and shared partials under `application/views/frontend/`, using
-  `<?php echo` and escaped CMS data.
-- Match its rendered markup, classes, spacing and behaviour when rebuilding a page. Compare
-  the rebuilt page against the `/ci3/` page at desktop and mobile widths.
-- Its forms, booking wizard, login/registration and account pages are mock-ups. Their real
-  behaviour is defined by `PROJECT_PLAN.md`, not by the mock-up.
-- `/ci3/vendor/` and `/ci3/assets/fontawesome-download/` are not needed and must not be copied.
-- `/ci3/` is deleted at the end of the migration.
+`/ci3/` held the static design export the Blossom frontend was rebuilt from. Every page was
+rebuilt under `application/views/frontend/`, and the export was deleted in Phase 9. The
+rebuilt views, shared partials and `assets/frontend/css/src/tailwind.css` are now the design
+reference. Extend them for new pages, and do not recreate `/ci3/` or copy markup back from
+an old copy of it.
 
 
 # Secrets and configuration
@@ -1007,6 +999,12 @@ Do not weaken existing:
 
 for convenience.
 
+CKFinder (the CKEditor file browser, `assets/ckfinder/`) runs outside CodeIgniter.
+`CheckAuthentication()` in `assets/ckfinder/config.php` allows it only for a signed-in,
+enabled administrator, by reading CodeIgniter's database session the way
+`SqlModel::authAdmin()` does. Never make it return `true`, and keep it in step when the
+session driver, session keys or admin check change.
+
 Do not expose:
 
 - passwords
@@ -1138,8 +1136,8 @@ Do not change unrelated styling while implementing functional work.
 
 The Blossom frontend (`application/views/frontend/`) is styled with **Tailwind CSS v4**,
 built with the standalone CLI — no npm, no Node, no `node_modules/`. The `/ci3/` reference
-design was authored for v4 (`ci3/assets/css/site.css` is a compiled v4.3.3 stylesheet), so
-the project uses v4 rather than the v3 build inherited from the Alam project.
+design (removed in Phase 9) was authored for v4 and compiled with v4.3.3, so the project uses
+v4 rather than the v3 build inherited from the Alam project.
 
 ```text
 D:\wamp64\www\tailwindcss-v4-windows-x64.exe
@@ -1158,13 +1156,13 @@ v4 is configured in CSS; there is no `tailwind.config.js`:
   `application/helpers/frontend_helper.php`, `assets/frontend/js`), the fonts, the `@theme`
   tokens, the base and component layers, and the reference's server-rendering rules
   (`.reveal`, `header.ci-scrolled`, `.ci-mobile-menu`). `source(none)` keeps Tailwind from
-  scanning `/ci3/` and the admin area.
-- The theme tokens come from `ci3/assets/css/site.css`: colors (`background`, `foreground`,
+  scanning the admin area and other folders.
+- The theme tokens came from the reference's compiled stylesheet: colors (`background`, `foreground`,
   `foreground-soft`, `muted`, `muted-foreground`, `border`, `border-strong`, `primary`,
   `primary-cta`, `primary-ink`, `primary-strong`, `primary-foreground`, `secondary`,
   `secondary-light`, `accent`, `plum`, `plum-deep`, `plum-deeper`, `lilac`, `petal`,
   `destructive`), fonts (`display`: Fraunces, `sans`: Plus Jakarta Sans) and easing
-  variables. Keep token names identical to the reference so its markup works unchanged.
+  variables. Keep token names unchanged; the rebuilt views depend on them.
 
 `assets/frontend/css/app.css` is **generated. Never edit it by hand.** Every style change goes
 into `assets/frontend/css/src/tailwind.css`, then gets rebuilt:
@@ -1228,7 +1226,9 @@ Every public page renders through `Frontend_layout::render($view, $data, $page)`
   optional partial variable explicitly (`variant`, `light`, `spacing`, …) instead of
   relying on its default.
 - `helpers/frontend_helper.php` holds the reference button classes
-  (`frontend_button_class()`), `frontend_phone_href()`, `frontend_opening_hours()`,
+  (`frontend_button_class()`), `frontend_phone_href()`, `frontend_phone_display()` (the
+  Website Settings phone is stored as `+48512129654`; print it through this helper),
+  `frontend_opening_hours()`,
   `frontend_lines()`, `frontend_price()` / `frontend_service_price()` (`from 80 zł`),
   `frontend_url()` (CMS link values), `frontend_icon_class()` and
   `frontend_html_sections()` (editor HTML split at its `<h2>` headings). Resize images with
