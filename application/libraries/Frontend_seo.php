@@ -264,9 +264,7 @@ class Frontend_seo
     /**
      * The first usable image as an absolute, sharing-sized URL.
      *
-     * Each candidate is array(upload directory, stored value). The stored value
-     * is normally a bare filename; older records hold a path such as
-     * "images/alam/tours/x.webp", which is resolved against the frontend assets.
+     * Each candidate is array(upload directory, stored filename).
      * With $useDefault the site-wide sharing image is returned when nothing
      * matches; otherwise an empty array.
      */
@@ -307,10 +305,7 @@ class Frontend_seo
             return '';
         }
 
-        // Legacy records store a path relative to assets/frontend.
-        $candidate = strpos($stored, 'images/') === 0
-            ? 'assets/frontend/' . $stored
-            : 'assets/frontend/images/' . trim((string) $directory, '/') . '/' . basename($stored);
+        $candidate = 'assets/frontend/images/' . trim((string) $directory, '/') . '/' . basename($stored);
 
         return is_file(FCPATH . $candidate) ? $candidate : '';
     }

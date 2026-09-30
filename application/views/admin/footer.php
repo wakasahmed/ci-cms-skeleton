@@ -103,14 +103,9 @@ window.contName = window.AdminConfig.controllerName;
 <script src="<?php echo ADMIN_ASSETS; ?>vendor/tablednd/jquery.tablednd.min.js"></script>
 <script src="<?php echo ADMIN_ASSETS; ?>js/sortable-records.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/sortable-records.js'); ?>"></script>
 
-<?php if (!empty($useMenuManager) || !empty($useSortableJs)) { ?>
-<script src="<?php echo ADMIN_ASSETS; ?>vendor/sortablejs/Sortable.min.js"></script>
-<?php } ?>
 <?php if (!empty($useMenuManager)) { ?>
+<script src="<?php echo ADMIN_ASSETS; ?>vendor/sortablejs/Sortable.min.js"></script>
 <script src="<?php echo ADMIN_ASSETS; ?>js/menu-manager.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/menu-manager.js'); ?>"></script>
-<?php } ?>
-<?php if (!empty($useSortableJs)) { ?>
-<script src="<?php echo ADMIN_ASSETS; ?>js/selected-items-sort.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/selected-items-sort.js'); ?>"></script>
 <?php } ?>
 <script src="<?php echo ADMIN_ASSETS; ?>vendor/jquery-mask/jquery.mask.min.js"></script>
 <script src="<?php echo ADMIN_ASSETS; ?>js/admin.js?v=<?php echo (int) @filemtime(FCPATH.'assets/admin/js/admin.js'); ?>"></script>

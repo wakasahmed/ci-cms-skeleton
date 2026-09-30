@@ -170,17 +170,6 @@ jQuery(document).ready(function ($) {
 		adminModal('removeImageModal', 'hide');
 		performImageRemoval(action.delLink, action.button);
 	});
-	 $("#copy_link").on('click',function(){
-	    $("#payment_link").select();
-		var successful = document.execCommand('copy');  
-		if(successful)
-		{
-			alert("Payment Link Copied Successfully");
-		}
-		else{
-			alert("Unable to support your browser, please manually copy the link");	
-		}
-  });
 	$("#blog_category, #blog_tags").select2();
 	//For hiding the alert div
 	$(".alertBox").on('click', function () {

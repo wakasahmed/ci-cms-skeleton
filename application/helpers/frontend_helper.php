@@ -56,6 +56,31 @@ if (!function_exists('frontend_phone_href')) {
     }
 }
 
+if (!function_exists('frontend_phone_display')) {
+    /**
+     * Readable form of the Website Settings phone, which Manage > Website
+     * Settings stores as "+48512129654". Polish numbers are grouped the way
+     * they are written locally: mobiles 3-3-3 ("+48 512 129 654"), landlines
+     * 2-3-2-2 ("+48 18 353 00 00"). Anything else is returned as stored.
+     */
+    function frontend_phone_display($phone)
+    {
+        $phone = trim((string) $phone);
+        if (preg_match('/^\+48(\d{9})$/', preg_replace('/[\s().-]/', '', $phone), $match) !== 1) {
+            return $phone;
+        }
+
+        $digits = $match[1];
+        $mobilePrefixes = array('45', '50', '51', '53', '57', '60', '66', '69', '72', '73', '78', '79', '88');
+
+        if (in_array(substr($digits, 0, 2), $mobilePrefixes, TRUE)) {
+            return '+48 '.substr($digits, 0, 3).' '.substr($digits, 3, 3).' '.substr($digits, 6, 3);
+        }
+
+        return '+48 '.substr($digits, 0, 2).' '.substr($digits, 2, 3).' '.substr($digits, 5, 2).' '.substr($digits, 7, 2);
+    }
+}
+
 if (!function_exists('frontend_opening_hours')) {
     /**
      * Website Settings opening hours ("Days | Hours" per line) as rows of

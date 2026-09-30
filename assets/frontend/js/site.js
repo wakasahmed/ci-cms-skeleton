@@ -5,7 +5,8 @@
  *   - opening one <details> closes its open siblings (accordion groups);
  *   - forms without a real action do not submit;
  *   - the header gains its "scrolled" style after the first few pixels;
- *   - the mobile menu panel is built from the primary navigation.
+ *   - the mobile menu panel is built from the primary navigation;
+ *   - the skip link moves keyboard focus into <main>.
  */
 (function ($) {
     'use strict';
@@ -102,7 +103,26 @@
         });
     }
 
+    // Following "#main" scrolls but leaves focus on the link in some browsers;
+    // focus <main> so the next Tab starts inside the page content.
+    function setupSkipLink() {
+        document.querySelectorAll('a[href="#main"]').forEach(function (link) {
+            link.addEventListener('click', function () {
+                var main = document.getElementById('main');
+                if (!main) {
+                    return;
+                }
+
+                if (!main.hasAttribute('tabindex')) {
+                    main.setAttribute('tabindex', '-1');
+                }
+                main.focus();
+            });
+        });
+    }
+
     $(function () {
+        setupSkipLink();
         markRevealed();
         setupAccordions();
         preventPlaceholderForms();

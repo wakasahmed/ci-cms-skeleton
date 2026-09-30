@@ -42,7 +42,7 @@ $client = array(
 <?php $this->load->view('admin/partials/breadcrumb', array(
     'items' => array(
         array('label' => $this->moduleName, 'url' => ADMIN_URL.$this->controller),
-        array('label' => 'Request '.$record['appointment_reference'], 'active' => TRUE),
+        array('label' => 'Appointment '.$record['appointment_reference'], 'active' => TRUE),
     ),
 )); ?>
 
@@ -59,13 +59,13 @@ $client = array(
 
 <section class="admin-records-listing" aria-labelledby="appointment-title">
     <?php $this->load->view('admin/partials/module_header', array(
-        'title' => 'Request '.$record['appointment_reference'],
-        'description' => 'Received '.date(ADMIN_DATETIME_FORMAT, strtotime($record['appointment_added'])).'.',
+        'title' => 'Appointment '.$record['appointment_reference'],
+        'description' => 'Booked '.date(ADMIN_DATETIME_FORMAT, strtotime($record['appointment_added'])).'.',
         'id' => 'appointment-title',
         'actions' => array(
             array(
                 'url' => ADMIN_URL.$this->controller,
-                'label' => 'All Requests',
+                'label' => 'All Appointments',
                 'icon' => 'bi-arrow-left',
                 'class' => 'btn-outline-secondary',
             ),
@@ -177,7 +177,7 @@ $client = array(
                             <input type="hidden" name="<?php echo $escape($this->security->get_csrf_token_name()); ?>" value="<?php echo $escape($this->security->get_csrf_hash()); ?>">
                         <?php } ?>
                         <div class="admin-field mb-3">
-                            <label class="form-label" for="status">Request status</label>
+                            <label class="form-label" for="status">Appointment status</label>
                             <select class="form-select select2" name="status" id="status" data-minimum-results-for-search="-1">
                                 <?php foreach ($status_options as $statusOption) { ?>
                                     <option value="<?php echo $statusOption; ?>" <?php echo $currentStatus === $statusOption ? 'selected' : ''; ?>><?php echo $statusOption; ?></option>

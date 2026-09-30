@@ -5,7 +5,8 @@
  *   D:\wamp64\www\tailwindcss-v4-windows-x64.exe -i assets/frontend/css/src/tailwind.css -o assets/frontend/css/app.css --minify
  *
  * The tokens, base styles and components are taken from the reference design
- * (ci3/assets/css/site.css, compiled with Tailwind v4.3.3). Keep token names
+ * (the /ci3/ export's site.css, compiled with Tailwind v4.3.3; the export was
+ * removed in Phase 9). Keep token names
  * identical to the reference so its markup works unchanged.
  */
 
@@ -196,6 +197,11 @@
         outline: 2px solid var(--color-primary-ink);
         outline-offset: 3px;
         border-radius: var(--radius-xs);
+    }
+
+    /* The skip link focuses <main> (site.js); the page itself needs no ring. */
+    main[tabindex="-1"]:focus {
+        outline: none;
     }
 
     ::selection {

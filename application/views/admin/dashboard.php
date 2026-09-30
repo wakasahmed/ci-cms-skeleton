@@ -69,16 +69,16 @@ $kpiCards = array(
         'icon' => 'bi-hourglass-split',
         'tone' => 'orange',
         'trend' => '',
-        'note' => 'New requests not yet confirmed or cancelled',
+        'note' => 'New appointments not yet confirmed or cancelled',
         'url' => $appointmentsUrl.'appointment_added/ASC/New',
     ),
     array(
-        'label' => 'Requests received',
+        'label' => 'Bookings received',
         'value' => number_format($kpi['requests']),
         'icon' => 'bi-calendar-plus',
         'tone' => 'purple',
         'trend' => $trend($kpi['trend']['requests']),
-        'note' => 'Booking requests in '.$periodLabel,
+        'note' => 'Bookings in '.$periodLabel,
         'url' => ADMIN_URL.'appointments',
     ),
     array(
@@ -103,20 +103,20 @@ $kpiCards = array(
 
 $attentionItems = array(
     array(
-        'title' => 'Requests waiting over '.Dashboard_model::REPLY_WITHIN_HOURS.' hours',
+        'title' => 'New appointments waiting over '.Dashboard_model::REPLY_WITHIN_HOURS.' hours',
         'count' => $attention['waiting'],
         'icon' => 'bi-hourglass-bottom',
         'url' => $appointmentsUrl.'appointment_added/ASC/New',
-        'ok' => 'Every new request has been answered within a day.',
+        'ok' => 'Every new appointment has been answered within a day.',
         'warn' => 'Call or email these clients to confirm a time.',
     ),
     array(
-        'title' => 'New requests for dates already passed',
+        'title' => 'New appointments for dates already passed',
         'count' => $attention['new_past'],
         'icon' => 'bi-calendar-x',
         'url' => $appointmentsUrl.'appointment_date/ASC/New',
-        'ok' => 'No unanswered requests are out of date.',
-        'warn' => 'Contact these clients to rebook, or cancel the request.',
+        'ok' => 'No unanswered appointments are out of date.',
+        'warn' => 'Contact these clients to rebook, or cancel the appointment.',
     ),
     array(
         'title' => 'Past appointments still marked Confirmed',
@@ -214,7 +214,7 @@ $chartData = array(
 <section class="admin-dashboard" aria-labelledby="dashboard-title">
     <?php $this->load->view('admin/partials/module_header', array(
         'title' => 'Dashboard',
-        'description' => 'Booking requests, client messages and the services, team and content behind the website.',
+        'description' => 'Bookings, client messages and the services, team and content behind the website.',
         'id' => 'dashboard-title',
     )); ?>
 
@@ -236,7 +236,7 @@ $chartData = array(
         </nav>
     </div>
 
-    <section class="admin-dashboard-kpis" aria-label="Booking request summary for <?php echo $e($periodLabel); ?>">
+    <section class="admin-dashboard-kpis" aria-label="Booking summary for <?php echo $e($periodLabel); ?>">
         <?php foreach ($kpiCards as $card) { ?>
             <article class="admin-dashboard-kpi admin-dashboard-kpi-<?php echo $e($card['tone']); ?>">
                 <header>
@@ -257,8 +257,8 @@ $chartData = array(
             <section class="admin-dashboard-panel" aria-labelledby="requests-chart-title">
                 <header class="admin-dashboard-panel-header">
                     <div>
-                        <h2 id="requests-chart-title">Booking requests</h2>
-                        <p>Requests received each day in <?php echo $e($periodLabel); ?>.</p>
+                        <h2 id="requests-chart-title">Bookings</h2>
+                        <p>Bookings received each day in <?php echo $e($periodLabel); ?>.</p>
                     </div>
                     <span class="admin-dashboard-panel-icon" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
                 </header>
@@ -266,14 +266,14 @@ $chartData = array(
                 <div class="admin-dashboard-panel-body">
                     <dl class="admin-dashboard-chart-stats">
                         <div>
-                            <dt>Requests received</dt>
+                            <dt>Bookings received</dt>
                             <dd><?php echo $e(number_format($kpi['requests'])); ?></dd>
                         </div>
                     </dl>
                     <div class="admin-dashboard-chart admin-dashboard-chart-lg">
-                        <canvas id="requests-chart" role="img" aria-label="Line chart of booking requests received per day over <?php echo $e($periodLabel); ?>"></canvas>
+                        <canvas id="requests-chart" role="img" aria-label="Line chart of bookings received per day over <?php echo $e($periodLabel); ?>"></canvas>
                     </div>
-                    <p class="admin-dashboard-chart-note" hidden data-chart-empty>No requests to plot yet for this period.</p>
+                    <p class="admin-dashboard-chart-note" hidden data-chart-empty>No bookings to plot yet for this period.</p>
                 </div>
             </section>
 
@@ -332,18 +332,18 @@ $chartData = array(
             <section class="admin-dashboard-panel" aria-labelledby="recent-title">
                 <header class="admin-dashboard-panel-header">
                     <div>
-                        <h2 id="recent-title">Latest requests</h2>
-                        <p>The most recent booking requests from the website.</p>
+                        <h2 id="recent-title">Latest bookings</h2>
+                        <p>The most recent bookings from the website.</p>
                     </div>
                     <a class="btn btn-sm btn-primary" href="<?php echo $e(ADMIN_URL.'appointments'); ?>">View all</a>
                 </header>
 
                 <?php if (empty($dashboard['recent'])) { ?>
-                    <p class="admin-dashboard-empty">No booking requests have been received yet.</p>
+                    <p class="admin-dashboard-empty">No bookings have been received yet.</p>
                 <?php } else { ?>
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
-                            <caption class="visually-hidden">Most recent booking requests</caption>
+                            <caption class="visually-hidden">Most recent bookings</caption>
                             <thead>
                                 <tr>
                                     <th scope="col">Client</th>
@@ -380,7 +380,7 @@ $chartData = array(
                 <header class="admin-dashboard-panel-header">
                     <div>
                         <h2 id="attention-title">Needs attention</h2>
-                        <p>Requests, offers and profiles to follow up.</p>
+                        <p>Appointments, offers and profiles to follow up.</p>
                     </div>
                     <span class="admin-dashboard-panel-icon" aria-hidden="true"><i class="bi bi-bell"></i></span>
                 </header>
@@ -408,18 +408,18 @@ $chartData = array(
             <section class="admin-dashboard-panel" aria-labelledby="status-title">
                 <header class="admin-dashboard-panel-header">
                     <div>
-                        <h2 id="status-title">Request outcomes</h2>
-                        <p>Current status of requests received in <?php echo $e($periodLabel); ?>.</p>
+                        <h2 id="status-title">Booking outcomes</h2>
+                        <p>Current status of bookings received in <?php echo $e($periodLabel); ?>.</p>
                     </div>
                     <span class="admin-dashboard-panel-icon" aria-hidden="true"><i class="bi bi-pie-chart"></i></span>
                 </header>
 
                 <div class="admin-dashboard-panel-body">
                     <?php if ($statusTotal === 0) { ?>
-                        <p class="admin-dashboard-empty admin-dashboard-empty-inline">No requests were received in this period.</p>
+                        <p class="admin-dashboard-empty admin-dashboard-empty-inline">No bookings were received in this period.</p>
                     <?php } else { ?>
                         <div class="admin-dashboard-chart admin-dashboard-chart-sm">
-                            <canvas id="status-chart" role="img" aria-label="Doughnut chart of booking requests by status"></canvas>
+                            <canvas id="status-chart" role="img" aria-label="Doughnut chart of bookings by status"></canvas>
                         </div>
                     <?php } ?>
                     <ul class="admin-dashboard-legend">
@@ -437,22 +437,22 @@ $chartData = array(
             <section class="admin-dashboard-panel" aria-labelledby="top-services-title">
                 <header class="admin-dashboard-panel-header">
                     <div>
-                        <h2 id="top-services-title">Most requested services</h2>
-                        <p>From requests received in <?php echo $e($periodLabel); ?>, excluding cancelled ones.</p>
+                        <h2 id="top-services-title">Most booked services</h2>
+                        <p>From bookings received in <?php echo $e($periodLabel); ?>, excluding cancelled ones.</p>
                     </div>
                     <span class="admin-dashboard-panel-icon" aria-hidden="true"><i class="bi bi-trophy"></i></span>
                 </header>
 
                 <div class="admin-dashboard-panel-body">
                     <?php if (empty($dashboard['topServices'])) { ?>
-                        <p class="admin-dashboard-empty admin-dashboard-empty-inline">No services have been requested in this period yet.</p>
+                        <p class="admin-dashboard-empty admin-dashboard-empty-inline">No services have been booked in this period yet.</p>
                     <?php } else { ?>
                         <div class="admin-dashboard-chart" data-chart-bars="<?php echo count($dashboard['topServices']); ?>">
-                            <canvas id="top-services-chart" role="img" aria-label="Bar chart of the most requested services"></canvas>
+                            <canvas id="top-services-chart" role="img" aria-label="Bar chart of the most booked services"></canvas>
                         </div>
                         <ol class="visually-hidden">
                             <?php foreach ($dashboard['topServices'] as $service) { ?>
-                                <li><?php echo $e($service['name']); ?>: <?php echo (int) $service['requests']; ?> <?php echo $plural($service['requests'], 'request'); ?></li>
+                                <li><?php echo $e($service['name']); ?>: <?php echo (int) $service['requests']; ?> <?php echo $plural($service['requests'], 'booking'); ?></li>
                             <?php } ?>
                         </ol>
                     <?php } ?>

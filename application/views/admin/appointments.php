@@ -19,7 +19,7 @@ $statusBadges = array(
 )); ?>
 
 <?php $this->load->view('admin/partials/crud_alert', array(
-    'module_name' => 'Appointment request',
+    'module_name' => 'Appointment',
     'status' => $alert,
 )); ?>
 
@@ -38,7 +38,7 @@ $statusBadges = array(
             data-filter-base-url="<?php echo htmlspecialchars(base_url('manage/'.$this->controller.'/index/'.$sortby.'/'.($order === 'ASC' ? 'DESC' : 'ASC')), ENT_QUOTES, 'UTF-8'); ?>"
         >
             <div class="pages-search-control">
-                <label class="visually-hidden" for="search_keywords">Search appointment requests</label>
+                <label class="visually-hidden" for="search_keywords">Search appointments</label>
                 <span class="pages-search-icon" aria-hidden="true"><i class="bi bi-search"></i></span>
                 <input
                     class="form-control"
@@ -79,19 +79,19 @@ $statusBadges = array(
     </div>
 
     <form action="<?php echo ADMIN_URL.$this->controller; ?>/deleteall" method="post" name="multiDel" id="multiDel">
-        <div class="table-responsive pages-table-responsive" tabindex="0" aria-label="Appointment requests table">
+        <div class="table-responsive pages-table-responsive" tabindex="0" aria-label="Appointments table">
             <table id="table-<?php echo $this->controller; ?>" class="table pages-listing-table admin-records-table">
                 <thead>
                     <tr>
                         <th class="pages-select-column" scope="col">
-                            <input class="form-check-input" type="checkbox" id="all-checkbox" autocomplete="off" aria-label="Select all appointment requests">
+                            <input class="form-check-input" type="checkbox" id="all-checkbox" autocomplete="off" aria-label="Select all appointments">
                         </th>
                         <?php echo admin_sort_heading('Reference', $this->colPrefix.'reference', $sortby, $order, $sortUrl($this->colPrefix.'reference')); ?>
                         <?php echo admin_sort_heading('Appointment', $this->colPrefix.'date', $sortby, $order, $sortUrl($this->colPrefix.'date')); ?>
                         <?php echo admin_sort_heading('Client', 'customer_name', $sortby, $order, $sortUrl('customer_name')); ?>
                         <th scope="col" class="d-none d-lg-table-cell">Services</th>
                         <?php echo admin_sort_heading('Status', $this->tStatus, $sortby, $order, $sortUrl($this->tStatus)); ?>
-                        <?php echo admin_sort_heading('Requested On', $this->colPrefix.'added', $sortby, $order, $sortUrl($this->colPrefix.'added'), 'd-none d-md-table-cell'); ?>
+                        <?php echo admin_sort_heading('Booked On', $this->colPrefix.'added', $sortby, $order, $sortUrl($this->colPrefix.'added'), 'd-none d-md-table-cell'); ?>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
@@ -113,7 +113,7 @@ $statusBadges = array(
                             ?>
                             <tr id="<?php echo $this->controller.'-'.$id; ?>" data-record-id="<?php echo $id; ?>">
                                 <td class="pages-select-column">
-                                    <input name="records[]" class="form-check-input cselect" value="<?php echo $id; ?>" type="checkbox" aria-label="Select request <?php echo $reference; ?>">
+                                    <input name="records[]" class="form-check-input cselect" value="<?php echo $id; ?>" type="checkbox" aria-label="Select appointment <?php echo $reference; ?>">
                                 </td>
                                 <td><a class="pages-name-link" href="<?php echo $viewUrl; ?>"><?php echo $reference; ?></a></td>
                                 <td>
@@ -141,16 +141,16 @@ $statusBadges = array(
                                 </td>
                                 <td class="d-none d-md-table-cell"><?php echo admin_datetime_cell($record[$this->colPrefix.'added']); ?></td>
                                 <td class="pages-actions-cell">
-                                    <a class="admin-action-icon font16" href="<?php echo $viewUrl; ?>" aria-label="View request <?php echo $reference; ?>" title="View" data-bs-toggle="tooltip">
+                                    <a class="admin-action-icon font16" href="<?php echo $viewUrl; ?>" aria-label="View appointment <?php echo $reference; ?>" title="View" data-bs-toggle="tooltip">
                                         <i class="bi bi-eye" aria-hidden="true"></i>
                                     </a>
                                     <a
                                         class="admin-action-icon font16 delitem"
                                         href="javascript:void(0);"
                                         data-controller="<?php echo $this->controller; ?>"
-                                        data-record-name="request <?php echo $reference; ?>"
+                                        data-record-name="appointment <?php echo $reference; ?>"
                                         id="recordID<?php echo $id; ?>"
-                                        aria-label="Delete request <?php echo $reference; ?>"
+                                        aria-label="Delete appointment <?php echo $reference; ?>"
                                         title="Delete"
                                         data-bs-toggle="tooltip"
                                     ><i class="bi bi-trash" aria-hidden="true"></i></a>
@@ -160,8 +160,8 @@ $statusBadges = array(
                     <?php } else { ?>
                         <tr>
                             <td class="pages-empty-state" colspan="8">
-                                <strong><?php echo $hasActiveFilters ? 'No appointment requests match your filters.' : 'No appointment requests yet.'; ?></strong>
-                                <span><?php echo $hasActiveFilters ? 'Try changing your search or status filter.' : 'Requests made through the website booking form appear here.'; ?></span>
+                                <strong><?php echo $hasActiveFilters ? 'No appointments match your filters.' : 'No appointments yet.'; ?></strong>
+                                <span><?php echo $hasActiveFilters ? 'Try changing your search or status filter.' : 'Appointments booked through the website appear here.'; ?></span>
                             </td>
                         </tr>
                     <?php } ?>
@@ -176,6 +176,6 @@ $statusBadges = array(
         'selected_per_page' => $this->per_page,
         'page_offset' => $page_numb,
         'pagination' => isset($paginate) ? $paginate : '',
-        'pagination_label' => 'Appointment request pagination',
+        'pagination_label' => 'Appointments pagination',
     )); ?>
 </section>

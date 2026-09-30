@@ -38,7 +38,6 @@ class Seo extends CI_Controller
             $lines[] = 'Disallow: /';
         } else {
             $lines[] = 'Allow: /';
-            $lines[] = 'Disallow: /recaptcha-enterprise';
             // Shows the visitor's own booking request; there is nothing to index.
             $lines[] = 'Disallow: /book/confirmed';
             $lines[] = '';
@@ -94,7 +93,7 @@ class Seo extends CI_Controller
             $contact[] = '- Address: ' . $address;
         }
         if ($seo->setting('phone') !== '') {
-            $contact[] = '- Phone: ' . $seo->setting('phone');
+            $contact[] = '- Phone: ' . frontend_phone_display($seo->setting('phone'));
         }
         // The raw setting keeps its line breaks (Frontend_seo::setting() flattens them).
         $openingHours = isset($settings['opening_hours']) ? $settings['opening_hours'] : '';

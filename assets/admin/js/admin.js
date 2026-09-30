@@ -504,9 +504,6 @@
           } else if (icon.classList.contains('bi-camera') || icon.classList.contains('bi-images')) {
             label = label || 'Manage images';
             actionType = 'media';
-          } else if (icon.classList.contains('bi-signpost-split')) {
-            label = label || 'Manage itineraries';
-            actionType = 'itinerary';
           } else if (icon.classList.contains('bi-star-fill')) {
             label = label || 'View ratings';
             actionType = 'rating';
@@ -586,7 +583,7 @@
 
   function enhanceStandardListingLayout() {
     var content = document.querySelector('.admin-content');
-    if (!content || !document.body.classList.contains('admin-list-screen') || document.body.classList.contains('admin-report-screen')) { return; }
+    if (!content || !document.body.classList.contains('admin-list-screen')) { return; }
     if (content.querySelector('.web-pages-listing')) { return; }
 
     var table = content.querySelector('table[id^="table-"], #multiDel table.table');
@@ -875,8 +872,6 @@
 
     document.body.classList.toggle('admin-list-screen', !!listingTable);
     document.body.classList.toggle('admin-form-screen', !listingTable && contentForms.length > 0 && contentCards.length > 0);
-    document.body.classList.toggle('admin-report-screen', !!content.querySelector('#report-box'));
-
     content.querySelectorAll('button, a.btn').forEach(function (action) {
       var text = (action.textContent || '').trim();
       if (/filter resutls/i.test(text)) {

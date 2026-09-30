@@ -159,7 +159,7 @@ class Frontend_layout
         return array(
             'name' => $name !== '' ? $name : 'Blossom Ewa Mazur',
             'intro' => $this->CI->frontend_seo->plainText($this->setting('website_intro')),
-            'phone' => $this->setting('phone'),
+            'phone' => frontend_phone_display($this->setting('phone')),
             'phone_href' => frontend_phone_href($this->setting('phone')),
             'email' => $this->setting('email'),
             'address_lines' => frontend_lines($this->setting('address')),

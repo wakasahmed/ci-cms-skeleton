@@ -553,7 +553,6 @@ button.admin-action-icon { border: 0; background: none; padding: 0; color: inher
 .admin-action-table .admin-action-cell .admin-action-delete { --admin-action-color: #c93434; --admin-action-bg: rgba(201, 52, 52, .10); --admin-action-border: rgba(201, 52, 52, .25); --admin-action-hover-bg: rgba(201, 52, 52, .20); --admin-action-hover-border: rgba(201, 52, 52, .62); }
 .admin-action-table .admin-action-cell .admin-action-duplicate { --admin-action-color: #087f5b; --admin-action-bg: rgba(8, 127, 91, .10); --admin-action-border: rgba(8, 127, 91, .25); --admin-action-hover-bg: rgba(8, 127, 91, .20); --admin-action-hover-border: rgba(8, 127, 91, .60); }
 .admin-action-table .admin-action-cell .admin-action-media { --admin-action-color: var(--admin-primary); --admin-action-bg: rgba(99, 86, 155, .11); --admin-action-border: rgba(99, 86, 155, .27); --admin-action-hover-bg: rgba(99, 86, 155, .22); --admin-action-hover-border: rgba(99, 86, 155, .65); }
-.admin-action-table .admin-action-cell .admin-action-itinerary { --admin-action-color: #a16207; --admin-action-bg: rgba(217, 119, 6, .11); --admin-action-border: rgba(217, 119, 6, .27); --admin-action-hover-bg: rgba(217, 119, 6, .22); --admin-action-hover-border: rgba(217, 119, 6, .65); }
 .admin-action-table .admin-action-cell .admin-action-rating { --admin-action-color: #a16207; --admin-action-bg: rgba(217, 119, 6, .11); --admin-action-border: rgba(217, 119, 6, .27); --admin-action-hover-bg: rgba(217, 119, 6, .22); --admin-action-hover-border: rgba(217, 119, 6, .65); }
 .admin-action-table .admin-action-cell .admin-action-related { --admin-action-color: #7c3aed; --admin-action-bg: rgba(124, 58, 237, .10); --admin-action-border: rgba(124, 58, 237, .25); --admin-action-hover-bg: rgba(124, 58, 237, .20); --admin-action-hover-border: rgba(124, 58, 237, .62); }
 .admin-action-table .admin-action-cell .admin-action-view { --admin-action-color: var(--admin-primary); --admin-action-bg: rgba(99, 86, 155, .11); --admin-action-border: rgba(99, 86, 155, .27); --admin-action-hover-bg: rgba(99, 86, 155, .22); --admin-action-hover-border: rgba(99, 86, 155, .65); }
@@ -1562,10 +1561,6 @@ select.admin-user-select + .select2-container--default .select2-selection--singl
 .admin-list-screen .selectPerPage { min-height: 38px; }
 .admin-list-screen .admin-filter-form { padding: .75rem 0; border: 0; }
 .admin-list-screen .admin-content hr { display: none; }
-.admin-report-screen #report-box > [class*="col-"] { min-width: 0; }
-.admin-report-screen #report-box h2 { margin-bottom: .25rem; }
-.admin-report-screen .admin-card { margin-bottom: 1rem; }
-.admin-report-screen .admin-form-bordered .admin-field { border-bottom-color: var(--admin-border-light); }
 
 .dd { max-width: none; }
 .dd-list { padding-left: 0; }
@@ -1780,72 +1775,6 @@ body.admin-standard-listing .breadcrumb,
   .admin-standard-form .admin-standard-form-grid > .admin-standard-form-span { grid-column: auto; }
 }
 
-/* Guide Availability adopts the Web Pages listing pattern without affecting other modules. */
-.availability-breadcrumb .breadcrumb { margin-bottom: 1rem; }
-.availability-listing .pages-listing-description { margin-top: .4rem; line-height: 1.5; }
-.availability-form-breadcrumb { margin-bottom: 1rem; }
-.availability-form-description { margin: .4rem 0 1rem; color: var(--admin-muted); font-size: .86rem; line-height: 1.5; }
-.card.admin-card.availability-form-card { width: 100%; max-width: none; margin-top: 0; }
-.availability-form-card .availability-date-control { position: relative; }
-.availability-form-card .availability-date-control .form-control { padding-right: 2.6rem; }
-.availability-form-card .availability-date-icon { position: absolute; top: 50%; right: .8rem; display: inline-flex; align-items: center; color: var(--admin-muted); font-size: .95rem; pointer-events: none; transform: translateY(-50%); }
-.availability-form-card .availability-date-control:focus-within .availability-date-icon { color: var(--admin-primary); }
-.availability-form-card .availability-form-actions { margin-top: calc(var(--bs-gutter-y) + .375rem); }
-.availability-listing .availability-header-actions { display: flex; flex: 0 0 auto; align-items: center; gap: .5rem; }
-.availability-listing .pages-listing-toolbar { flex-wrap: wrap; }
-.availability-listing .pages-filter-form { flex: 1 1 700px; }
-.availability-listing .pages-search-control { width: min(245px, 28vw); }
-.availability-listing .availability-date-filter-control { width: min(230px, 28vw); }
-.availability-listing .availability-tour-guide-control { width: 280px; }
-.availability-listing .availability-table { min-width: 1200px; }
-.availability-listing .pages-select-column { width: 54px; min-width: 54px; padding-right: .5rem; padding-left: .5rem; }
-.availability-listing .availability-id-column { width: 62px; font-variant-numeric: tabular-nums; }
-.availability-listing .availability-guide-column { width: 180px; }
-.availability-listing .availability-date-column { width: 120px; font-variant-numeric: tabular-nums; }
-.availability-listing .availability-slot-column { width: 245px; }
-.availability-listing .availability-booking-column { width: 112px; }
-.availability-listing .availability-status-column { width: 100px; }
-.availability-listing .availability-added-column,
-.availability-listing .availability-updated-column { width: 178px; font-variant-numeric: tabular-nums; }
-.availability-listing .availability-actions-column { width: 112px; text-align: left; }
-.availability-listing .availability-action { vertical-align: middle; }
-.availability-listing .availability-date-column time,
-.availability-listing .availability-added-column time,
-.availability-listing .availability-updated-column time { color: var(--admin-muted); font-size: .8rem; }
-.availability-listing .availability-booking-badge { display: inline-flex; align-items: center; min-height: 24px; padding: .18rem .48rem; border-radius: 999px; font-size: .74rem; font-weight: 700; line-height: 1; }
-.availability-listing .availability-booking-badge.is-available { background: #eaf8f0; color: #167348; }
-.availability-listing .availability-booking-badge.is-booked { background: #fff3df; color: #935e0b; }
-.availability-listing .pages-pagination { max-width: 100%; overflow-x: auto; }
-.availability-listing .pages-pagination .pagination { flex-wrap: nowrap; }
-
-.vehicle-price-list { display: flex; flex-direction: column; gap: .2rem; }
-.vehicle-price-item { display: block; white-space: nowrap; }
-.vehicle-price-duration {font-weight: 600;color: var(--admin-text);  font-size: .78rem; }
-.vehicle-price-amount { color: var(--admin-text); font-size: .82rem; font-variant-numeric: tabular-nums; }
-
-@media (max-width: 991.98px) {
-  .availability-listing .pages-filter-form { flex-wrap: wrap; }
-  .availability-listing .pages-search-control { width: min(320px, 45vw); }
-  .availability-listing .availability-date-filter-control { width: min(280px, 45vw); }
-}
-
-@media (max-width: 767.98px) {
-  .availability-listing .pages-filter-form { flex-basis: 100%; }
-  .availability-listing .availability-date-filter-control { width: min(280px, 48%); }
-  .availability-listing .availability-tour-guide-control { width: min(280px, 48%); }
-  .availability-listing .pages-status-control { width: min(165px, 48%); }
-  .availability-listing .pages-pagination { width: 100%; }
-}
-
-@media (max-width: 575.98px) {
-  .availability-listing .availability-header-actions { width: 100%; flex-direction: column-reverse; align-items: stretch; }
-  .availability-listing .availability-header-actions .btn { width: 100%; }
-  .availability-listing .pages-search-control { width: 100%; }
-  .availability-listing .availability-date-filter-control,
-  .availability-listing .availability-tour-guide-control,
-  .availability-listing .pages-status-control { width: 100%; grid-column: 1 / -1; }
-}
-
 @media (max-width: 1399.98px) {
   .admin-dashboard-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -1887,11 +1816,6 @@ body.admin-standard-listing .breadcrumb,
   .admin-card .admin-field.row { margin-inline: 0; }
   .admin-card .admin-field.row > [class*="col-"] { padding-inline: 0; }
   .admin-card .admin-field.row > label + [class*="col-"] { margin-top: .35rem; }
-  .admin-report-screen .admin-card > .card-body { padding: .85rem; }
-  .admin-report-screen .admin-form-horizontal .admin-field { display: block !important; width: 100%; }
-  .admin-report-screen .admin-form-horizontal .admin-field > [class*="col-"] { width: 100%; padding-inline: 0; }
-  .admin-report-screen .admin-form-horizontal .admin-field > label { margin-bottom: .3rem; }
-  .admin-report-screen #report-box > [class*="col-"] > [class*="col-"] { width: 100%; padding-inline: 0; text-align: left !important; }
   .admin-list-screen .admin-filter-form { align-items: stretch; }
   .pagination { gap: .15rem; }
   .pagination > li > a,
@@ -2008,29 +1932,6 @@ body.admin-standard-listing .breadcrumb,
 .miscellaneous-editor-attention { flex: 0 0 auto; margin-left: auto; }
 .miscellaneous-content-card.has-error { border-color: var(--bs-danger); }
 
-/* Tour image multi-upload */
-.tour-images-upload .dropzone {
-  min-height: 220px;
-  margin-bottom: 1.5rem;
-  border: 2px dashed var(--admin-primary-border);
-  border-radius: .75rem;
-  background: var(--admin-primary-soft);
-}
-.tour-images-upload .dropzone .dz-message { display: grid; gap: .45rem; margin: 3rem 0; color: var(--admin-text); }
-.tour-images-upload .dropzone .dz-message .bi { color: var(--admin-primary); font-size: 2.25rem; }
-.tour-images-upload .dropzone .dz-message span { color: var(--admin-muted); font-size: .85rem; }
-.tour-images-uploaded-list { display: grid; gap: .75rem; }
-.tour-images-uploaded-item { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; align-items: center; gap: 1rem; padding: .75rem; border: 1px solid var(--admin-border-light); border-radius: .6rem; background: var(--admin-surface-muted); }
-.tour-images-uploaded-item img { width: 76px; height: 58px; border-radius: .4rem; object-fit: cover; }
-.tour-images-uploaded-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
-
-@media (max-width: 575.98px) {
-  .tour-images-uploaded-item { grid-template-columns: 64px minmax(0, 1fr); gap: .65rem; }
-  .tour-images-uploaded-item img { width: 64px; height: 52px; }
-  .tour-images-uploaded-item .btn { grid-column: 2; justify-self: start; }
-  .tour-images-uploaded-fields { grid-template-columns: 1fr; }
-}
-
 @media (max-width: 767.98px) {
   .content-section-heading { flex-direction: column; }
   .web-page-sections-card-header { align-items: flex-start; flex-direction: column; }
@@ -2067,265 +1968,20 @@ body.admin-standard-listing .breadcrumb,
 .admin-form-accordion-item.has-error { border-color: var(--admin-danger) !important; }
 .admin-form-accordion-item.has-error > .accordion-header .accordion-button { background-color: rgba(198, 40, 40, .04); }
 
-/* Sortable list of currently-selected items for a multiselect (see Tours: Attractions). */
-.admin-selected-sort-list { list-style: none; margin: .5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
-.admin-selected-sort-item { display: flex; align-items: center; gap: .5rem; padding: .35rem .5rem; background: var(--admin-surface, #fff); border: 1px solid var(--admin-border); border-radius: .4rem; }
-.admin-selected-sort-handle { display: inline-flex; align-items: center; color: var(--admin-muted); cursor: grab; touch-action: none; user-select: none; }
-.admin-selected-sort-handle:active { cursor: grabbing; }
-.admin-selected-sort-label { flex: 1 1 auto; font-size: .9rem; color: var(--admin-text); }
-.admin-selected-sort-remove { display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; padding: 0; border: 0; background: transparent; color: var(--admin-muted); border-radius: .3rem; }
-.admin-selected-sort-remove:hover { color: var(--admin-danger); background: rgba(198, 40, 40, .08); }
-.admin-selected-sort-chosen { border-color: var(--admin-primary); }
-.admin-selected-sort-ghost { opacity: .5; }
-
-/* Booking detail cards reuse the admin palette and collapse to one column. */
-.booking-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-top: 1px solid var(--bs-border-color);
-}
-.booking-summary-grid > div {
-    padding: 1.25rem;
-    border-right: 1px solid var(--bs-border-color);
-}
-.booking-summary-grid strong {
-    display: block;
-}
-.booking-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--bs-secondary-color, #6c757d);
-    margin-bottom: 0.4rem;
-}
-.booking-section-title {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    margin-bottom: 1.5rem;
-}
-.booking-section-title::after {
-    content: "";
-    flex: 1;
-    border-top: 1px solid var(--bs-border-color);
-}
-.booking-person {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-.booking-avatar {
-    width: 3rem;
-    height: 3rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bs-tertiary-bg, #f3f4f6);
-    border-radius: 0.5rem;
-    font-weight: 700;
-}
-.booking-empty {
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background: var(--bs-tertiary-bg, #f3f4f6);
-}
-.booking-fields dd,
-.booking-agent,
-.booking-note {
-    overflow-wrap: anywhere;
-}
-.booking-agent {
-    font-family: monospace;
-    font-size: 0.8rem;
-}
-.booking-price {
-    overflow: hidden;
-}
-.booking-price-heading {
-    padding: 1.5rem;
-    background: var(--bs-primary);
-    color: #fff;
-}
-.booking-price-heading .booking-label {
-    color: inherit;
-}
-.booking-price-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--bs-border-color);
-    font-size: 0.9rem;
-}
-.booking-price-row:last-child {
-    border-bottom: 0;
-}
-.booking-note {
-    border-top: 1px solid var(--bs-border-color);
-    padding: 1rem 0;
-}
-.booking-modal .modal-content > form {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-@media (max-width: 767.98px) {
-    .booking-summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .booking-price-row {
-        flex-wrap: wrap;
-    }
-}
-@media (max-width: 375px) {
-    .booking-summary-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Reports: filter toolbar, summary cards and table helpers. */
-.admin-records-listing .report-toolbar { display: block; min-height: 0; padding: 0; }
-.admin-records-listing .report-filter-form { display: block; width: 100%; padding: 1rem 1.1rem; border: 1px solid var(--admin-border); border-radius: var(--admin-radius); background: var(--admin-surface); box-shadow: var(--admin-shadow); }
-.report-filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .85rem 1rem; }
-.report-filter-more { margin-top: .85rem; }
-.report-filter-field { min-width: 0; }
-.report-filter-field .form-label { margin-bottom: .3rem; color: var(--admin-text-secondary); font-size: .78rem; font-weight: 700; }
-.report-search-control { position: relative; }
-.report-search-control .form-control { padding-left: 2.25rem; }
-.report-filter-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: 1rem; }
-.report-filter-actions .badge { margin-left: .2rem; }
-/* Bookings listing: shared report filter fields sit inline after the status filter. */
-.admin-records-listing .bookings-filter-form { flex: 1 1 auto; flex-wrap: wrap; }
-.bookings-filter-form .report-filter-field { width: 200px; }
-.bookings-filter-form .report-filter-field-daterange { width: 210px; }
-@media (max-width: 767.98px) {
-  .bookings-filter-form .report-filter-field,
-  .bookings-filter-form .report-filter-field-daterange { width: 100%; grid-column: 1 / -1; }
-}
-.report-active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .65rem; margin: .8rem 0 .2rem; }
-.report-active-label { color: var(--admin-muted); font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
-.report-chip-list { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0; padding: 0; list-style: none; }
-.report-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .16rem .2rem .16rem .7rem; border: 1px solid var(--admin-primary-border); border-radius: 999px; background: var(--admin-primary-soft); color: var(--admin-primary-dark); font-size: .8rem; }
-.report-chip-remove { display: inline-flex; width: 1.4rem; height: 1.4rem; align-items: center; justify-content: center; border-radius: 50%; color: var(--admin-primary-dark); font-size: .68rem; text-decoration: none; }
-.report-chip-remove:hover,
-.report-chip-remove:focus-visible { background: var(--admin-primary); color: #fff; outline: 0; }
-.report-listing .admin-module-header-actions .btn { white-space: nowrap; }
-.report-alerts:empty { display: none; }
-.report-alerts { margin-top: .75rem; }
-.report-alerts .alert { margin-bottom: 0; }
-
-.report-summary { margin: 1rem 0; }
-.report-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)); gap: .75rem; margin: 0; }
-.report-summary-card { min-width: 0; padding: .65rem .85rem; border: 1px solid var(--admin-border); border-left: 3px solid var(--admin-border); border-radius: var(--admin-radius); background: var(--admin-surface); box-shadow: var(--admin-shadow); }
-.report-summary-card dt { color: var(--admin-muted); font-size: .74rem; font-weight: 600; line-height: 1.3; }
-.report-summary-card dd { margin: .15rem 0 0; color: var(--admin-text); font-size: 1.12rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-.report-summary-card-primary { border-left-color: var(--admin-primary); }
-.report-summary-card-success { border-left-color: var(--admin-success); }
-.report-summary-card-warning { border-left-color: #d9922b; }
-.report-summary-note { margin: .5rem 0 0; color: var(--admin-muted); font-size: .78rem; }
-
-.report-table thead th { white-space: nowrap; }
-.admin-records-listing .report-table > :not(caption) > * > * { padding: .55rem .55rem; }
-.report-table td { vertical-align: middle; }
-.report-table-rows tbody td:first-child { font-size: .78rem; white-space: nowrap; }
-.report-table td.text-end { white-space: nowrap; }
-.report-table .text-end .pages-cell-meta { text-align: right; }
-.report-nowrap-break { min-width: 130px; font-size: .78rem; overflow-wrap: anywhere; }
-.report-status { white-space: nowrap; }
-.report-nowrap { white-space: nowrap; }
-.report-progress { display: grid; min-width: 96px; gap: .25rem; }
-.report-progress-label { color: var(--admin-text-secondary); font-size: .76rem; white-space: nowrap; }
-.report-progress-bar { width: 100%; max-width: 110px; height: .4rem; border: 0; border-radius: 999px; background: var(--admin-border); overflow: hidden; -webkit-appearance: none; appearance: none; }
-.report-progress-bar::-webkit-progress-bar { background: var(--admin-border); }
-.report-progress-bar::-webkit-progress-value { border-radius: 999px; background: var(--admin-primary); }
-.report-progress-bar::-moz-progress-bar { border-radius: 999px; background: var(--admin-primary); }
-.report-commission { display: flex; min-width: 0; margin: 0; padding: 0; border: 0; gap: .35rem; }
-.report-commission[aria-busy="true"] { opacity: .6; }
-.report-commission .form-check { margin: 0; }
-
-@media (min-width: 1200px) {
-  .report-filter-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .report-summary-grid[data-cards="8"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-@media (max-width: 575.98px) {
-  .admin-records-listing .report-filter-form { padding: .85rem; }
-  .report-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem .75rem; }
-  .report-filter-field-search,
-  .report-filter-field-daterange { grid-column: 1 / -1; }
-  .report-filter-actions .btn { flex: 1 1 auto; }
-  .report-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-/* Reports: printer-friendly view (standalone page) and print rules. */
-.report-print-page { background: #fff; color: #111; }
-.report-print-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; padding: .75rem 1.25rem; border-bottom: 1px solid var(--admin-border); background: var(--admin-surface-muted); }
-.report-print-hint { color: var(--admin-muted); font-size: .8rem; }
-.report-print-masthead { padding: 1.1rem 1.25rem .4rem; }
-.report-print-company { margin: 0; color: var(--admin-muted); font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.report-print-masthead h1 { margin: .1rem 0 .25rem; font-size: 1.5rem; font-weight: 700; }
-.report-print-meta,
-.report-print-filters { margin: 0 0 .2rem; color: var(--admin-text-secondary); font-size: .85rem; }
-.report-print-page .report-print-body { padding: 0 1.25rem 1.5rem; }
-
-@page report-portrait { size: A4 portrait; margin: 12mm; }
-@page report-landscape { size: A4 landscape; margin: 10mm; @bottom-right { content: "Page " counter(page) " of " counter(pages); color: #444; font-size: 8pt; } }
-.report-print-portrait { page: report-portrait; }
-.report-print-landscape { page: report-landscape; }
-
+/* Printing an admin page: hide the navigation chrome and use the full width. */
 @media print {
-  .report-no-print,
   .admin-sidebar,
   .admin-sidebar-backdrop,
   .admin-topbar,
   .admin-footer,
   .admin-skip-link,
   .admin-module-header-actions,
-  .report-toolbar,
-  .report-active-filters,
-  .report-alerts,
-  .report-listing .pages-listing-footer,
-  .report-listing .pages-sort-icon,
   nav[aria-label="Breadcrumb"] { display: none !important; }
 
   .admin-main,
   body.admin-sidebar-collapsed .admin-main { margin-left: 0 !important; }
   .admin-content { max-width: none; min-height: 0; padding: 0; overflow: visible; }
-  body,
-  .report-print-page { background: #fff !important; color: #000; font-size: 9pt; overflow: visible; }
-
-  .report-print-masthead { padding: 0 0 .5rem; border-bottom: 1.5px solid #000; }
-  .report-print-masthead h1 { font-size: 16pt; }
-  .report-print-page .report-print-body { padding: .5rem 0 0; }
-
-  .report-listing a { color: #000 !important; text-decoration: none !important; }
-  .report-listing .pages-table-responsive { overflow: visible !important; border: 0; }
-
-  .report-summary { margin: .4rem 0 .6rem; }
-  .report-summary-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
-  .report-summary-card { padding: 3px 6px; border: 1px solid #555; border-left-width: 3px; box-shadow: none; break-inside: avoid; page-break-inside: avoid; }
-  .report-summary-card dt { color: #222; font-size: 7.5pt; }
-  .report-summary-card dd { color: #000; font-size: 10pt; }
-  .report-summary-note { color: #222; }
-
-  .report-table { width: 100%; font-size: 8pt; }
-  .report-table > :not(caption) > * > *,
-  .report-table thead th,
-  .report-table tbody td { height: auto !important; padding: 3px 4px !important; border: 1px solid #888; color: #000 !important; background: #fff !important; }
-  .report-table thead { display: table-header-group; }
-  .report-table tfoot { display: table-footer-group; }
-  .report-table tr { break-inside: avoid; page-break-inside: avoid; }
-  .report-table thead th { font-weight: 700; white-space: normal; }
-  .report-table .pages-cell-meta { color: #333 !important; font-size: 7pt; }
-  .report-nowrap-break { min-width: 0; font-size: 7pt; }
-  .report-status { padding: 0 4px; border: 1px solid #333; background: #fff !important; color: #000 !important; }
-  .report-progress-bar { display: none; }
-  .report-progress { min-width: 0; }
-  .report-progress-label { color: #000; font-size: 8pt; }
+  body { background: #fff !important; color: #000; font-size: 9pt; overflow: visible; }
 }
 
 /* Notification template short tag picker */

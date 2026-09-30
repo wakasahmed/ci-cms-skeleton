@@ -2,12 +2,12 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Appointment requests sent from the website booking form.
+ * Appointments booked through the website.
  *
- * Requests are created by the public site (PROJECT_PLAN.md, Phase 6), so
- * this module only lists, views, updates the status of, annotates and
- * deletes them. Service, artist and offer names are copied onto each request
- * when it is made, so later catalogue changes never alter it.
+ * Bookings are created by the public site (PROJECT_PLAN.md, Phases 6 and 8),
+ * so this module only lists, views, updates the status of, annotates and
+ * deletes them. Service, artist and offer names are copied onto each
+ * appointment when it is booked, so later catalogue changes never alter it.
  */
 class Appointments extends CI_Controller
 {
@@ -15,8 +15,8 @@ class Appointments extends CI_Controller
     public $colPrefix = 'appointment_';
     public $pKey = 'appointment_id';
     public $moduleName = 'Appointments';
-    public $moduleNameSingular = 'Appointment Request';
-    public $moduleDesc = 'Review booking requests from the website, confirm them with the client and keep notes.';
+    public $moduleNameSingular = 'Appointment';
+    public $moduleDesc = 'Review bookings from the website, update their status (the client is emailed) and keep notes.';
     public $controller = 'appointments';
     public $per_page = 10;
     public $tStatus = 'appointment_status';

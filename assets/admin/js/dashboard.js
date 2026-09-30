@@ -106,7 +106,7 @@
         return count + ' ' + word + (count === 1 ? '' : 's');
     }
 
-    /* ---------- Requests received per day ---------- */
+    /* ---------- Bookings received per day ---------- */
 
     function initRequests() {
         var canvas = document.getElementById('requests-chart');
@@ -127,7 +127,7 @@
             data: {
                 labels: data.labels,
                 datasets: [{
-                    label: 'Requests',
+                    label: 'Bookings',
                     data: data.requests,
                     borderColor: COLORS.primary,
                     backgroundColor: 'rgba(' + COLORS.primaryRgb + ', 0.12)',
@@ -150,7 +150,7 @@
                                 return items.length ? longDate(data.labels[items[0].dataIndex]) : '';
                             },
                             label: function (item) {
-                                return plural(item.parsed.y, 'request');
+                                return plural(item.parsed.y, 'booking');
                             }
                         }
                     }
@@ -184,7 +184,7 @@
         });
     }
 
-    /* ---------- Request outcomes (doughnut) ---------- */
+    /* ---------- Booking outcomes (doughnut) ---------- */
 
     function initStatus() {
         var canvas = document.getElementById('status-chart');
@@ -210,7 +210,7 @@
                 context.fillText(numberFormat.format(total), x, y - 8);
                 context.fillStyle = COLORS.text;
                 context.font = '12px ' + Chart.defaults.font.family;
-                context.fillText(total === 1 ? 'request' : 'requests', x, y + 14);
+                context.fillText(total === 1 ? 'booking' : 'bookings', x, y + 14);
                 context.restore();
             }
         };
@@ -250,7 +250,7 @@
         });
     }
 
-    /* ---------- Most requested services (horizontal bars) ---------- */
+    /* ---------- Most booked services (horizontal bars) ---------- */
 
     function initTopServices() {
         var canvas = document.getElementById('top-services-chart');
@@ -269,7 +269,7 @@
             data: {
                 labels: data.topServices.labels,
                 datasets: [{
-                    label: 'Requests',
+                    label: 'Bookings',
                     data: data.topServices.requests,
                     backgroundColor: COLORS.primary,
                     borderRadius: 4,
@@ -288,7 +288,7 @@
                                 return items.length ? data.topServices.labels[items[0].dataIndex] : '';
                             },
                             label: function (item) {
-                                return plural(item.parsed.x, 'request');
+                                return plural(item.parsed.x, 'booking');
                             }
                         }
                     }
