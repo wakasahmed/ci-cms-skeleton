@@ -358,7 +358,7 @@ class Login extends CI_Controller
             'Use the button below within '.$expiresInMinutes.' minutes:'.
             '<div style="margin:24px 0;text-align:center">'.
             '<a href="'.$safeUrl.'" style="display:inline-block;padding:12px 20px;border-radius:6px;'.
-            'background:#63569b;color:#fff;text-decoration:none;font-weight:700">Reset password</a>'.
+            'background:#a73a9b;color:#fff;text-decoration:none;font-weight:700">Reset password</a>'.
             '</div>'.
             'If the button does not work, copy this link into your browser:<br>'.
             '<a href="'.$safeUrl.'">'.$safeUrl.'</a><br><br>'.

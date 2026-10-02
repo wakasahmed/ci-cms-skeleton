@@ -117,10 +117,10 @@
 .menu-manager-edit-link,
 .menu-manager-control {
     --admin-action-color: var(--admin-primary);
-    --admin-action-bg: rgba(99, 86, 155, .11);
-    --admin-action-border: rgba(99, 86, 155, .27);
-    --admin-action-hover-bg: rgba(99, 86, 155, .22);
-    --admin-action-hover-border: rgba(99, 86, 155, .65);
+    --admin-action-bg: rgba(var(--admin-primary-rgb), .11);
+    --admin-action-border: rgba(var(--admin-primary-rgb), .27);
+    --admin-action-hover-bg: rgba(var(--admin-primary-rgb), .22);
+    --admin-action-hover-border: rgba(var(--admin-primary-rgb), .65);
     flex: 0 0 auto;
     display: inline-flex;
     width: 32px;

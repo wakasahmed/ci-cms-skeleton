@@ -212,7 +212,7 @@ class Admins extends CI_Controller {
 			'For security, please sign in and change your password as soon as possible.'.
 			'<div style="margin:24px 0;text-align:center">'.
 			'<a href="'.$safeLoginUrl.'" style="display:inline-block;padding:12px 20px;border-radius:6px;'.
-			'background:#63569b;color:#fff;text-decoration:none;font-weight:700">Sign in</a>'.
+			'background:#a73a9b;color:#fff;text-decoration:none;font-weight:700">Sign in</a>'.
 			'</div>'.
 			'If the button does not work, copy this link into your browser:<br>'.
 			'<a href="'.$safeLoginUrl.'">'.$safeLoginUrl.'</a><br><br>'.

@@ -13,7 +13,7 @@
 }
 
 .admin-icon-picker-control:focus-within .admin-icon-picker-preview {
-  border-color: #8f84b8;
+  border-color: var(--admin-primary-light);
 }
 
 .icon-picker-modal {
@@ -61,8 +61,8 @@
 }
 
 .icon-picker-modal__search:focus {
-  border-color: #8f84b8;
-  box-shadow: 0 0 0 .2rem rgba(99, 86, 155, .14);
+  border-color: var(--admin-primary-light);
+  box-shadow: 0 0 0 .2rem rgba(var(--admin-primary-rgb), .14);
 }
 
 .icon-picker-modal__content {
@@ -105,7 +105,7 @@
 .icon-picker-modal__content .icon-element.is-selected:focus-visible {
   border-color: var(--admin-primary);
   background: var(--admin-primary);
-  box-shadow: 0 0 0 .15rem rgba(99, 86, 155, .16);
+  box-shadow: 0 0 0 .15rem rgba(var(--admin-primary-rgb), .16);
 }
 
 .icon-picker-modal__content .icon-element.is-selected i,

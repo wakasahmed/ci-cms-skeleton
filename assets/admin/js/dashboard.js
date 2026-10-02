@@ -49,8 +49,8 @@
 
     var styles = getComputedStyle(document.documentElement);
     var COLORS = {
-        primary: styles.getPropertyValue('--admin-primary').trim() || '#63569b',
-        primaryRgb: styles.getPropertyValue('--admin-primary-rgb').trim() || '99, 86, 155',
+        primary: styles.getPropertyValue('--admin-primary').trim() || '#a73a9b',
+        primaryRgb: styles.getPropertyValue('--admin-primary-rgb').trim() || '167, 58, 155',
         success: '#157347',
         warning: '#d98a1f',
         neutral: '#98a2b3',
