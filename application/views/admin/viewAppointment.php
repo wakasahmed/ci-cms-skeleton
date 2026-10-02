@@ -6,12 +6,6 @@ $escape = function ($value) {
 $reference = $escape($record['appointment_reference']);
 $appointmentTime = strtotime($record['appointment_date'].' '.$record['appointment_time']);
 $currentStatus = (string) $record['appointment_status'];
-$statusBadges = array(
-    'New' => 'text-bg-warning',
-    'Confirmed' => 'text-bg-primary',
-    'Completed' => 'text-bg-success',
-    'Cancelled' => 'text-bg-secondary',
-);
 $duration = (int) $record['appointment_duration_minutes'];
 $durationText = '';
 
@@ -77,7 +71,7 @@ $client = array(
             <div class="card admin-card mb-4">
                 <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <h2 class="card-title mb-0">Appointment</h2>
-                    <span class="badge <?php echo isset($statusBadges[$currentStatus]) ? $statusBadges[$currentStatus] : 'text-bg-light'; ?>"><?php echo $escape($currentStatus); ?></span>
+                    <span class="badge <?php echo admin_appointment_status_badge($currentStatus); ?>"><?php echo $escape($currentStatus); ?></span>
                 </div>
                 <div class="card-body">
                     <div class="contact-request-details-grid mb-4">

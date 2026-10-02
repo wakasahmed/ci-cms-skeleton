@@ -1000,6 +1000,11 @@
     document.addEventListener('repeatable:added', function (event) {
       initializeDateTimeControls(event.target);
     });
+    document.addEventListener('click', function (event) {
+      if (event.target.closest('[data-print-page]')) {
+        window.print();
+      }
+    });
     wrapTables();
     enhanceListings();
     initializeImagePreview();

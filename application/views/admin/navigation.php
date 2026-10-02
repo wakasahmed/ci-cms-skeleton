@@ -50,6 +50,13 @@ $adminNav = array(
                 'active' => isset($appointmentsActive),
             ),
             array(
+                'type' => 'link',
+                'title' => 'Reports',
+                'icon' => 'bi-bar-chart-line',
+                'url' => ADMIN_URL.'reports',
+                'active' => isset($reportsActive),
+            ),
+            array(
                 'type' => 'toggle',
                 'title' => 'Services',
                 'icon' => 'bi-stars',

@@ -5,12 +5,6 @@ $sortUrl = function ($column) use ($order, $status, $keywords, $page_numb) {
         'manage/'.$this->controller.'/index/'.$column.'/'.$order.'/'.$status.'/'.rawurlencode($keywords).'/'.$page_numb
     );
 };
-$statusBadges = array(
-    'New' => 'text-bg-warning',
-    'Confirmed' => 'text-bg-primary',
-    'Completed' => 'text-bg-success',
-    'Cancelled' => 'text-bg-secondary',
-);
 ?>
 <?php $this->load->view('admin/partials/breadcrumb', array(
     'items' => array(
@@ -135,7 +129,7 @@ $statusBadges = array(
                                     <?php } ?>
                                 </td>
                                 <td>
-                                    <span class="badge <?php echo isset($statusBadges[$recordStatus]) ? $statusBadges[$recordStatus] : 'text-bg-light'; ?>">
+                                    <span class="badge <?php echo admin_appointment_status_badge($recordStatus); ?>">
                                         <?php echo htmlspecialchars($recordStatus, ENT_QUOTES, 'UTF-8'); ?>
                                     </span>
                                 </td>

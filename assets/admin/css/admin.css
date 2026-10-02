@@ -1976,13 +1976,27 @@ body.admin-standard-listing .breadcrumb,
   .admin-footer,
   .admin-skip-link,
   .admin-module-header-actions,
+  .admin-no-print,
   nav[aria-label="Breadcrumb"] { display: none !important; }
 
   .admin-main,
   body.admin-sidebar-collapsed .admin-main { margin-left: 0 !important; }
   .admin-content { max-width: none; min-height: 0; padding: 0; overflow: visible; }
   body { background: #fff !important; color: #000; font-size: 9pt; overflow: visible; }
+  .admin-card { box-shadow: none; break-inside: avoid; }
+  .table-responsive { overflow: visible !important; }
+  .admin-report-table tr { break-inside: avoid; }
+  .admin-dashboard-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
 }
+
+/* Reports: filters, quick ranges and the period line. */
+.admin-report-filters { margin-bottom: 1rem; padding: 1rem 1.1rem; border: 1px solid var(--admin-border); border-radius: var(--admin-radius); background: var(--admin-surface-muted); }
+.admin-report-filters .form-label { margin-bottom: .3rem; font-size: .8rem; font-weight: 600; }
+.admin-report-presets { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .85rem; }
+.admin-report-period { margin: 0 0 .9rem; color: var(--admin-text-secondary); }
+.admin-report-table th[scope="row"] { font-weight: 600; }
+.admin-report-table td,
+.admin-report-table th { vertical-align: top; }
 
 /* Notification template short tag picker */
 .short-tag-picker-tags {

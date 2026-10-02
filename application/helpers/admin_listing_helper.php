@@ -66,3 +66,20 @@ if (!function_exists('admin_datetime_cell')) {
             .'</time>';
     }
 }
+
+if (!function_exists('admin_appointment_status_badge')) {
+    /**
+     * Bootstrap badge class for an appointment status (Appointments, Reports).
+     */
+    function admin_appointment_status_badge($status)
+    {
+        $badges = array(
+            'New' => 'text-bg-warning',
+            'Confirmed' => 'text-bg-primary',
+            'Completed' => 'text-bg-success',
+            'Cancelled' => 'text-bg-secondary',
+        );
+
+        return isset($badges[$status]) ? $badges[$status] : 'text-bg-light';
+    }
+}
