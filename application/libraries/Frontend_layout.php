@@ -60,6 +60,33 @@ class Frontend_layout
     }
 
     /**
+     * While the site is under construction, serve the under-construction page
+     * (503 with Retry-After, so search engines treat it as temporary) to
+     * everyone except signed-in administrators, who keep browsing the real
+     * site. Called from public controllers' constructors, before the router
+     * dispatches, so it flushes and halts.
+     */
+    public function guardUnderConstruction()
+    {
+        if (!$this->isUnderConstruction() || (string) $this->CI->session->userdata('admin_auth') === 'allow') {
+            return;
+        }
+
+        $this->CI->output->set_status_header(503);
+        $this->CI->output->set_header('Retry-After: 3600');
+        $this->CI->output->set_header('Cache-Control: no-store');
+        $this->CI->output->set_header('X-Robots-Tag: noindex, nofollow');
+
+        $this->renderStandalone('frontend/under_construction', array(), array(
+            'meta' => array(
+                'page_title' => $this->setting('website_title'),
+            ),
+        ));
+        $this->CI->output->_display();
+        exit;
+    }
+
+    /**
      * Render a page.
      *
      * $page keys (all optional):
@@ -172,6 +199,20 @@ class Frontend_layout
             'copyright' => str_replace('[YEAR]', date('Y'), $this->setting('copyright_text')),
             'book_url' => base_url('book'),
             'search_url' => base_url('search'),
+            'account' => $this->accountLink(),
+        );
+    }
+
+    /** Header link to the customer's account, or to sign in. */
+    private function accountLink()
+    {
+        $this->CI->load->library('customer_auth');
+        $signedIn = $this->CI->customer_auth->current() !== NULL;
+
+        return array(
+            'signed_in' => $signedIn,
+            'url' => base_url($signedIn ? 'account' : 'account/sign-in'),
+            'label' => $signedIn ? 'My account' : 'Sign in',
         );
     }
 

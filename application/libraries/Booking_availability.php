@@ -110,11 +110,13 @@ class Booking_availability
     /**
      * Free start times for $services with $artistId (NULL for any artist):
      * Y-m-d => list of "HH:MM", one entry per day in the booking window.
+     * $exceptAppointmentId leaves that appointment's own time free (for
+     * moving it).
      */
-    public function days(array $services, $artistId = NULL)
+    public function days(array $services, $artistId = NULL, $exceptAppointmentId = NULL)
     {
         $dates = $this->CI->booking_schedule->dates();
-        $busy = $this->busy(reset($dates), end($dates));
+        $busy = $this->busy(reset($dates), end($dates), $exceptAppointmentId);
         $minutes = $this->totalMinutes($services);
 
         $days = array();
@@ -136,7 +138,7 @@ class Booking_availability
      * or NULL when the salon rules or the artists' diaries do not allow it.
      * Call inside Booking_request's booking lock before saving.
      */
-    public function schedule(array $services, $artistId, $date, $time)
+    public function schedule(array $services, $artistId, $date, $time, $exceptAppointmentId = NULL)
     {
         $start = Booking_schedule::minute($time);
         if ($start === NULL
@@ -145,7 +147,7 @@ class Booking_availability
             return NULL;
         }
 
-        return $this->plan($services, $artistId, $date, $start, $this->busy($date, $date));
+        return $this->plan($services, $artistId, $date, $start, $this->busy($date, $date, $exceptAppointmentId));
     }
 
     /** Sum of the services' lengths. */
@@ -280,18 +282,20 @@ class Booking_availability
      * appointment's artist, time and total length. Time off is added on top:
      * the whole day, or the same hours on each day of its range.
      */
-    private function busy($from, $to)
+    private function busy($from, $to, $exceptAppointmentId = NULL)
     {
-        $rows = $this->CI->db
+        $this->CI->db
             ->select('a.appointment_id, a.appointment_date, a.appointment_time, a.appointment_duration_minutes,'
                 .' a.appointment_artist_id, s.service_artist_id, s.service_start_time, s.service_duration_minutes', FALSE)
             ->from('appointments a')
             ->join('appointment_services s', 's.appointment_id = a.appointment_id', 'left')
             ->where('a.appointment_status !=', 'Cancelled')
             ->where('a.appointment_date >=', $from)
-            ->where('a.appointment_date <=', $to)
-            ->get()
-            ->result_array();
+            ->where('a.appointment_date <=', $to);
+        if ($exceptAppointmentId !== NULL) {
+            $this->CI->db->where('a.appointment_id !=', (int) $exceptAppointmentId);
+        }
+        $rows = $this->CI->db->get()->result_array();
 
         $busy = array();
         $wholeVisits = array();

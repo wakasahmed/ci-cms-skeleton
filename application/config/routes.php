@@ -68,6 +68,11 @@ $route['blog/category/(:any)'] = 'frontend/blog_category/$1';
 $route['blog/(:any)'] = 'frontend/article/$1';
 $route['artists'] = 'frontend/artists';
 $route['artists/(:any)'] = 'frontend/artist/$1';
+// Customer accounts (Phase 10); the other /account/… pages map to Account methods directly.
+$route['account/reset-password/(:any)'] = 'account/reset_password/$1';
+$route['account/verify/(:any)'] = 'account/verify/$1';
+$route['account/appointments/(:any)/cancel'] = 'account/cancel/$1';
+$route['account/appointments/(:any)/reschedule'] = 'account/reschedule/$1';
 
 $route['404_override'] = 'frontend/error_404';
 $route['translate_uri_dashes'] = TRUE;

@@ -40,6 +40,8 @@ class Seo extends CI_Controller
             $lines[] = 'Allow: /';
             // Shows the visitor's own booking request; there is nothing to index.
             $lines[] = 'Disallow: /book/confirmed';
+            // Customer accounts (sign-in, the customer's own appointments); the pages are also noindex.
+            $lines[] = 'Disallow: /account';
             $lines[] = '';
             $lines[] = 'Sitemap: ' . base_url('sitemap.xml');
         }

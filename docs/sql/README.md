@@ -46,6 +46,7 @@ Back up first: `phase-4-cleanup.sql` drops columns and tables.
 | 19 | `phase-8-booking.sql` | Schema: each appointment service's artist and start time (`appointment_services`). | |
 | 20 | `phase-8-booking-content.sql` | Real-time booking wording (Book page, confirmation, home booking step, artist pages), email templates 3 and 4, removes template 2. | Those texts |
 | 21 | `phase-8-artist-hours.sql` | Schema: `artist_hours` and `artist_time_off`; turns each artist's working days into full working days. | |
+| 22 | `phase-10-customers.sql` | Schema: `customers`, `customer_tokens`, `customer_remember_tokens`, `customer_login_attempts`, `appointments.customer_id`; email templates 5–7 (account emails). | Templates 5–7 |
 
 Page section definitions (`application/config/content_sections.php`) are keyed by the page
 IDs these scripts create (1, 2, 6, 7, 8, 9, 10, 37–42), so keep them when seeding.

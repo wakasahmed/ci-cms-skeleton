@@ -1,8 +1,11 @@
 /*
- * Contact form (/contact): checks the required fields and the email address
- * before sending (the server repeats every check), then adds a reCAPTCHA
- * Enterprise token when a site key is configured and submits the form.
- * Field errors use the reference design's .ci-field-error markup.
+ * Public forms ([data-public-form]: contact, account pages): checks the
+ * required fields, email addresses, minimum lengths and matching fields
+ * ([data-match="#other"]) before sending (the server repeats every check),
+ * then adds a reCAPTCHA Enterprise token when the form has a site key
+ * (data-recaptcha-site-key / data-recaptcha-action) and submits it.
+ * The submit button ([data-form-submit]) shows its data-busy-label while
+ * sending. Field errors use the reference design's .ci-field-error markup.
  */
 (function ($) {
     'use strict';
@@ -38,23 +41,36 @@
         }
     }
 
+    function problem($field) {
+        var value = String($field.val() || '');
+        var trimmed = value.trim();
+        var minLength = parseInt($field.attr('minlength'), 10);
+        var match = $field.data('match');
+
+        if ($field.prop('required') && trimmed === '') {
+            return 'This field is required.';
+        }
+        if (trimmed !== '' && $field.attr('type') === 'email' && !EMAIL.test(trimmed)) {
+            return 'That email doesn’t look quite right.';
+        }
+        if (value !== '' && minLength > 0 && value.length < minLength) {
+            return 'Use at least ' + minLength + ' characters.';
+        }
+        if (match && value !== String($(match).val() || '')) {
+            return 'The two passwords do not match.';
+        }
+
+        return '';
+    }
+
     function validate($form) {
         var valid = true;
 
-        $form.find('[required]').each(function () {
+        $form.find('input, select, textarea').not('[type=hidden]').each(function () {
             var $field = $(this);
-            var empty = String($field.val() || '').trim() === '';
-            setError($field, empty ? 'This field is required.' : '');
-            if (empty) {
-                valid = false;
-            }
-        });
-
-        $form.find('input[type=email]').each(function () {
-            var $field = $(this);
-            var value = String($field.val() || '').trim();
-            if (value !== '' && !EMAIL.test(value)) {
-                setError($field, 'That email doesn’t look quite right.');
+            var message = problem($field);
+            setError($field, message);
+            if (message) {
                 valid = false;
             }
         });
@@ -80,12 +96,12 @@
 
     function setup(form) {
         var $form = $(form);
-        var $button = $form.find('[data-contact-submit]');
+        var $button = $form.find('[data-form-submit]');
         var label = $button.text();
         var sending = false;
 
         $form.on('input change', '[aria-invalid="true"]', function () {
-            if (String($(this).val() || '').trim() !== '') {
+            if (!problem($(this))) {
                 setError($(this), '');
             }
         });
@@ -102,7 +118,7 @@
             }
 
             sending = true;
-            $button.prop('disabled', true).text('Sending…');
+            $button.prop('disabled', true).text($button.data('busy-label') || 'Sending…');
 
             recaptchaToken($form.data('recaptcha-site-key'), $form.data('recaptcha-action'))
                 .then(function (token) {
@@ -115,15 +131,15 @@
                     window.alert('The form could not be checked. Please try again, or call us.');
                 });
         });
-
-        // Bring the result of the last submission into view for screen readers too.
-        var status = document.getElementById('contact-form-status');
-        if (status) {
-            status.focus({ preventScroll: true });
-        }
     }
 
     $(function () {
-        document.querySelectorAll('[data-contact-form]').forEach(setup);
+        document.querySelectorAll('[data-public-form]').forEach(setup);
+
+        // Bring the result of the last submission into view for screen readers too.
+        var status = document.querySelector('[data-form-status]');
+        if (status) {
+            status.focus({ preventScroll: true });
+        }
     });
 })(jQuery);

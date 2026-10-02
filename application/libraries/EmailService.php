@@ -50,6 +50,13 @@ class EmailService
             'notes',
             'created_at',
         ),
+        'customer' => array(
+            'first_name',
+            'customer_name',
+            'customer_email',
+            'link',
+            'expires',
+        ),
     );
 
     /** Tags that render HTML rather than plain text. */
@@ -202,7 +209,7 @@ class EmailService
         return $this->CI->load->view('email/english', $data, TRUE);
     }
 
-    /** Short tag names an entity supports (contact, appointment). */
+    /** Short tag names an entity supports (contact, appointment, customer). */
     public function shortTagFields($entity)
     {
         return isset(self::$shortTagFields[$entity])
@@ -228,6 +235,12 @@ class EmailService
     public function parseAppointmentShortTags($template, array $values = array())
     {
         return $this->parseShortTags('appointment', $template, $values, array('schedule', 'notes'));
+    }
+
+    /** Replace the supported customer-account short tags with scalar values. */
+    public function parseCustomerShortTags($template, array $values = array())
+    {
+        return $this->parseShortTags('customer', $template, $values, array());
     }
 
     /** Replace an entity's short tags; $multiline values keep their line breaks as <br>. */
@@ -256,7 +269,7 @@ class EmailService
      * - to: recipient address
      * - values: short-tag values keyed by field name
      * - parser: the parse*ShortTags() method that owns the template's tags
-     *   (parseContactShortTags or parseAppointmentShortTags)
+     *   (parseContactShortTags, parseAppointmentShortTags or parseCustomerShortTags)
      * - multiline_fields: value keys whose line breaks become <br> in the HTML body
      * - label: prefix for log messages
      */
@@ -273,7 +286,7 @@ class EmailService
         $label = (string) $options['label'];
         $templateId = (int) $options['template_id'];
 
-        if (!in_array($options['parser'], array('parseContactShortTags', 'parseAppointmentShortTags'), TRUE)) {
+        if (!in_array($options['parser'], array('parseContactShortTags', 'parseAppointmentShortTags', 'parseCustomerShortTags'), TRUE)) {
             return $this->fail($label.' has no valid short tag parser.');
         }
 

@@ -56,6 +56,16 @@ $config['short_tag_entities'] = array(
             'created_at' => 'Oct 10, 2026 09:30 am',
         ),
     ),
+    'customer' => array(
+        'label' => 'Customer account',
+        'examples' => array(
+            'first_name' => 'Anna',
+            'customer_name' => 'Anna Kowalska',
+            'customer_email' => 'anna@example.com',
+            'link' => 'https://example.com/account/verify/…',
+            'expires' => '48 hours',
+        ),
+    ),
 );
 
 /*
@@ -70,4 +80,7 @@ $config['short_tag_template_entities'] = array(
     1 => 'contact',
     3 => 'appointment',
     4 => 'appointment',
+    5 => 'customer',
+    6 => 'customer',
+    7 => 'customer',
 );

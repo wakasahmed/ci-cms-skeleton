@@ -877,6 +877,13 @@
             return;
         }
 
+        // A signed-in customer's details are filled in (they can still be changed).
+        if (config.customer) {
+            state.details.name = config.customer.name || '';
+            state.details.phone = config.customer.phone || '';
+            state.details.email = config.customer.email || '';
+        }
+
         preselect();
         render();
 

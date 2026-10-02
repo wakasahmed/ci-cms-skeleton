@@ -108,8 +108,19 @@ if ($appointment['appointment_offer_title'] !== NULL) {
 
             <div class="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <a href="<?php echo html_escape(base_url()); ?>" class="<?php echo html_escape(frontend_button_class('primary', 'h-12 px-7')); ?>">Back to home</a>
-                <a href="<?php echo html_escape(base_url('services')); ?>" class="<?php echo html_escape(frontend_button_class('outline', 'h-12 px-7')); ?>">Browse services</a>
+                <?php if ($site['account']['signed_in']) { ?>
+                    <a href="<?php echo html_escape(base_url('account')); ?>" class="<?php echo html_escape(frontend_button_class('outline', 'h-12 px-7')); ?>">My appointments</a>
+                <?php } else { ?>
+                    <a href="<?php echo html_escape(base_url('services')); ?>" class="<?php echo html_escape(frontend_button_class('outline', 'h-12 px-7')); ?>">Browse services</a>
+                <?php } ?>
             </div>
+            <?php if (!$site['account']['signed_in']) { ?>
+                <p class="mt-6 text-sm text-foreground-soft">
+                    Want to move or cancel bookings online?
+                    <a class="link-underline font-semibold text-primary-ink" href="<?php echo html_escape(base_url('account/sign-up')); ?>">Create an account</a>
+                    with <?php echo html_escape($appointment['customer_email']); ?> and confirm it — this booking will be there.
+                </p>
+            <?php } ?>
             <?php if (isset($confirmation['note']) && trim($confirmation['note']) !== '') { ?>
                 <p class="mt-6 rounded-lg bg-lilac px-4 py-3 text-sm text-foreground-soft"><?php echo html_escape($confirmation['note']); ?></p>
             <?php } ?>

@@ -31,6 +31,7 @@ $client = array(
     array('Email', $record['customer_email'], 'bi-envelope'),
     array('Phone', $record['customer_phone'] !== NULL && $record['customer_phone'] !== '' ? $record['customer_phone'] : 'Not provided', 'bi-telephone'),
     array('Preferred contact', $record['customer_contact_preference'], 'bi-chat-dots'),
+    array('Account', $record['customer_id'] !== NULL ? 'View account' : 'Booked as a guest', 'bi-person-badge'),
 );
 ?>
 <?php $this->load->view('admin/partials/breadcrumb', array(
@@ -137,6 +138,8 @@ $client = array(
                                     <span class="contact-request-detail-value">
                                         <?php if ($detail[0] === 'Email') { ?>
                                             <a href="mailto:<?php echo $escape($detail[1]); ?>"><?php echo $escape($detail[1]); ?></a>
+                                        <?php } elseif ($detail[0] === 'Account' && $record['customer_id'] !== NULL) { ?>
+                                            <a href="<?php echo base_url('manage/customers/view/'.(int) $record['customer_id']); ?>"><?php echo $escape($detail[1]); ?></a>
                                         <?php } elseif ($detail[0] === 'Phone' && $record['customer_phone']) { ?>
                                             <a href="tel:<?php echo $escape(preg_replace('/[^\d+]/', '', $detail[1])); ?>"><?php echo $escape($detail[1]); ?></a>
                                         <?php } else { ?>
@@ -207,7 +210,13 @@ $client = array(
                                 <li class="border-top pt-2 mt-2">
                                     <div class="d-flex justify-content-between align-items-start gap-2">
                                         <small class="text-muted">
-                                            <?php echo $escape($note['full_name'] !== NULL ? $note['full_name'] : 'Former administrator'); ?>
+                                            <?php
+                                            // Author 0: a change the client made from their account (Booking_request).
+                                            $author = (int) $note['author_id'] === 0
+                                                ? 'Client (online)'
+                                                : ($note['full_name'] !== NULL ? $note['full_name'] : 'Former administrator');
+                                            echo $escape($author);
+                                            ?>
                                             &middot;
                                             <time datetime="<?php echo date('c', strtotime($note['created_at'])); ?>"><?php echo date(ADMIN_DATETIME_FORMAT, strtotime($note['created_at'])); ?></time>
                                         </small>

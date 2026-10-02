@@ -92,6 +92,16 @@ $overlay = !empty($header_overlay);
                 <i class="fa-solid fa-magnifying-glass size-5" aria-hidden="true"></i>
             </a>
 
+            <a
+                aria-label="<?php echo html_escape($site['account']['label']); ?>"
+                title="<?php echo html_escape($site['account']['label']); ?>"
+                data-header-tool
+                class="inline-flex size-11 items-center justify-center rounded-full transition-colors duration-200 <?php echo $overlay ? 'text-rose-100/85 hover:bg-background/15 hover:text-background' : 'text-foreground-soft hover:bg-petal hover:text-primary'; ?>"
+                href="<?php echo html_escape($site['account']['url']); ?>"
+            >
+                <i class="<?php echo $site['account']['signed_in'] ? 'fa-solid fa-circle-user' : 'fa-regular fa-user'; ?> size-5" aria-hidden="true"></i>
+            </a>
+
             <?php if ($site['phone_href'] !== '') { ?>
                 <a
                     href="<?php echo html_escape($site['phone_href']); ?>"

@@ -23,6 +23,7 @@ class Contact_form
     {
         $this->CI =& get_instance();
         $this->CI->load->model('Contact_model');
+        $this->CI->load->library('form_token');
     }
 
     /** Subjects (value => label) and the success message. */
@@ -53,13 +54,7 @@ class Contact_form
     /** The session-bound token the form posts back. */
     public function token()
     {
-        $token = (string) $this->CI->session->userdata('contact_form_token');
-        if (strlen($token) !== 64) {
-            $token = bin2hex(random_bytes(32));
-            $this->CI->session->set_userdata('contact_form_token', $token);
-        }
-
-        return $token;
+        return $this->CI->form_token->get('contact');
     }
 
     /**
@@ -71,7 +66,7 @@ class Contact_form
     {
         $values = $this->values();
 
-        if (!$this->consumeToken()) {
+        if (!$this->CI->form_token->consume('contact')) {
             return $this->result('expired', $values);
         }
 
@@ -181,18 +176,6 @@ class Contact_form
         $matched = preg_match_all("/\\p{L}[\\p{L}\\p{M}\\p{N}'’-]*/u", (string) $message);
 
         return $matched === false ? 0 : $matched;
-    }
-
-    /** Check and rotate the one-use token. */
-    private function consumeToken()
-    {
-        $expected = (string) $this->CI->session->userdata('contact_form_token');
-        $submitted = (string) $this->CI->input->post('form_token');
-        $this->CI->session->unset_userdata('contact_form_token');
-
-        return strlen($expected) === 64
-            && strlen($submitted) === 64
-            && hash_equals($expected, $submitted);
     }
 
     private function userAgent()

@@ -27,10 +27,7 @@ class Frontend extends CI_Controller
         }
 
         $this->load->library('frontend_layout');
-
-        if ($this->frontend_layout->isUnderConstruction() && !$this->isAdministrator()) {
-            $this->renderUnderConstruction();
-        }
+        $this->frontend_layout->guardUnderConstruction();
     }
 
     /** Home page (/). */
@@ -445,7 +442,7 @@ class Frontend extends CI_Controller
         ), array(
             'page_type' => 'ContactPage',
             'meta' => $this->frontend_layout->pageMeta($page, base_url('contact')),
-            'scripts' => array('js/contact.js'),
+            'scripts' => array('js/form.js'),
         ));
     }
 
@@ -543,12 +540,33 @@ class Frontend extends CI_Controller
                     'siteKey' => RECAPTCHA_ENTERPRISE_SITE_KEY,
                     'action' => Booking_request::RECAPTCHA_ACTION,
                 ),
+                'customer' => $this->signedInCustomerDetails(),
             ),
             'helpText' => isset($wizard['help_text']) ? $wizard['help_text'] : '',
         ), array(
             'meta' => $this->frontend_layout->pageMeta($page, base_url('book')),
             'scripts' => array('js/booking.js'),
         ));
+    }
+
+    /**
+     * Name, phone and email of the signed-in customer, filled in on the
+     * wizard's details step (the booking is then linked to the account), or
+     * NULL for a guest.
+     */
+    private function signedInCustomerDetails()
+    {
+        $this->load->library('customer_auth');
+        $customer = $this->customer_auth->current();
+        if ($customer === NULL) {
+            return NULL;
+        }
+
+        return array(
+            'name' => $customer['customer_name'],
+            'phone' => (string) $customer['customer_phone'],
+            'email' => $customer['customer_email'],
+        );
     }
 
     /**
@@ -986,37 +1004,6 @@ class Frontend extends CI_Controller
         }
 
         return $schema;
-    }
-
-    /**
-     * Signed-in administrators keep browsing the real site while it is under
-     * construction, so they can review pages before launch.
-     */
-    private function isAdministrator()
-    {
-        return (string) $this->session->userdata('admin_auth') === 'allow';
-    }
-
-    /**
-     * Serve the under-construction page for every public URL. 503 with
-     * Retry-After tells search engines the outage is temporary. Runs from the
-     * constructor, before the router dispatches, so it must flush and halt
-     * here to avoid a double render.
-     */
-    private function renderUnderConstruction()
-    {
-        $this->output->set_status_header(503);
-        $this->output->set_header('Retry-After: 3600');
-        $this->output->set_header('Cache-Control: no-store');
-        $this->output->set_header('X-Robots-Tag: noindex, nofollow');
-
-        $this->frontend_layout->renderStandalone('frontend/under_construction', array(), array(
-            'meta' => array(
-                'page_title' => $this->frontend_layout->setting('website_title'),
-            ),
-        ));
-        $this->output->_display();
-        exit;
     }
 
     private function renderManageNotFound()

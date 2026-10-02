@@ -87,6 +87,11 @@ define('PASSWORD_RESET_MAX_REQUESTS', 3);
 define('PASSWORD_RESET_WINDOW', 900);
 define('PASSWORD_MIN_LENGTH', 8);
 
+// Customer accounts (Phase 10). Reset links reuse PASSWORD_RESET_TTL and its request limits.
+defined('CUSTOMER_VERIFY_TTL') OR define('CUSTOMER_VERIFY_TTL', 172800);
+// Customers can cancel or reschedule online until this many hours before the visit.
+defined('ACCOUNT_CHANGE_NOTICE_HOURS') OR define('ACCOUNT_CHANGE_NOTICE_HOURS', 24);
+
 /*
 |--------------------------------------------------------------------------
 | Manage/Admin Date and Time Display Format

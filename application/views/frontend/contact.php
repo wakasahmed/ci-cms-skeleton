@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /*
  * Contact (/contact): hero with call / directions / booking actions, the
  * salon details with a map card, and the contact form (libraries/
- * Contact_form.php, js/contact.js).
+ * Contact_form.php, js/form.js).
  *
  * $hero       page hero data (see partials/page_hero.php)
  * $sections   Web Page Sections of the Contact page, keyed by section
@@ -121,6 +121,7 @@ $fieldError = function ($field) use ($errors) {
                             <?php $isSuccess = $status === 'success'; ?>
                             <div
                                 id="contact-form-status"
+                                data-form-status
                                 role="<?php echo $isSuccess ? 'status' : 'alert'; ?>"
                                 tabindex="-1"
                                 class="mb-6 flex items-start gap-3 rounded-lg px-5 py-4 <?php echo $isSuccess ? 'bg-petal text-foreground' : 'bg-destructive/10 text-destructive'; ?>"
@@ -134,7 +135,7 @@ $fieldError = function ($field) use ($errors) {
                             action="<?php echo html_escape(base_url('contact')); ?>"
                             novalidate
                             class="grid gap-6 sm:grid-cols-2"
-                            data-contact-form
+                            data-public-form
                             data-recaptcha-site-key="<?php echo html_escape($recaptcha['siteKey']); ?>"
                             data-recaptcha-action="<?php echo html_escape($recaptcha['action']); ?>"
                         >
@@ -229,7 +230,7 @@ $fieldError = function ($field) use ($errors) {
                                 </div>
                             </div>
                             <div class="sm:col-span-2">
-                                <button class="<?php echo html_escape(frontend_button_class('primary', 'h-13 px-8')); ?>" type="submit" data-contact-submit>
+                                <button class="<?php echo html_escape(frontend_button_class('primary', 'h-13 px-8')); ?>" type="submit" data-form-submit data-busy-label="Sending…">
                                     <?php echo html_escape($value($formSection, 'button_text', 'Send message')); ?>
                                 </button>
                                 <?php if ($value($formSection, 'note') !== '') { ?>

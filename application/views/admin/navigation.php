@@ -57,6 +57,13 @@ $adminNav = array(
                 'active' => isset($reportsActive),
             ),
             array(
+                'type' => 'link',
+                'title' => 'Customers',
+                'icon' => 'bi-people',
+                'url' => ADMIN_URL.'customers',
+                'active' => isset($customersActive),
+            ),
+            array(
                 'type' => 'toggle',
                 'title' => 'Services',
                 'icon' => 'bi-stars',

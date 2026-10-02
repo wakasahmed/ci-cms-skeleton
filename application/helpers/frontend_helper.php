@@ -56,6 +56,21 @@ if (!function_exists('frontend_phone_href')) {
     }
 }
 
+if (!function_exists('frontend_input_class')) {
+    /**
+     * Classes of a text input, select or textarea on the public forms (contact,
+     * account), with the error border when $invalid.
+     */
+    function frontend_input_class($invalid = FALSE)
+    {
+        return 'w-full rounded-md border bg-background px-4 text-[1rem] text-foreground placeholder:text-muted-foreground/70'
+            .' transition-[border-color,box-shadow] duration-200 ease-[var(--ease-out-soft)]'
+            .' focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15'
+            .' disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-70'
+            .($invalid ? ' border-destructive' : ' border-border-strong');
+    }
+}
+
 if (!function_exists('frontend_phone_display')) {
     /**
      * Readable form of the Website Settings phone, which Manage > Website
