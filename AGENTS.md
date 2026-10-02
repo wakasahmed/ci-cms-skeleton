@@ -452,15 +452,20 @@ Use these instead of per-controller copies:
 - `application/helpers/admin_input_helper.php` — `admin_clean_text()`, `admin_clean_lines()`
   ("one per line" textareas), `admin_price_value()`, `admin_format_price()` (`80 zł`),
   `admin_date_value()` / `admin_datepicker_value()` (shared `.datepicker` format),
+  `admin_time_value()` / `admin_timepicker_value()` (shared `.timepicker` format),
   `admin_ids()`.
 - `application/helpers/admin_listing_helper.php` — `admin_sort_heading()` and
-  `admin_datetime_cell()` for listing tables.
+  `admin_datetime_cell()` for listing tables, `admin_appointment_status_badge()` for
+  appointment status badges.
+- `admin/partials/print_button` — a module header "Print" action (`[data-print-page]`,
+  handled in `admin.js`); mark parts of a page that should not print with `.admin-no-print`.
 - `assets/admin/js/records-listing.js` (always loaded) — listing filters
   (`[data-records-filter]`, `[data-filter-segment]`, `[data-filter-keyword]`) and the bulk
   selection bar (`[data-records-listing]`, `[data-bulk-actions]`). Do not add per-page listing
   scripts.
 - `assets/admin/js/repeatable-rows.js` (`$data['useRepeatableRows'] = TRUE`) — add/remove
-  form rows (`[data-repeatable]`).
+  form rows (`[data-repeatable]`). A new row fires `repeatable:added`, so `.datepicker` and
+  `.timepicker` inputs inside it are set up by `admin.js`.
 - `assets/admin/js/accordion-validation.js` (`$data['useAccordionValidation'] = TRUE`) —
   reveals invalid required fields inside collapsed accordion panels for
   `form[data-accordion-validation]`.
@@ -1287,10 +1292,15 @@ saved as Confirmed:
 - `libraries/Booking_availability.php` decides who is free. A visit is a run of
   back-to-back segments, one per chosen service in the order chosen; each segment needs an
   artist who offers that service (Manage > Artists > services; a service nobody is
-  assigned to can be done by anyone), works that weekday and has no overlapping booking.
+  assigned to can be done by anyone), works at that time and has no overlapping booking.
+  Working hours come from Manage > Artists (`artist_hours`: the ticked weekdays, each
+  optionally narrowed by a start and finish time; no ticked days means "whenever the salon
+  is open"); `artists.artist_working_days` is kept in step for the public profile.
   Every appointment except a Cancelled one holds its artists' time, read from
   `appointment_services` (`service_artist_id`, `service_start_time`,
-  `service_duration_minutes`).
+  `service_duration_minutes`), and so does each artist's time off (`artist_time_off`).
+- Manage > Reports (`Report_model`) reads the same `appointment_services` rows; values are
+  the list prices saved with each booking, so they are estimates.
 - The wizard asks `/book/availability` for the free times; the same engine checks the
   chosen time again when the booking is saved, under the `blossom_booking` MySQL named
   lock, so two visitors cannot take the same artist's time. Keep every write of booked

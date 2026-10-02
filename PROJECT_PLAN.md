@@ -82,7 +82,7 @@ Each item has a recommendation; the plan below assumes the recommendation unless
 | # | Decision | Recommendation |
 |---|----------|----------------|
 | D1 | Booking: real online booking engine, a **booking request** form, or phone-only? | Phase 6 shipped a **booking request** (staff confirm by phone/email). **Changed in Phase 8 (owner's decision, 2026-09-28): real-time booking** against the artists' diaries, confirmed straight away; placeholder artists are bookable; services that need different artists are booked back to back. |
-| D2 | Customer accounts (login/register/account/appointments) | **Defer.** Remove these routes from launch; revisit only if D1 becomes a real booking engine. |
+| D2 | Customer accounts (login/register/account/appointments) | Deferred at first. **Changed (owner, 2026-10-02): optional accounts in Phase 10**; guests can still book, and customers can cancel or reschedule online until 24 hours before. |
 | D3 | Online payments | **None.** Remove Moyasar. Salons are paid in the studio. |
 | D4 | reCAPTCHA | **Keep reCAPTCHA Enterprise** (already integrated) for the contact and booking-request forms, with a new Google project/keys for Blossom. Remove only `google/cloud-translate` from Composer. |
 | D5 | Tailwind version for the frontend | **Tailwind v4 standalone CLI.** The exported markup is written for v4 (`@theme` tokens, v4 arbitrary-value syntax); porting it to v3 risks visual drift. |
@@ -707,6 +707,62 @@ mixed services split across artists, an artist is refused for a service they do 
 offer, two simultaneous bookings of the same slot leave exactly one, and cancelling frees
 the time; the wizard was run end to end in a headless browser at desktop and phone
 widths.
+
+**Status: artist hours and reports done (2026-10-02), branch
+`phase-8-artist-hours-reports`.** The owner asked for the two remaining Phase 8 items
+except accounts; customer accounts and the account area moved to Phase 10.
+
+- **Working hours and time off** (Manage > Artists). The "Usually in the studio" checkboxes
+  became a working-hours grid: tick the days, optionally narrow a day with a start and
+  finish time (empty follows the salon's hours, shown beside each day). A repeatable
+  "Time off" list holds whole days, or the same hours on each day of a range, with a staff
+  note. Stored in `artist_hours` and `artist_time_off`
+  (`docs/sql/phase-8-artist-hours.sql`, which turned every existing working day into a
+  full day, so availability did not change); `artist_working_days` is kept in step for the
+  public profile. `Booking_availability` requires each service to fall within its artist's
+  hours and treats time off as booked time. An artist with no ticked days still takes
+  bookings whenever the salon is open.
+- **Reports** (Manage > Reports, `controllers/manage/Reports.php`, `models/Report_model.php`).
+  Appointments in a date range (this month by default, with quick ranges), filtered by
+  status, artist and service: totals (appointments by status, booked hours, estimated value
+  from the saved list prices, cancelled value), breakdowns by artist and by service (a
+  visit shared by two artists is split by service), the appointment list, a printable
+  layout and a CSV export (one line per booked service, guarded against spreadsheet
+  formulas). Cancelled appointments are counted but left out of hours and value.
+- **Shared pieces.** `admin_time_value()` / `admin_timepicker_value()` for the `.timepicker`
+  control; date and time pickers now start in rows added by `repeatable-rows.js` (the
+  `repeatable:added` event); `admin_appointment_status_badge()` replaced the badge maps
+  copied in the appointment views; `admin/partials/print_button` with `[data-print-page]`;
+  `.admin-no-print` hides parts of a page when printing.
+
+---
+
+## Phase 10 — Customer accounts and account area (planned)
+
+Agreed with the owner on 2026-10-02; to be built the following week. Decision D2 changes:
+accounts are now wanted, but stay **optional**.
+
+- **Accounts.** Sign up, sign in, sign out, forgotten password and "remember me" on the
+  website, in a separate `customers` table, reusing the admin's patterns: password hashing,
+  login throttling (`admin_login_attempts`-style), one-use reset tokens with an expiry and
+  request limits (`PasswordResetModel`), remember-me tokens
+  (`AdminRememberTokenModel`). The public form pattern applies (one-use form token,
+  reCAPTCHA with its own action, server-side validation, emails through managed templates
+  and the mail log locally).
+- **Booking stays open to guests.** A signed-in customer gets name, email and phone filled
+  in on the wizard, and the booking is linked to the account
+  (`appointments.customer_id`, nullable). Earlier guest bookings with the same, verified
+  email can be shown in the account.
+- **Account area** ("My appointments"): upcoming and past appointments with their
+  services, artists and times; profile and password changes.
+- **Cancel and reschedule online** until **24 hours** before the appointment starts
+  (a constant, like the booking lead time); after that the customer is asked to call.
+  Rescheduling uses the same availability engine and booking lock as a new booking;
+  cancelling frees the time and sends email template 4, rescheduling sends template 3.
+- **Admin.** Manage > Customers (listing, view, disable), and the customer shown on the
+  appointment.
+- **Public pages.** Sign-in/up and account pages built in the frontend design, kept out
+  of the sitemap and robots-indexing; header link to sign in / the account.
 
 ---
 
