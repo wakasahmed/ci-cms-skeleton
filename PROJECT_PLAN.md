@@ -737,9 +737,9 @@ except accounts; customer accounts and the account area moved to Phase 10.
 
 ---
 
-## Phase 10 — Customer accounts and account area (planned)
+## Phase 10 — Customer accounts and account area
 
-Agreed with the owner on 2026-10-02; to be built the following week. Decision D2 changes:
+Agreed with the owner on 2026-10-02 and brought forward the same day. Decision D2 changes:
 accounts are now wanted, but stay **optional**.
 
 - **Accounts.** Sign up, sign in, sign out, forgotten password and "remember me" on the
@@ -763,6 +763,44 @@ accounts are now wanted, but stay **optional**.
   appointment.
 - **Public pages.** Sign-in/up and account pages built in the frontend design, kept out
   of the sitemap and robots-indexing; header link to sign in / the account.
+
+**Status: built (2026-10-02), branch `phase-10-customer-accounts`.**
+
+- **Schema** (`docs/sql/phase-10-customers.sql`): `customers`, `customer_tokens` (one-use
+  'verify' and 'reset' links, hashed), `customer_remember_tokens`,
+  `customer_login_attempts`, `appointments.customer_id`, and email templates 5 (confirm
+  your email), 6 (reset your password) and 7 (password changed) with the new `customer`
+  short tags. Constants `CUSTOMER_VERIFY_TTL` (48 h) and `ACCOUNT_CHANGE_NOTICE_HOURS` (24).
+- **Code.** `controllers/Account.php`, `libraries/Customer_auth.php` (who is signed in),
+  `libraries/Customer_account.php` (the forms and emails), `models/Customer_model.php`,
+  `models/Customer_token_model.php`; Manage > Customers (`manage/Customers.php`, listing,
+  view with appointments, enable/disable; disabling revokes remembered devices).
+  `Booking_request` links bookings to accounts and gained `changeBlocker()`,
+  `cancelForCustomer()`, `rescheduleDays()` and `rescheduleForCustomer()`;
+  `Booking_availability` can leave one appointment's time free while it is being moved.
+- **Shared pieces.** `libraries/Form_token.php` replaced the token code copied in
+  `Contact_form` and `Booking_request` (same session keys); `js/contact.js` became the
+  shared `js/form.js`; `partials/form_field`, `partials/form_status` and
+  `frontend_input_class()`; the Under Construction gate moved to
+  `Frontend_layout::guardUnderConstruction()`.
+- **Decisions taken while building** (open to change): signing up signs the customer in at
+  once and emails the confirmation link; only confirmed addresses claim earlier guest
+  bookings (and later guest bookings made with them); a password reset also confirms the
+  address; changing the email needs the current password and a new confirmation; there is
+  no self-service account deletion yet (an administrator can disable an account).
+- **Tested.** Without typing passwords: every account page renders (noindex, redirects to
+  sign-in with a safe return path, external `?next=` dropped, bad links handled), the
+  header link, Manage > Customers, and the contact and booking pages after the shared
+  changes. A temporary command-line harness ran 38 checks against the real libraries:
+  hashed one-use links (once only, per type, rate limited), remember-me rotation and
+  revocation, throttling by email and IP, claiming guest bookings case-insensitively,
+  the 24-hour rule, moving (own time free, same/invalid/taken times refused, prices kept,
+  client and salon emailed, staff note, old time freed) and cancelling (emails, time
+  freed, cannot cancel twice, another customer cannot reach it). All passed and the
+  database was left as before.
+- **Still to test with a person signing in** (passwords are typed only by people): sign
+  up, sign in with "remember me", sign out, forgotten and reset password, changing the
+  password and email, and the account pages in the browser.
 
 ---
 

@@ -1257,13 +1257,18 @@ Every public page renders through `Frontend_layout::render($view, $data, $page)`
 
 ## Public forms
 
-The contact form (`libraries/Contact_form.php`) and the booking wizard
-(`libraries/Booking_request.php`, `js/booking.js`) share one pattern. Follow it for any new
-public form:
+The contact form (`libraries/Contact_form.php`), the booking wizard
+(`libraries/Booking_request.php`, `js/booking.js`) and the account forms
+(`libraries/Customer_account.php`) share one pattern. Follow it for any new public form:
 
-- A one-use session token in the form (global CSRF protection is off); rotate it on every
-  submission.
+- A one-use session token in the form (global CSRF protection is off), from
+  `libraries/Form_token.php` (`get($form)` / `consume($form)`, one token per form);
+  rotate it on every submission.
 - Server-side validation is the authority; the page's script mirrors it for usability.
+  Plain forms use `js/form.js` (`[data-public-form]`: required fields, email format,
+  `minlength`, `[data-match]`, the reCAPTCHA token, `[data-form-submit]` with its
+  `data-busy-label`), with fields from `partials/form_field` (`frontend_input_class()`)
+  and the result box `partials/form_status`.
 - `Google_recaptcha::verify($token, $action, $minScore)` with a form-specific action.
   Without reCAPTCHA keys it accepts forms only in `development` and rejects them in every
   other environment.
@@ -1272,14 +1277,44 @@ public form:
 - Save related rows in one transaction.
 - Email the salon at Website Settings > notification emails and the client through a
   managed Email Template sent with `EmailService::sendManagedTemplate()`. Short tags are
-  registered per entity in `EmailService::$shortTagFields` (`contact`, `appointment`) with
-  examples in `config/short_tags.php`; templates 1 (contact), 3 (appointment confirmed,
-  also sent when a booking is made) and 4 (appointment cancelled) are mapped there.
+  registered per entity in `EmailService::$shortTagFields` (`contact`, `appointment`,
+  `customer`) with examples in `config/short_tags.php`; templates 1 (contact), 3
+  (appointment confirmed, also sent when a booking is made or moved), 4 (appointment
+  cancelled), 5 (confirm your email), 6 (reset your password) and 7 (password changed)
+  are mapped there.
   Changing an appointment to Confirmed or Cancelled in Manage > Appointments sends
   template 3 or 4 (`Booking_request::sendStatusEmail()`); the salon's own notifications
   are built in code by `Contact_form` and `Booking_request`.
 - Emails need a sender address (Website Settings > sender or site email). Locally
   `EMAIL_HOST` is `log`, so messages are written to `email_logs/` instead of being sent.
+
+## Customer accounts
+
+Accounts are optional (`PROJECT_PLAN.md` Phase 10, decision D2): guests still book.
+
+- `controllers/Account.php` serves `/account/…` (sign in/up/out, forgotten and reset
+  password, email confirmation, My appointments, details, password, move and cancel). Every
+  page is `noindex`, kept out of the sitemap and disallowed in robots.txt; the Under
+  Construction gate is `Frontend_layout::guardUnderConstruction()`, shared with `Frontend`.
+- `libraries/Customer_auth.php` decides who is signed in: its own session key
+  (`customer_id`, never the admin keys) and remember-me cookie, re-reading the account on
+  every request so disabling it in Manage > Customers signs the customer out. A sign-in may
+  return only to an allowed local path (`Account::NEXT_ALLOWED`).
+- Passwords use `password_hash()` (at least `PASSWORD_MIN_LENGTH`, at most 72 bytes).
+  One-use links (`customer_tokens`: 'verify', 'reset') and remember-me tokens are stored as
+  SHA-256 hashes (`Customer_token_model`); reset links reuse the admin reset policy
+  constants. Failed sign-ins are counted in `customer_login_attempts` per email and per IP
+  (`Customer_model::retryAfter()`), not in the session.
+- A booking is linked to the signed-in customer, or to the enabled account that has
+  confirmed the same email (`appointments.customer_id`); confirming an address claims the
+  earlier guest bookings made with it.
+- Customers move or cancel their own appointments until `ACCOUNT_CHANGE_NOTICE_HOURS`
+  (24) before the start (`Booking_request::changeBlocker()`, `cancelForCustomer()`,
+  `rescheduleForCustomer()`): moving uses the same engine and booking lock as a new
+  booking, leaves the appointment's own time free while choosing
+  (`Booking_availability` `$exceptAppointmentId`) and keeps the prices it was booked at.
+  Each change emails the client (template 3 or 4) and the salon, and leaves an appointment
+  note with author 0, shown as "Client (online)".
 
 ## Online booking
 
